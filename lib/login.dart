@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'adminhome.dart'; // Ensure this file exists
+import 'home.dart'; // Ensure this file exists
 
 void main() {
   runApp(MyApp());
@@ -50,8 +52,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  final String correctUsername = 'admin';
-  final String correctPassword = 'hasło';
+  final String correctUsernameAdmin = 'admin';
+  final String correctPasswordAdmin = 'hasło';
+  final String correctUsernameUser = 'user';
+  final String correctPasswordUser = 'password';
 
   late AnimationController _buttonController;
   late Animation<double> _buttonAnimation;
@@ -80,23 +84,20 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       String username = _usernameController.text;
       String password = _passwordController.text;
 
-      if (username == correctUsername && password == correctPassword) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Logowanie udane'),
-            content: Text('Witaj, $username!'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
-          ),
+      if (username == correctUsernameAdmin && password == correctPasswordAdmin) {
+        // Navigate to AdminHomePage if credentials match for admin
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AdminHomePage()),
+        );
+      } else if (username == correctUsernameUser && password == correctPasswordUser) {
+        // Navigate to HomePage if credentials match for user
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
       } else {
+        // Show login error for invalid credentials
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
