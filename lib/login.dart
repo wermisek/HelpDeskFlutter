@@ -267,20 +267,3 @@ class AdminHomePage extends StatelessWidget {
   }
 }
 
-class AddProblemPage extends StatelessWidget {
-  final String username;
-
-  AddProblemPage({required this.username});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Add Problem'),
-      ),
-      body: Center(
-        child: Text('Logged in as: $username'), // Display the username for testing
-      ),
-    );
-  }
-}
