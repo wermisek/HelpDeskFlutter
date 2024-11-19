@@ -6,7 +6,6 @@ void main() {
   runApp(MyApp());
 }
 
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -29,7 +28,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Future<void> getProblems() async {
     try {
       // Send GET request to fetch problems from the server
-      var response = await HttpClient().getUrl(Uri.parse('http://localhost:8080/get_problems'));
+      var response = await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
 

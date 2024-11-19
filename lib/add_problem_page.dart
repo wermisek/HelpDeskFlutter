@@ -72,7 +72,7 @@ class _AddProblemPageState extends State<AddProblemPage> {
       try {
         // Sending data to the server
         var response = await HttpClient()
-            .postUrl(Uri.parse('http://localhost:8080/add_problem'))
+            .postUrl(Uri.parse('http://192.168.10.188:8080/add_problem')) // Zmieniono URL na IP komputera hosta
             .then((request) {
           request.headers.contentType = ContentType.json;
           request.write(jsonEncode(problemData));
