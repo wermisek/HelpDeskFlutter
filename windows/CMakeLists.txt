@@ -2,6 +2,13 @@
 cmake_minimum_required(VERSION 3.14)
 project(desktop_help_flutter LANGUAGES CXX)
 
+# Ścieżka do Firebase C++ SDK
+set(FIREBASE_CPP_SDK_DIR "C:/Users/wermis/Downloads/firebase_cpp_sdk_12.4.0/firebase_cpp_sdk")
+
+# Dodaj podkatalog dla Firebase C++
+add_subdirectory(${FIREBASE_CPP_SDK_DIR} ${CMAKE_CURRENT_BINARY_DIR}/firebase_sdk_build)
+
+
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(BINARY_NAME "desktop_help_flutter")

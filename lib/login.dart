@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'adminhome.dart'; // Ensure this file exists
-import 'home.dart'; // Ensure this file exists
+import 'add_problem_page.dart'; // Add the page where problems are added
+import 'admin_home_page.dart'; // Add the page for admin home
 
 void main() {
   runApp(MyApp());
@@ -18,10 +18,12 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Strona Logowania',
-      theme: _isDarkMode ? ThemeData.dark().copyWith(
+      theme: _isDarkMode
+          ? ThemeData.dark().copyWith(
         primaryColor: Colors.blueAccent,
         scaffoldBackgroundColor: Colors.black,
-      ) : ThemeData.light().copyWith(
+      )
+          : ThemeData.light().copyWith(
         primaryColor: Colors.blueAccent,
         scaffoldBackgroundColor: Colors.white,
       ),
@@ -52,10 +54,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  final String correctUsernameAdmin = 'admin';
-  final String correctPasswordAdmin = 'hasło';
-  final String correctUsernameUser = 'user';
-  final String correctPasswordUser = 'password';
+  final String correctUsername = 'admin';
+  final String correctPassword = 'hasło';
 
   late AnimationController _buttonController;
   late Animation<double> _buttonAnimation;
@@ -79,25 +79,27 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     _buttonController.forward();
   }
 
-  void _login() {
+  void _login(BuildContext context) {
     if (_formKey.currentState?.validate() ?? false) {
       String username = _usernameController.text;
       String password = _passwordController.text;
 
-      if (username == correctUsernameAdmin && password == correctPasswordAdmin) {
-        // Navigate to AdminHomePage if credentials match for admin
-        Navigator.push(
+      if (username == correctUsername && password == correctPassword) {
+        // Zamiast push, używamy pushReplacement, aby zastąpić stronę logowania
+        Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => AdminHomePage()),
+          MaterialPageRoute(
+            builder: (context) => AdminHomePage(username: username),
+          ),
         );
-      } else if (username == correctUsernameUser && password == correctPasswordUser) {
-        // Navigate to HomePage if credentials match for user
-        Navigator.push(
+      } else if (username == 'user' && password == 'password') {
+        Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(
+            builder: (context) => AddProblemPage(username: username),
+          ),
         );
       } else {
-        // Show login error for invalid credentials
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -116,6 +118,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       }
     }
   }
+
 
   @override
   void dispose() {
@@ -218,14 +221,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   ScaleTransition(
                     scale: _buttonAnimation,
                     child: ElevatedButton(
-                      onPressed: _login,
+                      onPressed: () => _login(context),
                       style: ButtonStyle(
                         backgroundColor: MaterialStateProperty.all<Color>(
                           widget.isDarkMode ? Colors.black : Colors.blueAccent,
                         ),
-                        padding: MaterialStateProperty.all<EdgeInsets>(
-                          EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                        ),
+                        padding: MaterialStateProperty.all<EdgeInsets>(EdgeInsets.symmetric(horizontal: 50, vertical: 15)),
                         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -243,6 +244,42 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class AdminHomePage extends StatelessWidget {
+  final String username;
+
+  AdminHomePage({required this.username});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Admin Home'),
+      ),
+      body: Center(
+        child: Text('Welcome, $username!'), // Display the username for testing
+      ),
+    );
+  }
+}
+
+class AddProblemPage extends StatelessWidget {
+  final String username;
+
+  AddProblemPage({required this.username});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Add Problem'),
+      ),
+      body: Center(
+        child: Text('Logged in as: $username'), // Display the username for testing
       ),
     );
   }
