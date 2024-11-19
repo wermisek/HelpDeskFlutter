@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'settings.dart';  // Import the settings page
+import 'settings.dart';
 
 void main() {
   runApp(MyApp());
@@ -11,8 +11,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // This line removes the debug banner
-      home: UserHomePage(username: 'TestUser'), // Starting screen (replace with actual user login logic)
+      debugShowCheckedModeBanner: false,
+      home: UserHomePage(username: 'TestUser'),
     );
   }
 }
@@ -36,7 +36,6 @@ class UserHomePage extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Navigate to AddProblemPage
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -67,71 +66,70 @@ class _AddProblemPageState extends State<AddProblemPage> {
   final _problemController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  bool _showForm = false;  // To control whether to show the form or not
+  bool _showForm = false;
 
-  // Function to send the problem to the local server
   Future<void> _submitProblem(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
       String room = _roomController.text;
       String problem = _problemController.text;
 
-      // Create the data to be sent to the server
       Map<String, dynamic> problemData = {
         'username': widget.username,
         'room': room,
         'problem': problem,
-        'timestamp': DateTime.now().toString(),
       };
 
       try {
-        // Sending data to the server
-        var response = await HttpClient()
-            .postUrl(Uri.parse('http://192.168.10.188:8080/add_problem')) // Zmieniono URL na IP komputera hosta
-            .then((request) {
-          request.headers.contentType = ContentType.json;
-          request.write(jsonEncode(problemData));
-          return request.close();
-        });
+        final request = await HttpClient()
+            .postUrl(Uri.parse('http://192.168.10.188:8080/add_problem'));
 
-        if (response.statusCode == 200) {
-          // Show success message
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Problem wysłany'),
-              content: Text('Dziękujemy, ${widget.username}. Twój problem został wysłany.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text('OK'),
-                ),
-              ],
-            ),
+        request.headers.contentType = ContentType.json;
+        request.write(jsonEncode(problemData));
+
+        final response = await request.close();
+        final responseBody = await response.transform(utf8.decoder).join();
+
+        if (response.statusCode == 201) {
+          _showDialog(
+            context,
+            title: 'Problem wysłany',
+            message: 'Dziękujemy, ${widget.username}. Twój problem został przesłany.',
           );
         } else {
-          throw Exception('Błąd połączenia z serwerem');
+          _showDialog(
+            context,
+            title: 'Błąd',
+            message:
+            'Nie udało się wysłać problemu. Serwer zwrócił: ${response.reasonPhrase}',
+          );
         }
       } catch (e) {
-        // Handle connection errors
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Błąd'),
-            content: Text('Nie udało się wysłać problemu. Spróbuj ponownie.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
-          ),
+        _showDialog(
+          context,
+          title: 'Błąd połączenia',
+          message: 'Nie udało się połączyć z serwerem. Sprawdź połączenie sieciowe.',
         );
       }
     }
+  }
+
+  void _showDialog(BuildContext context,
+      {required String title, required String message}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -140,17 +138,15 @@ class _AddProblemPageState extends State<AddProblemPage> {
       appBar: AppBar(
         title: Text('Dodaj Problem'),
         actions: [
-          // Restore settings button in the AppBar
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () {
-              // Navigate to SettingsPage (you can add settings functionality later)
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => SettingsPage(
-                    isDarkMode: false, // Placeholder, modify as necessary
-                    toggleTheme: () {}, // Placeholder, modify as necessary
+                    isDarkMode: false,
+                    toggleTheme: () {},
                   ),
                 ),
               );
@@ -184,6 +180,7 @@ class _AddProblemPageState extends State<AddProblemPage> {
                           labelText: 'Numer Sali',
                           border: OutlineInputBorder(),
                         ),
+                        style: TextStyle(color: Colors.black), // Set text color to black
                         validator: (value) {
                           if (value?.isEmpty ?? true) {
                             return 'Proszę podać numer sali';
@@ -198,6 +195,7 @@ class _AddProblemPageState extends State<AddProblemPage> {
                           labelText: 'Opis Problemu',
                           border: OutlineInputBorder(),
                         ),
+                        style: TextStyle(color: Colors.black), // Set text color to black
                         validator: (value) {
                           if (value?.isEmpty ?? true) {
                             return 'Proszę podać opis problemu';
