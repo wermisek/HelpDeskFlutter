@@ -1,6 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'settings.dart';  // Import the settings page
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false, // This line removes the debug banner
+      home: UserHomePage(username: 'TestUser'), // Starting screen (replace with actual user login logic)
+    );
+  }
+}
 
 class UserHomePage extends StatelessWidget {
   final String username;
@@ -21,7 +36,7 @@ class UserHomePage extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Przejście do formularza zgłaszania problemu
+                // Navigate to AddProblemPage
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -50,7 +65,6 @@ class AddProblemPage extends StatefulWidget {
 class _AddProblemPageState extends State<AddProblemPage> {
   final _roomController = TextEditingController();
   final _problemController = TextEditingController();
-
   final _formKey = GlobalKey<FormState>();
 
   bool _showForm = false;  // To control whether to show the form or not
@@ -125,6 +139,24 @@ class _AddProblemPageState extends State<AddProblemPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Dodaj Problem'),
+        actions: [
+          // Restore settings button in the AppBar
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              // Navigate to SettingsPage (you can add settings functionality later)
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SettingsPage(
+                    isDarkMode: false, // Placeholder, modify as necessary
+                    toggleTheme: () {}, // Placeholder, modify as necessary
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Padding(
