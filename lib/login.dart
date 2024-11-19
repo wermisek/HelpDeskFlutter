@@ -62,7 +62,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final String correctUsername = 'admin';
   final String correctPassword = 'hasło';
 
-  // Added user2 and password2
   final String correctUsername2 = 'user2';
   final String correctPassword2 = 'password2';
 
@@ -82,9 +81,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       ..addListener(() {
         setState(() {});
       });
-    _controller.forward(); // Start the animation
+    _controller.forward();
 
-    // Animation for the theme switch circle
     _buttonController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -108,7 +106,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         );
       } else if ((username == 'user' && password == 'password') ||
           (username == correctUsername2 && password == correctPassword2)) {
-        // Allow user2 to log in as a regular user
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -148,7 +145,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       appBar: AppBar(
         title: Text('Logowanie do HelpDesk'),
         actions: [
-          // Animated button for switching themes (just the inner circle)
           AnimatedAlign(
             alignment: widget.isDarkMode ? Alignment.centerRight : Alignment.centerLeft,
             duration: const Duration(milliseconds: 300),
@@ -196,28 +192,27 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  // TextField for username with icon
                   _buildTextField(
                     controller: _usernameController,
                     label: 'Nazwa użytkownika',
                     icon: Icons.person,
+                    isDarkMode: widget.isDarkMode,
                   ),
                   SizedBox(height: 20),
 
-                  // TextField for password with icon
                   _buildTextField(
                     controller: _passwordController,
                     label: 'Hasło',
                     obscureText: true,
                     icon: Icons.lock,
+                    isDarkMode: widget.isDarkMode,
                   ),
                   SizedBox(height: 40),
 
-                  // Login Button with color based on theme
                   ElevatedButton(
                     onPressed: () => _login(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.isDarkMode ? Colors.white : Colors.black, // Change button color
+                      backgroundColor: widget.isDarkMode ? Colors.grey[400] : Colors.black, // Szare tło, podobne do pól tekstowych
                       padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -228,7 +223,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: widget.isDarkMode ? Colors.black : Colors.white, // Change text color
+                        color: widget.isDarkMode ? Colors.white : Colors.white, // Tekst biały, aby był widoczny na szarym tle
                       ),
                     ),
                   ),
@@ -241,17 +236,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // Reusable TextField widget for username and password with icon
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
     bool obscureText = false,
     required IconData icon,
+    required bool isDarkMode,
   }) {
     return AnimatedContainer(
       duration: Duration(milliseconds: 50),
       decoration: BoxDecoration(
-        color: Colors.white70,
+        color: isDarkMode ? Colors.grey[800] : Colors.white70,  // Change background color
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
@@ -267,12 +262,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         obscureText: obscureText,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.black),
+          labelStyle: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-          prefixIcon: Icon(icon, color: Colors.black), // Add icon
+          prefixIcon: Icon(icon, color: isDarkMode ? Colors.white : Colors.black),
         ),
-        style: TextStyle(color: Colors.black), // Set text color to black
+        style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
         validator: (value) {
           if (value?.isEmpty ?? true) {
             return 'Proszę podać $label';
