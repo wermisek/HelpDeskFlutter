@@ -30,6 +30,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
       // Send GET request to fetch problems from the server
       var response = await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
+
+      // Wait for response and decode it
       String content = await data.transform(utf8.decoder).join();
 
       // Decode the response JSON and update state
@@ -39,7 +41,27 @@ class _AdminHomePageState extends State<AdminHomePage> {
       });
     } catch (e) {
       print('Błąd: $e');
+      // In case of error, display an alert to the user
+      _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
     }
+  }
+
+  void _showErrorDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

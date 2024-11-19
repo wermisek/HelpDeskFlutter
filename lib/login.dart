@@ -1,5 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/animation.dart';
+import 'package:http/http.dart' as http;
 import 'add_problem_page.dart';
 import 'admin_home_page.dart';
 
@@ -59,12 +60,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  final String correctUsername = 'admin';
-  final String correctPassword = 'hasło';
-
-  final String correctUsername2 = 'user2';
-  final String correctPassword2 = 'password2';
-
   late AnimationController _controller;
   late Animation<double> _animation;
   late AnimationController _buttonController;
@@ -92,44 +87,68 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  void _login(BuildContext context) {
+  Future<void> _login(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
       String username = _usernameController.text;
       String password = _passwordController.text;
 
-      if (username == correctUsername && password == correctPassword) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AdminHomePage(),
-          ),
+      try {
+        final response = await http.post(
+          Uri.parse('http://192.168.10.188:8080/login'), // Zmieniony na adres IP
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'username': username,
+            'password': password,
+          }),
         );
-      } else if ((username == 'user' && password == 'password') ||
-          (username == correctUsername2 && password == correctPassword2)) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AddProblemPage(username: username),
-          ),
-        );
-      } else {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Błąd logowania'),
-            content: Text('Niepoprawna nazwa użytkownika lub hasło.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
+
+        if (response.statusCode == 200) {
+          Map<String, dynamic> data = jsonDecode(response.body);
+          String role = data['role']; // Oczekujemy roli w odpowiedzi
+
+          if (role == 'admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminHomePage(),
               ),
-            ],
-          ),
-        );
+            );
+          } else if (role == 'user') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddProblemPage(username: username),
+              ),
+            );
+          } else {
+            _showErrorDialog(context, 'Błąd logowania', 'Nieznana rola użytkownika.');
+          }
+        } else {
+          _showErrorDialog(context, 'Błąd logowania', 'Niepoprawna nazwa użytkownika lub hasło.');
+        }
+      } catch (e) {
+        _showErrorDialog(context, 'Błąd połączenia', 'Wystąpił problem z połączeniem z serwerem.');
       }
     }
+  }
+
+
+  void _showErrorDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -199,7 +218,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     isDarkMode: widget.isDarkMode,
                   ),
                   SizedBox(height: 20),
-
                   _buildTextField(
                     controller: _passwordController,
                     label: 'Hasło',
@@ -208,11 +226,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     isDarkMode: widget.isDarkMode,
                   ),
                   SizedBox(height: 40),
-
                   ElevatedButton(
                     onPressed: () => _login(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.isDarkMode ? Colors.grey[400] : Colors.black, // Szare tło, podobne do pól tekstowych
+                      backgroundColor: widget.isDarkMode ? Colors.grey[400] : Colors.black,
                       padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -223,7 +240,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: widget.isDarkMode ? Colors.white : Colors.white, // Tekst biały, aby był widoczny na szarym tle
+                        color: widget.isDarkMode ? Colors.white : Colors.white,
                       ),
                     ),
                   ),
@@ -246,7 +263,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return AnimatedContainer(
       duration: Duration(milliseconds: 50),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.white70,  // Change background color
+        color: isDarkMode ? Colors.grey[800] : Colors.white70,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
