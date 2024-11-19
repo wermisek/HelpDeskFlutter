@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'settings.dart';
+import 'problemy.dart';
 
 void main() {
   runApp(MyApp());
@@ -45,6 +46,19 @@ class UserHomePage extends StatelessWidget {
               },
               child: Text('Dodaj Problem'),
             ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // Przejście do strony "Moje Zgłoszenia"
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProblemyPage(),
+                  ),
+                );
+              },
+              child: Text('Moje Zgłoszenia'),
+            ),
           ],
         ),
       ),
@@ -67,6 +81,7 @@ class _AddProblemPageState extends State<AddProblemPage> {
   final _formKey = GlobalKey<FormState>();
 
   bool _showForm = false;
+  bool _isOtherButtonVisible = true;
 
   Future<void> _submitProblem(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -164,10 +179,19 @@ class _AddProblemPageState extends State<AddProblemPage> {
                 onPressed: () {
                   setState(() {
                     _showForm = !_showForm;
+                    _isOtherButtonVisible = !_isOtherButtonVisible;
                   });
                 },
                 child: Text(_showForm ? 'Anuluj' : 'Dodaj Problem'),
               ),
+              SizedBox(height: 20),
+              if (_isOtherButtonVisible)
+                ElevatedButton(
+                  onPressed: () {
+                    print("kliknietorel");
+                  },
+                  child: Text('moje zgloszenia (nie dziala)'),
+                ),
               SizedBox(height: 20),
               if (_showForm)
                 Form(
@@ -180,7 +204,7 @@ class _AddProblemPageState extends State<AddProblemPage> {
                           labelText: 'Numer Sali',
                           border: OutlineInputBorder(),
                         ),
-                        style: TextStyle(color: Colors.black), // Set text color to black
+                        style: TextStyle(color: Colors.black),
                         validator: (value) {
                           if (value?.isEmpty ?? true) {
                             return 'Proszę podać numer sali';
@@ -195,7 +219,7 @@ class _AddProblemPageState extends State<AddProblemPage> {
                           labelText: 'Opis Problemu',
                           border: OutlineInputBorder(),
                         ),
-                        style: TextStyle(color: Colors.black), // Set text color to black
+                        style: TextStyle(color: Colors.black),
                         validator: (value) {
                           if (value?.isEmpty ?? true) {
                             return 'Proszę podać opis problemu';
