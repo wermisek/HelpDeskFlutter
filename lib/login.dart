@@ -99,6 +99,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             builder: (context) => AddProblemPage(username: username),
           ),
         );
+        //ZROBIE SOBIE KRZYWDE
       } else {
         showDialog(
           context: context,
