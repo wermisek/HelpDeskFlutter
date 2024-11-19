@@ -6,6 +6,7 @@ void main() {
   runApp(MyApp());
 }
 
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -27,11 +28,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
   // Function to fetch problems from the server
   Future<void> getProblems() async {
     try {
+      // Send GET request to fetch problems from the server
       var response = await HttpClient().getUrl(Uri.parse('http://localhost:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
-      List<dynamic> fetchedProblems = jsonDecode(content);
 
+      // Decode the response JSON and update state
+      List<dynamic> fetchedProblems = jsonDecode(content);
       setState(() {
         problems = fetchedProblems;
       });
@@ -69,6 +72,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   children: [
                     Text('Room: ${problem['room']}'),
                     Text('Problem: ${problem['problem']}'),
+                    Text('Timestamp: ${problem['timestamp']}'),
                   ],
                 ),
               ),
