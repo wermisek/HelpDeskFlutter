@@ -6,7 +6,7 @@ project(desktop_help_flutter LANGUAGES CXX)
 
 
 # Dodaj podkatalog dla Firebase C++
-add_subdirectory(${FIREBASE_CPP_SDK_DIR} ${CMAKE_CURRENT_BINARY_DIR}/firebase_sdk_build)
+
 
 
 # The name of the executable created for the application. Change this to change
