@@ -109,41 +109,54 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('HelpDesk Drzewniak'),
-        backgroundColor: Colors.white, // Kolor AppBar zawsze biały
+        backgroundColor: Color.fromRGBO(245, 245, 245, 1), // Kolor AppBar zmieniony na rgb(245, 245, 245)
         elevation: 0, // Brak cienia dla AppBar
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFFF5F5F5), // Jasnoszare tło bliskie białemu
-        ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  _buildTextField(
-                    controller: _usernameController,
-                    label: 'Nazwa użytkownika',
-                    icon: Icons.person,
-                  ),
-                  SizedBox(height: 20),
-                  _buildTextField(
-                    controller: _passwordController,
-                    label: 'Hasło',
-                    obscureText: true,
-                    icon: Icons.lock,
-                    onFieldSubmitted: (_) => _login(context),
-                  ),
-                  SizedBox(height: 40),
-                  _buildLoginButton(context),
-                ],
+      body: Stack(
+        children: [
+          // Tło z kolorem RGB(245, 245, 245)
+          Container(
+            color: Color.fromRGBO(245, 245, 245, 1), // Tło z kolorem RGB(245, 245, 245)
+          ),
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.center, // Wyrównanie obrazu na środku
+              child: Image.asset(
+                'assets/images/drzewniak.png', // Ścieżka do obrazka
+                width: MediaQuery.of(context).size.width * 0.60, // Zwiększenie szerokości do 60%
+                fit: BoxFit.cover,
               ),
             ),
           ),
-        ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    _buildTextField(
+                      controller: _usernameController,
+                      label: 'Nazwa użytkownika',
+                      icon: Icons.person,
+                    ),
+                    SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _passwordController,
+                      label: 'Hasło',
+                      obscureText: true,
+                      icon: Icons.lock,
+                      onFieldSubmitted: (_) => _login(context),
+                    ),
+                    SizedBox(height: 40),
+                    _buildLoginButton(context),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -169,7 +182,7 @@ class _LoginPageState extends State<LoginPage> {
             offset: Offset(0, 4),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.3), // Podświetlenie na neonowo czarno
+            color: Colors.black.withOpacity(0.3),
             spreadRadius: 2,
             blurRadius: 10,
             offset: Offset(0, 0),
