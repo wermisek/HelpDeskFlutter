@@ -49,11 +49,11 @@ class UserHomePage extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Przejście do strony "Moje Zgłoszenia"
+                // Przechodzenie na stronę ProblemyPage
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProblemyPage(),
+                    builder: (context) => ProblemyPage(username: username),
                   ),
                 );
               },
@@ -65,7 +65,6 @@ class UserHomePage extends StatelessWidget {
     );
   }
 }
-
 class AddProblemPage extends StatefulWidget {
   final String username;
 
@@ -190,9 +189,14 @@ class _AddProblemPageState extends State<AddProblemPage> {
               if (_isOtherButtonVisible)
                 ElevatedButton(
                   onPressed: () {
-                    print("kliknietorel");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProblemyPage(username: widget.username),
+                      ),
+                    );
                   },
-                  child: Text('moje zgloszenia (nie dziala)'),
+                  child: Text('Moje Zgłoszenia'),
                 ),
               SizedBox(height: 20),
               if (_showForm)
