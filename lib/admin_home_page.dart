@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'login.dart';  // Import strony logowania
 
 void main() {
   runApp(MyApp());
@@ -99,6 +100,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
+  void _logout() {
+    // Tutaj należy dodać logikę wylogowania, np. usuwając dane logowania z pamięci.
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage(isDarkMode: false, onThemeChanged: (bool ) {  },)),  // Przenosimy użytkownika na stronę logowania
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -130,6 +139,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
           IconButton(
             icon: Icon(Icons.refresh, color: Colors.black),  // Refresh icon color black
             onPressed: getProblems,
+          ),
+          IconButton(
+            icon: Icon(Icons.exit_to_app, color: Colors.black),  // Wyloguj ikona
+            onPressed: _logout,  // Wywołanie funkcji wylogowania
           ),
         ],
       ),

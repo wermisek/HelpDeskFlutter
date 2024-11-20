@@ -55,37 +55,10 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  late AnimationController _buttonController;
-  late Animation<Offset> _buttonAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 100),
-      vsync: this,
-    );
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller)
-      ..addListener(() {
-        setState(() {});
-      });
-    _controller.forward();
-
-    _buttonController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _buttonAnimation = Tween<Offset>(begin: Offset.zero, end: Offset(0.5, 0)).animate(
-      CurvedAnimation(parent: _buttonController, curve: Curves.easeInOut),
-    );
-  }
 
   Future<void> _login(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -131,7 +104,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       }
     }
   }
-//komentarz
 
   void _showErrorDialog(BuildContext context, String title, String message) {
     showDialog(
@@ -153,8 +125,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _controller.dispose();
-    _buttonController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -203,49 +175,46 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: AnimatedOpacity(
-            opacity: _animation.value,
-            duration: const Duration(seconds: 2),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  _buildTextField(
-                    controller: _usernameController,
-                    label: 'Nazwa użytkownika',
-                    icon: Icons.person,
-                    isDarkMode: widget.isDarkMode,
-                  ),
-                  SizedBox(height: 20),
-                  _buildTextField(
-                    controller: _passwordController,
-                    label: 'Hasło',
-                    obscureText: true,
-                    icon: Icons.lock,
-                    isDarkMode: widget.isDarkMode,
-                  ),
-                  SizedBox(height: 40),
-                  ElevatedButton(
-                    onPressed: () => _login(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.isDarkMode ? Colors.grey[400] : Colors.black,
-                      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: Text(
-                      'Zaloguj się',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: widget.isDarkMode ? Colors.white : Colors.white,
-                      ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                _buildTextField(
+                  controller: _usernameController,
+                  label: 'Nazwa użytkownika',
+                  icon: Icons.person,
+                  isDarkMode: widget.isDarkMode,
+                ),
+                SizedBox(height: 20),
+                _buildTextField(
+                  controller: _passwordController,
+                  label: 'Hasło',
+                  obscureText: true,
+                  icon: Icons.lock,
+                  isDarkMode: widget.isDarkMode,
+                  onFieldSubmitted: (_) => _login(context), // Logowanie po Enter
+                ),
+                SizedBox(height: 40),
+                ElevatedButton(
+                  onPressed: () => _login(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.isDarkMode ? Colors.grey[400] : Colors.black,
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                ],
-              ),
+                  child: Text(
+                    'Zaloguj się',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: widget.isDarkMode ? Colors.white : Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -259,6 +228,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     bool obscureText = false,
     required IconData icon,
     required bool isDarkMode,
+    Function(String)? onFieldSubmitted,
   }) {
     return AnimatedContainer(
       duration: Duration(milliseconds: 50),
@@ -291,6 +261,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           }
           return null;
         },
+        onFieldSubmitted: onFieldSubmitted, // Dodanie funkcji do obsługi Enter
       ),
     );
   }
