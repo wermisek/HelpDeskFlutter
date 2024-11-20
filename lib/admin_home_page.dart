@@ -104,7 +104,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     // Tutaj należy dodać logikę wylogowania, np. usuwając dane logowania z pamięci.
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage(isDarkMode: false, onThemeChanged: (bool ) {  },)),  // Przenosimy użytkownika na stronę logowania
+      MaterialPageRoute(builder: (context) => LoginPage()),  // Przenosimy użytkownika na stronę logowania
     );
   }
 

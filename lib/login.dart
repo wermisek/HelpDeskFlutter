@@ -8,49 +8,23 @@ void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  bool isDarkMode = false;
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Strona Logowania',
-      theme: isDarkMode
-          ? ThemeData.dark().copyWith(
-        primaryColor: Colors.blueAccent,
-        scaffoldBackgroundColor: Colors.black,
-        buttonTheme: ButtonThemeData(buttonColor: Colors.white),
-        textTheme: TextTheme(bodyMedium: TextStyle(color: Colors.white)),
-      )
-          : ThemeData.light().copyWith(
+      theme: ThemeData.light().copyWith(
         primaryColor: Colors.blueAccent,
         scaffoldBackgroundColor: Colors.white,
         buttonTheme: ButtonThemeData(buttonColor: Colors.black),
         textTheme: TextTheme(bodyMedium: TextStyle(color: Colors.black)),
       ),
-      home: LoginPage(
-        isDarkMode: isDarkMode,
-        onThemeChanged: (value) {
-          setState(() {
-            isDarkMode = value;
-          });
-        },
-      ),
+      home: LoginPage(),
     );
   }
 }
 
 class LoginPage extends StatefulWidget {
-  final bool isDarkMode;
-  final Function(bool) onThemeChanged;
-
-  LoginPage({required this.isDarkMode, required this.onThemeChanged});
-
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -67,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://192.168.10.188:8080/login'), // Zmieniony na adres IP
+          Uri.parse('http://192.168.10.188:8080/login'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'username': username,
@@ -77,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
 
         if (response.statusCode == 200) {
           Map<String, dynamic> data = jsonDecode(response.body);
-          String role = data['role']; // Oczekujemy roli w odpowiedzi
+          String role = data['role'];
 
           if (role == 'admin') {
             Navigator.pushReplacement(
@@ -135,42 +109,6 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Logowanie do HelpDesk'),
-        actions: [
-          AnimatedAlign(
-            alignment: widget.isDarkMode ? Alignment.centerRight : Alignment.centerLeft,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            child: GestureDetector(
-              onTap: () {
-                widget.onThemeChanged(!widget.isDarkMode);
-              },
-              child: Container(
-                width: 50,
-                height: 30,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  color: widget.isDarkMode ? Colors.blueAccent : Colors.grey,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(5),
-                  child: AnimatedAlign(
-                    alignment: widget.isDarkMode ? Alignment.centerRight : Alignment.centerLeft,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: Center(
         child: Padding(
@@ -184,7 +122,6 @@ class _LoginPageState extends State<LoginPage> {
                   controller: _usernameController,
                   label: 'Nazwa użytkownika',
                   icon: Icons.person,
-                  isDarkMode: widget.isDarkMode,
                 ),
                 SizedBox(height: 20),
                 _buildTextField(
@@ -192,14 +129,13 @@ class _LoginPageState extends State<LoginPage> {
                   label: 'Hasło',
                   obscureText: true,
                   icon: Icons.lock,
-                  isDarkMode: widget.isDarkMode,
-                  onFieldSubmitted: (_) => _login(context), // Logowanie po Enter
+                  onFieldSubmitted: (_) => _login(context),
                 ),
                 SizedBox(height: 40),
                 ElevatedButton(
                   onPressed: () => _login(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.isDarkMode ? Colors.grey[400] : Colors.black,
+                    backgroundColor: Colors.black,
                     padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -210,7 +146,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: widget.isDarkMode ? Colors.white : Colors.white,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -227,13 +163,12 @@ class _LoginPageState extends State<LoginPage> {
     required String label,
     bool obscureText = false,
     required IconData icon,
-    required bool isDarkMode,
     Function(String)? onFieldSubmitted,
   }) {
     return AnimatedContainer(
       duration: Duration(milliseconds: 50),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.white70,
+        color: Colors.white70,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
@@ -249,19 +184,19 @@ class _LoginPageState extends State<LoginPage> {
         obscureText: obscureText,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+          labelStyle: TextStyle(color: Colors.black),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-          prefixIcon: Icon(icon, color: isDarkMode ? Colors.white : Colors.black),
+          prefixIcon: Icon(icon, color: Colors.black),
         ),
-        style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+        style: TextStyle(color: Colors.black),
         validator: (value) {
           if (value?.isEmpty ?? true) {
             return 'Proszę podać $label';
           }
           return null;
         },
-        onFieldSubmitted: onFieldSubmitted, // Dodanie funkcji do obsługi Enter
+        onFieldSubmitted: onFieldSubmitted,
       ),
     );
   }
