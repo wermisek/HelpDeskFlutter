@@ -1,23 +1,11 @@
 import 'package:flutter/material.dart';
 
 class SettingsPage extends StatefulWidget {
-  final bool isDarkMode;
-  final VoidCallback toggleTheme;
-
-  SettingsPage({required this.isDarkMode, required this.toggleTheme});
-
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  late bool _isDarkTheme;
-
-  @override
-  void initState() {
-    super.initState();
-    _isDarkTheme = widget.isDarkMode;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,24 +18,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Dark Theme',
-                  style: TextStyle(fontSize: 18.0),
-                ),
-                Switch(
-                  value: _isDarkTheme,
-                  onChanged: (value) {
-                    setState(() {
-                      _isDarkTheme = value;
-                      widget.toggleTheme();
-                    });
-                  },
-                ),
-              ],
-            ),
+            // Removed the dark theme toggle switch
             SizedBox(height: 24.0),
             ListTile(
               leading: Icon(Icons.lock),
