@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';  // Dodano import do Timer
 import 'package:flutter/material.dart';
 
 class ProblemyPage extends StatefulWidget {
@@ -14,6 +15,7 @@ class ProblemyPage extends StatefulWidget {
 class _ProblemyPageState extends State<ProblemyPage> {
   List<dynamic> unreadProblems = [];
   List<dynamic> readProblems = [];
+  Timer? _refreshTimer;  // Zmienna dla Timer
 
   Future<void> getUserProblems() async {
     try {
@@ -63,13 +65,29 @@ class _ProblemyPageState extends State<ProblemyPage> {
   void initState() {
     super.initState();
     getUserProblems();
+    _refreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      getUserProblems();
+    });
   }
-//UwU
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();  // Anulowanie Timer przy zamykaniu strony
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Moje Zgłoszenia'),
+        actions: [
+          // Przycisk do ręcznego odświeżania
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: getUserProblems,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
