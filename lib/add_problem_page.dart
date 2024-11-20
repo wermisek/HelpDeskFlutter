@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'settings.dart';
+import 'settings.dart'; // Keep the import for SettingsPage
 import 'problemy.dart';
 
 void main() {
@@ -65,6 +65,7 @@ class UserHomePage extends StatelessWidget {
     );
   }
 }
+
 class AddProblemPage extends StatefulWidget {
   final String username;
 
@@ -128,7 +129,6 @@ class _AddProblemPageState extends State<AddProblemPage> {
     }
   }
 
-
   void _showDialog(BuildContext context,
       {required String title, required String message}) {
     showDialog(
@@ -157,13 +157,11 @@ class _AddProblemPageState extends State<AddProblemPage> {
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () {
+              // Remove isDarkMode and toggleTheme parameters if they aren't used
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => SettingsPage(
-                    isDarkMode: false,
-                    toggleTheme: () {},
-                  ),
+                  builder: (context) => SettingsPage(),
                 ),
               );
             },
