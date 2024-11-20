@@ -129,12 +129,14 @@ class _AddProblemPageState extends State<AddProblemPage> {
     }
   }
 
-  void _showDialog(BuildContext context,
-      {required String title, required String message}) {
+  void _showDialog(BuildContext context, {required String title, required String message}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
+        title: Text(
+          title,
+          style: TextStyle(color: Colors.black),
+        ),
         content: Text(message),
         actions: [
           TextButton(
