@@ -4,67 +4,6 @@ import 'package:flutter/material.dart';
 import 'settings.dart';
 import 'problemy.dart';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: UserHomePage(username: 'TestUser'),
-    );
-  }
-}
-
-class UserHomePage extends StatelessWidget {
-  final String username;
-
-  UserHomePage({required this.username});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Zalogowano jako $username'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Witaj, $username!'),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddProblemPage(username: username),
-                  ),
-                );
-              },
-              child: Text('Dodaj Problem'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // Przechodzenie na stronę ProblemyPage
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProblemyPage(username: username),
-                  ),
-                );
-              },
-              child: Text('Moje Zgłoszenia'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 class AddProblemPage extends StatefulWidget {
   final String username;
 
@@ -81,18 +20,25 @@ class _AddProblemPageState extends State<AddProblemPage> {
 
   bool _showForm = false;
   bool _isOtherButtonVisible = true;
+  bool _isDarkTheme = false;
+
+  void _toggleTheme() {
+    setState(() {
+      _isDarkTheme = !_isDarkTheme;
+    });
+  }
 
   Future<void> _submitProblem(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
       String room = _roomController.text;
       String problem = _problemController.text;
 
-      // Dodanie parametru 'read' z wartością 0 (nieodczytane)
+      // Problem data with 'read' set to 0 (unread)
       Map<String, dynamic> problemData = {
         'username': widget.username,
         'room': room,
         'problem': problem,
-        'read': 0, // Dodanie statusu jako nieodczytane
+        'read': 0,
       };
 
       try {
@@ -128,7 +74,6 @@ class _AddProblemPageState extends State<AddProblemPage> {
     }
   }
 
-
   void _showDialog(BuildContext context,
       {required String title, required String message}) {
     showDialog(
@@ -150,98 +95,96 @@ class _AddProblemPageState extends State<AddProblemPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Dodaj Problem'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SettingsPage(
-                    isDarkMode: false,
-                    toggleTheme: () {},
+    return MaterialApp(
+      theme: _isDarkTheme ? ThemeData.dark() : ThemeData.light(),
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Dodaj Problem'),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SettingsPage(
+                      isDarkMode: _isDarkTheme,
+                      toggleTheme: _toggleTheme,
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _showForm = !_showForm;
-                    _isOtherButtonVisible = !_isOtherButtonVisible;
-                  });
-                },
-                child: Text(_showForm ? 'Anuluj' : 'Dodaj Problem'),
-              ),
-              SizedBox(height: 20),
-              if (_isOtherButtonVisible)
+                );
+              },
+            ),
+          ],
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProblemyPage(username: widget.username),
-                      ),
-                    );
+                    setState(() {
+                      _showForm = !_showForm;
+                      _isOtherButtonVisible = !_isOtherButtonVisible;
+                    });
                   },
-                  child: Text('Moje Zgłoszenia'),
+                  child: Text(_showForm ? 'Anuluj' : 'Dodaj Problem'),
                 ),
-              SizedBox(height: 20),
-              if (_showForm)
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _roomController,
-                        decoration: InputDecoration(
-                          labelText: 'Numer Sali',
-                          border: OutlineInputBorder(),
-                        ),
-                        style: TextStyle(color: Colors.black),
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return 'Proszę podać numer sali';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 20),
-                      TextFormField(
-                        controller: _problemController,
-                        decoration: InputDecoration(
-                          labelText: 'Opis Problemu',
-                          border: OutlineInputBorder(),
-                        ),
-                        style: TextStyle(color: Colors.black),
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return 'Proszę podać opis problemu';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () => _submitProblem(context),
-                        child: Text('Wyślij problem'),
-                      ),
-                    ],
+                SizedBox(height: 20),
+                if (_isOtherButtonVisible)
+                  ElevatedButton(
+                    onPressed: () {
+                      print("Kliknięto przycisk Moje zgłoszenia.");
+                    },
+                    child: Text('Moje zgłoszenia (nie działa)'),
                   ),
-                ),
-            ],
+                SizedBox(height: 20),
+                if (_showForm)
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _roomController,
+                          decoration: InputDecoration(
+                            labelText: 'Numer Sali',
+                            border: OutlineInputBorder(),
+                          ),
+                          style: TextStyle(color: Colors.black),
+                          validator: (value) {
+                            if (value?.isEmpty ?? true) {
+                              return 'Proszę podać numer sali';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        TextFormField(
+                          controller: _problemController,
+                          decoration: InputDecoration(
+                            labelText: 'Opis Problemu',
+                            border: OutlineInputBorder(),
+                          ),
+                          style: TextStyle(color: Colors.black),
+                          validator: (value) {
+                            if (value?.isEmpty ?? true) {
+                              return 'Proszę podać opis problemu';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () => _submitProblem(context),
+                          child: Text('Wyślij problem'),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
