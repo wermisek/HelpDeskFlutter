@@ -74,26 +74,20 @@ class _ProblemyPageState extends State<ProblemyPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: unreadProblems.isEmpty && readProblems.isEmpty
-            ? Center(child: CircularProgressIndicator())
+            ? Center(child: Text('Nie posiadasz zgłoszeń.'))
             : Column(
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Nieodczytane zgłoszenia',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  unreadProblems.isEmpty
-                      ? Center(
-                    child: Text(
-                      'Brak nieodczytanych zgłoszeń.',
-                      style: TextStyle(fontSize: 16.0),
+            if (unreadProblems.isNotEmpty)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Nieodczytane zgłoszenia',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                  )
-                      : Expanded(
-                    child: ListView.builder(
+                    ListView.builder(
+                      shrinkWrap: true,
                       itemCount: unreadProblems.length,
                       itemBuilder: (context, index) {
                         var problem = unreadProblems[index];
@@ -113,27 +107,20 @@ class _ProblemyPageState extends State<ProblemyPage> {
                         );
                       },
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Odczytane zgłoszenia',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  readProblems.isEmpty
-                      ? Center(
-                    child: Text(
-                      'Brak odczytanych zgłoszeń.',
-                      style: TextStyle(fontSize: 16.0),
+            if (readProblems.isNotEmpty)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Odczytane zgłoszenia',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                  )
-                      : Expanded(
-                    child: ListView.builder(
+                    ListView.builder(
+                      shrinkWrap: true,
                       itemCount: readProblems.length,
                       itemBuilder: (context, index) {
                         var problem = readProblems[index];
@@ -153,10 +140,9 @@ class _ProblemyPageState extends State<ProblemyPage> {
                         );
                       },
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
