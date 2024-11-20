@@ -108,49 +108,39 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Logowanie do HelpDesk'),
+        title: Text('HelpDesk Drzewniak'),
+        backgroundColor: Colors.white, // Kolor AppBar zawsze biały
+        elevation: 0, // Brak cienia dla AppBar
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                _buildTextField(
-                  controller: _usernameController,
-                  label: 'Nazwa użytkownika',
-                  icon: Icons.person,
-                ),
-                SizedBox(height: 20),
-                _buildTextField(
-                  controller: _passwordController,
-                  label: 'Hasło',
-                  obscureText: true,
-                  icon: Icons.lock,
-                  onFieldSubmitted: (_) => _login(context),
-                ),
-                SizedBox(height: 40),
-                ElevatedButton(
-                  onPressed: () => _login(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFFF5F5F5), // Jasnoszare tło bliskie białemu
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  _buildTextField(
+                    controller: _usernameController,
+                    label: 'Nazwa użytkownika',
+                    icon: Icons.person,
                   ),
-                  child: Text(
-                    'Zaloguj się',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                  SizedBox(height: 20),
+                  _buildTextField(
+                    controller: _passwordController,
+                    label: 'Hasło',
+                    obscureText: true,
+                    icon: Icons.lock,
+                    onFieldSubmitted: (_) => _login(context),
                   ),
-                ),
-              ],
+                  SizedBox(height: 40),
+                  _buildLoginButton(context),
+                ],
+              ),
             ),
           ),
         ),
@@ -166,16 +156,23 @@ class _LoginPageState extends State<LoginPage> {
     Function(String)? onFieldSubmitted,
   }) {
     return AnimatedContainer(
-      duration: Duration(milliseconds: 50),
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: Colors.white70,
-        borderRadius: BorderRadius.circular(15),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 5,
-            blurRadius: 7,
-            offset: Offset(0, 3),
+            color: Colors.black.withOpacity(0.1),
+            spreadRadius: 3,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3), // Podświetlenie na neonowo czarno
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: Offset(0, 0),
           ),
         ],
       ),
@@ -197,6 +194,32 @@ class _LoginPageState extends State<LoginPage> {
           return null;
         },
         onFieldSubmitted: onFieldSubmitted,
+      ),
+    );
+  }
+
+  Widget _buildLoginButton(BuildContext context) {
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      child: ElevatedButton(
+        onPressed: () => _login(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          elevation: 5,
+        ),
+        child: Text(
+          'Zaloguj się',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
