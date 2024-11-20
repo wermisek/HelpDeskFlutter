@@ -88,10 +88,12 @@ class _AddProblemPageState extends State<AddProblemPage> {
       String room = _roomController.text;
       String problem = _problemController.text;
 
+      // Dodanie parametru 'read' z wartością 0 (nieodczytane)
       Map<String, dynamic> problemData = {
         'username': widget.username,
         'room': room,
         'problem': problem,
+        'read': 0, // Dodanie statusu jako nieodczytane
       };
 
       try {
@@ -114,8 +116,7 @@ class _AddProblemPageState extends State<AddProblemPage> {
           _showDialog(
             context,
             title: 'Błąd',
-            message:
-            'Nie udało się wysłać problemu. Serwer zwrócił: ${response.reasonPhrase}',
+            message: 'Nie udało się wysłać problemu. Serwer zwrócił: ${response.reasonPhrase}',
           );
         }
       } catch (e) {
@@ -127,6 +128,7 @@ class _AddProblemPageState extends State<AddProblemPage> {
       }
     }
   }
+
 
   void _showDialog(BuildContext context,
       {required String title, required String message}) {
