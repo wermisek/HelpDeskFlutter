@@ -12,18 +12,27 @@ class ProblemyPage extends StatefulWidget {
 }
 
 class _ProblemyPageState extends State<ProblemyPage> {
-  List<dynamic> problems = [];
+  List<dynamic> unreadProblems = [];
+  List<dynamic> readProblems = [];
 
   Future<void> getUserProblems() async {
     try {
-      var response = await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
+      var response =
+      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
       List<dynamic> fetchedProblems = jsonDecode(content);
 
       setState(() {
-        problems = fetchedProblems
-            .where((problem) => problem['username'] == widget.username)
+        unreadProblems = fetchedProblems
+            .where((problem) =>
+        problem['username'] == widget.username &&
+            (problem['read'] ?? false) == 0) // 0 - nieodczytane
+            .toList();
+        readProblems = fetchedProblems
+            .where((problem) =>
+        problem['username'] == widget.username &&
+            (problem['read'] ?? false) == 1) // 1 - odczytane
             .toList();
       });
     } catch (e) {
@@ -64,26 +73,91 @@ class _ProblemyPageState extends State<ProblemyPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: problems.isEmpty
+        child: unreadProblems.isEmpty && readProblems.isEmpty
             ? Center(child: CircularProgressIndicator())
-            : ListView.builder(
-          itemCount: problems.length,
-          itemBuilder: (context, index) {
-            var problem = problems[index];
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 8.0),
-              child: ListTile(
-                title: Text('Pokój: ${problem['room']}'),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Problem: ${problem['problem']}'),
-                    Text('Data: ${problem['timestamp']}'),
-                  ],
-                ),
+            : Column(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Nieodczytane zgłoszenia',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  unreadProblems.isEmpty
+                      ? Center(
+                    child: Text(
+                      'Brak nieodczytanych zgłoszeń.',
+                      style: TextStyle(fontSize: 16.0),
+                    ),
+                  )
+                      : Expanded(
+                    child: ListView.builder(
+                      itemCount: unreadProblems.length,
+                      itemBuilder: (context, index) {
+                        var problem = unreadProblems[index];
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 8.0),
+                          child: ListTile(
+                            title: Text('Pokój: ${problem['room']}'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Problem: ${problem['problem']}'),
+                                Text('Data: ${problem['timestamp']}'),
+                                Text('Status: Nieodczytane'),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Odczytane zgłoszenia',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  readProblems.isEmpty
+                      ? Center(
+                    child: Text(
+                      'Brak odczytanych zgłoszeń.',
+                      style: TextStyle(fontSize: 16.0),
+                    ),
+                  )
+                      : Expanded(
+                    child: ListView.builder(
+                      itemCount: readProblems.length,
+                      itemBuilder: (context, index) {
+                        var problem = readProblems[index];
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 8.0),
+                          child: ListTile(
+                            title: Text('Pokój: ${problem['room']}'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Problem: ${problem['problem']}'),
+                                Text('Data: ${problem['timestamp']}'),
+                                Text('Status: Odczytane'),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
