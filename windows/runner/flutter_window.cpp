@@ -1,7 +1,7 @@
 #include "flutter_window.h"
 
 #include <optional>
-#include <dwmapi.h> // Potrzebne do modyfikacji kolorów paska tytułu
+#include <dwmapi.h>
 #pragma comment(lib, "dwmapi.lib")
 
 #include "flutter/generated_plugin_registrant.h"
@@ -38,7 +38,7 @@ bool FlutterWindow::OnCreate() {
     // window is shown. It is a no-op if the first frame hasn't completed yet.
     flutter_controller_->ForceRedraw();
 
-    // Zmiana koloru paska tytułu
+
     UpdateTitleBarColor(GetHandle());
 
     return true;
@@ -72,10 +72,10 @@ flutter_controller_->engine()->ReloadSystemFonts();
 break;
 
 case WM_GETMINMAXINFO: {
-// Ustawienia minimalnego rozmiaru okna
+
 MINMAXINFO* minMaxInfo = reinterpret_cast<MINMAXINFO*>(lparam);
-minMaxInfo->ptMinTrackSize.x = 800; // Minimalna szerokość
-minMaxInfo->ptMinTrackSize.y = 600; // Minimalna wysokość
+minMaxInfo->ptMinTrackSize.x = 800;
+minMaxInfo->ptMinTrackSize.y = 600;
 return 0;
 }
 }
@@ -84,15 +84,12 @@ return Win32Window::MessageHandler(hwnd, message, wparam, lparam);
 }
 
 void FlutterWindow::UpdateTitleBarColor(HWND hwnd) {
-    // Włącz tryb niestandardowego paska tytułu
     BOOL enable = TRUE;
     DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &enable, sizeof(enable));
 
-    // Ustaw typ tła (Mica/Akryl)
-    int backdropType = 2; // 2 = Akryl; 1 = Mica
+    int backdropType = 2;
     DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, &backdropType, sizeof(backdropType));
 
-    // Ustaw kolor na F5F5F5
     COLORREF color = RGB(245, 245, 245);
     DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, &color, sizeof(color));
 }

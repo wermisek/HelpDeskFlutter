@@ -17,7 +17,7 @@ protected:
     LRESULT MessageHandler(HWND hwnd, UINT const message, WPARAM const wparam,
                            LPARAM const lparam) noexcept override;
 
-    void UpdateTitleBarColor(HWND hwnd); // Deklaracja funkcji
+    void UpdateTitleBarColor(HWND hwnd);
 
 private:
     flutter::DartProject project_;
