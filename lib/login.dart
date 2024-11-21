@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'add_problem_page.dart';
 import 'admin_home_page.dart';
+import 'settings.dart';  // Assuming SettingsPage is imported here.
 
 void main() {
   runApp(MyApp());
@@ -123,7 +124,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-
   @override
   void dispose() {
     _usernameController.dispose();
@@ -138,6 +138,7 @@ class _LoginPageState extends State<LoginPage> {
         title: Text('HelpDesk Drzewniak'),
         backgroundColor: Color.fromRGBO(245, 245, 245, 1),
         elevation: 0,
+        automaticallyImplyLeading: false, // Prevents the back button from showing
       ),
       body: Stack(
         children: [
