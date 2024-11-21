@@ -8,6 +8,7 @@ environment:
   sdk: ^3.5.4
 
 dependencies:
+  window_manager: ^0.4.3
   shelf: ^1.2.0
   shelf_router: ^1.0.0
   flutter:
