@@ -266,12 +266,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                   deleteProblem(problem['id']);
                                 },
                               ),
-                              IconButton(
-                                icon: Icon(Icons.check, color: Colors.green),
-                                onPressed: () {
-                                  markAsRead(problem['id']);
-                                },
-                              ),
+                              if (isUnread)
+                                IconButton(
+                                  icon: Icon(Icons.check, color: Colors.green),
+                                  onPressed: () {
+                                    markAsRead(problem['id']);
+                                  },
+                                ),
                             ],
                           ),
                         ],
@@ -322,6 +323,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ],
             ),
           ),
+          Divider(color: Colors.black, thickness: 1), // Czarna linia oddzielająca nagłówek
           _buildProblemGrid('Nieodczytane Zgłoszenia', unreadProblems, true),
           _buildProblemGrid('Odczytane Zgłoszenia', readProblems, false),
         ],
