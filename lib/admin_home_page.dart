@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'login.dart'; // Import strony logowania
+import 'settings.dart'; // Import your settings page
 
 void main() {
   runApp(MyApp());
@@ -294,9 +295,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
         children: [
           Container(
             height: 60,
-            color: Color(0xFFF5F5F5), // Background color of the header
+            color: Color(0xFFF5F5F5),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -308,6 +309,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       fontSize: 20,
                     ),
                   ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.settings, color: Colors.black),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SettingsPage()),
+                    );
+                  },
                 ),
               ],
             ),
