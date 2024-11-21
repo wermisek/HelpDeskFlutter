@@ -33,49 +33,66 @@ class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  String? _usernameError;
+  String? _passwordError;
 
   Future<void> _login(BuildContext context) async {
-    if (_formKey.currentState?.validate() ?? false) {
-      String username = _usernameController.text;
-      String password = _passwordController.text;
+    // Resetujemy błędy przed rozpoczęciem walidacji
+    setState(() {
+      _usernameError = null;
+      _passwordError = null;
+    });
 
-      try {
-        final response = await http.post(
-          Uri.parse('http://192.168.10.188:8080/login'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'username': username,
-            'password': password,
-          }),
-        );
-
-        if (response.statusCode == 200) {
-          Map<String, dynamic> data = jsonDecode(response.body);
-          String role = data['role'];
-
-          if (role == 'admin') {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminHomePage(),
-              ),
-            );
-          } else if (role == 'user') {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AddProblemPage(username: username),
-              ),
-            );
-          } else {
-            _showErrorDialog(context, 'Błąd logowania', 'Nieznana rola użytkownika.');
-          }
-        } else {
-          _showErrorDialog(context, 'Błąd logowania', 'Niepoprawna nazwa użytkownika lub hasło.');
+    // Jeśli dane są puste, nie wykonujemy logowania
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      setState(() {
+        if (_usernameController.text.isEmpty) {
+          _usernameError = 'Proszę podać nazwę użytkownika';
         }
-      } catch (e) {
-        _showErrorDialog(context, 'Błąd połączenia', 'Wystąpił problem z połączeniem z serwerem.');
+        if (_passwordController.text.isEmpty) {
+          _passwordError = 'Proszę podać hasło';
+        }
+      });
+      return;
+    }
+
+    // Dopiero teraz sprawdzamy login na serwerze
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.10.188:8080/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': _usernameController.text,
+          'password': _passwordController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> data = jsonDecode(response.body);
+        String role = data['role'];
+
+        if (role == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AdminHomePage(),
+            ),
+          );
+        } else if (role == 'user') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddProblemPage(username: _usernameController.text),
+            ),
+          );
+        } else {
+          _showErrorDialog(context, 'Błąd logowania', 'Nieznana rola użytkownika.');
+        }
+      } else {
+        _showErrorDialog(context, 'Błąd logowania', 'Niepoprawna nazwa użytkownika lub hasło.');
       }
+    } catch (e) {
+      _showErrorDialog(context, 'Błąd połączenia', 'Wystąpił problem z połączeniem z serwerem.');
     }
   }
 
@@ -83,19 +100,29 @@ class _LoginPageState extends State<LoginPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
+        title: Text(
+          title,
+          style: TextStyle(color: Colors.black),
+        ),
+        content: Text(
+          message,
+          style: TextStyle(color: Colors.black),
+        ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text('OK'),
+            child: Text(
+              'OK',
+              style: TextStyle(color: Colors.black),
+            ),
           ),
         ],
       ),
     );
   }
+
 
   @override
   void dispose() {
@@ -109,21 +136,20 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('HelpDesk Drzewniak'),
-        backgroundColor: Color.fromRGBO(245, 245, 245, 1), // Kolor AppBar zmieniony na rgb(245, 245, 245)
-        elevation: 0, // Brak cienia dla AppBar
+        backgroundColor: Color.fromRGBO(245, 245, 245, 1),
+        elevation: 0,
       ),
       body: Stack(
         children: [
-          // Tło z kolorem RGB(245, 245, 245)
           Container(
-            color: Color.fromRGBO(245, 245, 245, 1), // Tło z kolorem RGB(245, 245, 245)
+            color: Color.fromRGBO(245, 245, 245, 1),
           ),
           Positioned.fill(
             child: Align(
-              alignment: Alignment.center, // Wyrównanie obrazu na środku
+              alignment: Alignment.center,
               child: Image.asset(
-                'assets/images/drzewniak.png', // Ścieżka do obrazka
-                width: MediaQuery.of(context).size.width * 0.60, // Zwiększenie szerokości do 60%
+                'assets/images/drzewniak.png',
+                width: MediaQuery.of(context).size.width * 0.60,
                 fit: BoxFit.cover,
               ),
             ),
@@ -140,6 +166,7 @@ class _LoginPageState extends State<LoginPage> {
                       controller: _usernameController,
                       label: 'Nazwa użytkownika',
                       icon: Icons.person,
+                      errorText: _usernameError,
                     ),
                     SizedBox(height: 20),
                     _buildTextField(
@@ -148,6 +175,7 @@ class _LoginPageState extends State<LoginPage> {
                       obscureText: true,
                       icon: Icons.lock,
                       onFieldSubmitted: (_) => _login(context),
+                      errorText: _passwordError,
                     ),
                     SizedBox(height: 40),
                     _buildLoginButton(context),
@@ -166,48 +194,57 @@ class _LoginPageState extends State<LoginPage> {
     required String label,
     bool obscureText = false,
     required IconData icon,
+    String? errorText,
     Function(String)? onFieldSubmitted,
   }) {
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            spreadRadius: 3,
-            blurRadius: 8,
-            offset: Offset(0, 4),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                spreadRadius: 3,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                spreadRadius: 2,
+                blurRadius: 10,
+                offset: Offset(0, 0),
+              ),
+            ],
           ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 10,
-            offset: Offset(0, 0),
+          child: TextFormField(
+            controller: controller,
+            obscureText: obscureText,
+            decoration: InputDecoration(
+              labelText: label,
+              labelStyle: TextStyle(color: Colors.black),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+              prefixIcon: Icon(icon, color: Colors.black),
+            ),
+            style: TextStyle(color: Colors.black),
+            validator: (value) {
+              if (value?.isEmpty ?? true) {
+                return 'Proszę podać $label';
+              }
+              return null;
+            },
+            onFieldSubmitted: onFieldSubmitted,
           ),
-        ],
-      ),
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscureText,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.black),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-          prefixIcon: Icon(icon, color: Colors.black),
         ),
-        style: TextStyle(color: Colors.black),
-        validator: (value) {
-          if (value?.isEmpty ?? true) {
-            return 'Proszę podać $label';
-          }
-          return null;
-        },
-        onFieldSubmitted: onFieldSubmitted,
-      ),
+        if (errorText != null)
+          Text(
+            errorText,
+            style: TextStyle(color: Colors.red, fontSize: 12),
+          ),
+      ],
     );
   }
 
