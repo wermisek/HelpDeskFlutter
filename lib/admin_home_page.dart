@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'login.dart'; // Import strony logowania
-import 'settings.dart'; // Import your settings page
+import 'login.dart';
+import 'settings.dart';
 
 void main() {
   runApp(MyApp());
@@ -15,10 +15,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'HelpDesk Admin',
       theme: ThemeData.light().copyWith(
-        primaryColor: Color(0xFFF5F5F5), // Set the primary color to #f5f5f5
-        scaffoldBackgroundColor: Color(0xFFF5F5F5), // Set the scaffold background color to #f5f5f5
+        primaryColor: Color(0xFFF5F5F5),
+        scaffoldBackgroundColor: Color(0xFFF6F6F8),
         buttonTheme: ButtonThemeData(buttonColor: Colors.white),
-        textTheme: TextTheme(bodyMedium: TextStyle(color: Colors.black)), // Set text color to black
+        textTheme: TextTheme(bodyMedium: TextStyle(color: Colors.black)),
       ),
       home: AdminHomePage(),
     );
@@ -31,9 +31,9 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
-  List<dynamic> unreadProblems = [];
-  List<dynamic> readProblems = [];
+  List<dynamic> problems = [];
   Timer? _refreshTimer;
+  bool showUsers = false; // Zmienna przechowująca stan widoczności kontenera użytkowników
 
   Future<void> getProblems() async {
     try {
@@ -41,43 +41,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
       await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
-      List<dynamic> fetchedProblems = jsonDecode(content);
-
       setState(() {
-        unreadProblems = fetchedProblems
-            .where((p) => (p['read'] ?? false) == 0) // Assuming 0 means unread
-            .toList();
-        readProblems = fetchedProblems
-            .where((p) => (p['read'] ?? false) == 1) // Assuming 1 means read
-            .toList();
+        problems = jsonDecode(content);
       });
     } catch (e) {
       _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
-    }
-  }
-
-  Future<void> deleteProblem(int id) async {
-    try {
-      var request = await HttpClient()
-          .deleteUrl(Uri.parse('http://192.168.10.188:8080/delete_problem/$id'));
-      await request.close();
-      setState(() {
-        unreadProblems.removeWhere((problem) => problem['id'] == id);
-        readProblems.removeWhere((problem) => problem['id'] == id);
-      });
-    } catch (e) {
-      _showErrorDialog(context, 'Błąd', 'Nie udało się usunąć problemu.');
-    }
-  }
-
-  Future<void> markAsRead(int id) async {
-    try {
-      var request = await HttpClient()
-          .putUrl(Uri.parse('http://192.168.10.188:8080/mark_as_read/$id'));
-      await request.close();
-      getProblems();
-    } catch (e) {
-      _showErrorDialog(context, 'Błąd', 'Nie udało się oznaczyć zgłoszenia jako odczytane.');
     }
   }
 
@@ -99,10 +67,115 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  void _logout() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()), // Przenosimy użytkownika na stronę logowania
+  @override
+  void initState() {
+    super.initState();
+    getProblems();
+    _refreshTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      getProblems();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Widget _buildProblemList() {
+    return Expanded(
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+        child: problems.isEmpty
+            ? Center(
+          child: Text(
+            'Brak zgłoszeń.',
+            style: TextStyle(fontSize: 16.0, color: Colors.black),
+          ),
+        )
+            : GridView.builder(
+          padding: EdgeInsets.symmetric(vertical: 3.0),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            crossAxisSpacing: 8.0,
+            mainAxisSpacing: 8.0,
+            childAspectRatio: 1.9,
+          ),
+          itemCount: problems.length,
+          itemBuilder: (context, index) {
+            var problem = problems[index];
+            return IntrinsicHeight(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color(0xFFFFFFFF),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                      offset: Offset(3, 3),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sala: ${problem['room'] ?? 'Nieznana'}',
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 19),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
+                        style: TextStyle(color: Colors.black, fontSize: 16),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Treść: ${problem['problem'] ?? 'Brak opisu'}',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _showPopup(context, problem);
+                          },
+                          child: Text(
+                            'Rozwiń',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 15.0, horizontal: 20.0),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -110,7 +183,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFFF5F5F5), // Jaśniejszy kolor tła popupu
+        backgroundColor: Color(0xFFF5F5F5),
         contentPadding: EdgeInsets.all(20),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -126,17 +199,17 @@ class _AdminHomePageState extends State<AdminHomePage> {
               SizedBox(height: 10),
               Text(
                 'Pokój: ${problem['room'] ?? 'Nieznany'}',
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 17),
               ),
               SizedBox(height: 10),
               Text(
-                'Opis problemu:',
+                'Opis problemu: ',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               SizedBox(height: 5),
               Text(
                 problem['problem'] ?? 'Brak opisu',
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 17),
               ),
               SizedBox(height: 20),
               Row(
@@ -156,177 +229,116 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    getProblems();
-    _refreshTimer = Timer.periodic(Duration(seconds: 5), (timer) {
-      getProblems(); // Fetch problems every 5 seconds
-    });
-  }
-
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    super.dispose();
-  }
-
-  Widget _buildProblemGrid(String title, List<dynamic> problems, bool isUnread) {
-    return Expanded(
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0), // Zwiększenie zewnętrznego marginesu
-        padding: EdgeInsets.only(left: 5.0, right: 5.0, top: 8.0, bottom: 8.0), // Padding wewnętrzny
-        decoration: BoxDecoration(
-          color: Color(0xFFF5F5F5), // Background color changed to #f5f5f5
-          border: Border.all(color: Colors.black, width: 3), // Szerszy border
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(60),
+        child: AppBar(
+          backgroundColor: Color(0xFFF5F5F5),
+          elevation: 0,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.black.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
             ),
-            Expanded(
-              child: problems.isEmpty
-                  ? Center(
-                child: Text(
-                  isUnread
-                      ? 'Brak nieodczytanych zgłoszeń.'
-                      : 'Brak odczytanych zgłoszeń.',
-                  style: TextStyle(fontSize: 14.0, color: Colors.black),
-                ),
-              )
-                  : GridView.builder(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4, // Four tiles per row
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
-                  childAspectRatio: 1.8, // Adjust aspect ratio for compact tiles
-                ),
-                itemCount: problems.length,
-                itemBuilder: (context, index) {
-                  var problem = problems[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black, // Tło bardzo ciemne, prawie czarne
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Username: ${problem['username'] ?? 'Nieznany'}',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14), // Decreased font size
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.arrow_forward_ios, size: 18, color: Colors.white),
-                                onPressed: () {
-                                  _showPopup(context, problem); // Show full problem in popup
-                                },
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Room: ${problem['room'] ?? 'Nieznany'}',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14), // Decreased font size
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Problem: ${problem['problem'] ?? 'Brak opisu'}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Spacer(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {
-                                  deleteProblem(problem['id']);
-                                },
-                              ),
-                              if (isUnread)
-                                IconButton(
-                                  icon: Icon(Icons.check, color: Colors.green),
-                                  onPressed: () {
-                                    markAsRead(problem['id']);
-                                  },
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+          ),
+          title: Padding(
+            padding: EdgeInsets.only(left: 25.0),
+            child: Text(
+              'Panel administratora',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
               ),
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.settings, color: Colors.black),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),
+                );
+              },
             ),
           ],
         ),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
       body: Column(
         children: [
-          Container(
-            height: 60,
-            color: Color(0xFFF5F5F5),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
+                _buildCustomButton('Zgłoszenia'),
+                SizedBox(width: 30),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      showUsers = !showUsers; // Toggle visibility
+                    });
+                  },
                   child: Text(
-                    'Panel administratora',
+                    'Użytkownicy',
                     style: TextStyle(
-                      color: Colors.black,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      fontSize: 20,
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.settings, color: Colors.black),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SettingsPage()),
-                    );
-                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                    elevation: 5,
+                  ),
                 ),
               ],
             ),
           ),
-          Divider(color: Colors.black, thickness: 1), // Czarna linia oddzielająca nagłówek
-          _buildProblemGrid('Nieodczytane Zgłoszenia', unreadProblems, true),
-          _buildProblemGrid('Odczytane Zgłoszenia', readProblems, false),
+          Visibility(
+            visible: showUsers, // Kontener użytkowników będzie widoczny, jeśli `showUsers` jest true
+            child: Container(
+              margin: EdgeInsets.all(10.0),
+              color: Colors.grey[200],
+              padding: EdgeInsets.all(10.0),
+              child: Text('Kontener użytkowników'), // Możesz tutaj dodać więcej elementów
+            ),
+          ),
+          _buildProblemList(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCustomButton(String text) {
+    return ElevatedButton(
+      onPressed: () {},
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+        elevation: 5,
       ),
     );
   }
