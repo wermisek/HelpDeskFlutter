@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'add_problem_page.dart';
 import 'admin_home_page.dart';
-import 'settings.dart';  // Assuming SettingsPage is imported here.
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -26,11 +27,13 @@ class MyApp extends StatelessWidget {
 }
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
-  _LoginPageState createState() => _LoginPageState();
+  LoginPageState createState() => LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -38,13 +41,11 @@ class _LoginPageState extends State<LoginPage> {
   String? _passwordError;
 
   Future<void> _login(BuildContext context) async {
-    // Resetujemy błędy przed rozpoczęciem walidacji
     setState(() {
       _usernameError = null;
       _passwordError = null;
     });
 
-    // Jeśli dane są puste, nie wykonujemy logowania
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       setState(() {
         if (_usernameController.text.isEmpty) {
@@ -57,7 +58,6 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    // Dopiero teraz sprawdzamy login na serwerze
     try {
       final response = await http.post(
         Uri.parse('http://192.168.10.188:8080/login'),
@@ -72,55 +72,83 @@ class _LoginPageState extends State<LoginPage> {
         Map<String, dynamic> data = jsonDecode(response.body);
         String role = data['role'];
 
-        if (role == 'admin') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AdminHomePage(),
-            ),
-          );
-        } else if (role == 'user') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddProblemPage(username: _usernameController.text),
-            ),
-          );
-        } else {
-          _showErrorDialog(context, 'Błąd logowania', 'Nieznana rola użytkownika.');
-        }
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+
+          if (role == 'admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminHomePage(),
+              ),
+            );
+          } else if (role == 'user') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    AddProblemPage(username: _usernameController.text),
+              ),
+            );
+          } else {
+            _showErrorDialog(
+              context,
+              'Błąd logowania',
+              'Nieznana rola użytkownika.',
+            );
+          }
+        });
       } else {
-        _showErrorDialog(context, 'Błąd logowania', 'Niepoprawna nazwa użytkownika lub hasło.');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+
+          _showErrorDialog(
+            context,
+            'Błąd logowania',
+            'Niepoprawna nazwa użytkownika lub hasło.',
+          );
+        });
       }
     } catch (e) {
-      _showErrorDialog(context, 'Błąd połączenia', 'Wystąpił problem z połączeniem z serwerem.');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        _showErrorDialog(
+          context,
+          'Błąd połączenia',
+          'Wystąpił problem z połączeniem z serwerem.',
+        );
+      });
     }
   }
 
   void _showErrorDialog(BuildContext context, String title, String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          title,
-          style: TextStyle(color: Colors.black),
-        ),
-        content: Text(
-          message,
-          style: TextStyle(color: Colors.black),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text(
-              'OK',
+      builder: (context) =>
+          AlertDialog(
+            backgroundColor: Colors.white,
+            title: Text(
+              title,
               style: TextStyle(color: Colors.black),
             ),
+            content: Text(
+              message,
+              style: TextStyle(color: Colors.black),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'OK',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -138,7 +166,7 @@ class _LoginPageState extends State<LoginPage> {
         title: Text('HelpDesk Drzewniak'),
         backgroundColor: Color.fromRGBO(245, 245, 245, 1),
         elevation: 0,
-        automaticallyImplyLeading: false, // Prevents the back button from showing
+        automaticallyImplyLeading: false,
       ),
       body: Stack(
         children: [
@@ -150,37 +178,43 @@ class _LoginPageState extends State<LoginPage> {
               alignment: Alignment.center,
               child: Image.asset(
                 'assets/images/drzewniak.png',
-                width: MediaQuery.of(context).size.width * 0.60,
+                width: MediaQuery
+                    .of(context)
+                    .size
+                    .width * 0.60,
                 fit: BoxFit.cover,
               ),
             ),
           ),
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    _buildTextField(
-                      controller: _usernameController,
-                      label: 'Nazwa użytkownika',
-                      icon: Icons.person,
-                      errorText: _usernameError,
-                    ),
-                    SizedBox(height: 20),
-                    _buildTextField(
-                      controller: _passwordController,
-                      label: 'Hasło',
-                      obscureText: true,
-                      icon: Icons.lock,
-                      onFieldSubmitted: (_) => _login(context),
-                      errorText: _passwordError,
-                    ),
-                    SizedBox(height: 40),
-                    _buildLoginButton(context),
-                  ],
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 600),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      _buildTextField(
+                        controller: _usernameController,
+                        label: 'Nazwa użytkownika',
+                        icon: Icons.person,
+                        errorText: _usernameError,
+                      ),
+                      SizedBox(height: 20),
+                      _buildTextField(
+                        controller: _passwordController,
+                        label: 'Hasło',
+                        obscureText: true,
+                        icon: Icons.lock,
+                        onFieldSubmitted: (_) => _login(context),
+                        errorText: _passwordError,
+                      ),
+                      SizedBox(height: 40),
+                      _buildLoginButton(context),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -202,21 +236,23 @@ class _LoginPageState extends State<LoginPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
+          width: 450, // Szerokość kontenera
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
+              // Zmniejszony cień
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
-                spreadRadius: 3,
-                blurRadius: 8,
-                offset: Offset(0, 4),
+                spreadRadius: 1, // Mniejszy spread
+                blurRadius: 4,   // Mniejszy blur
+                offset: Offset(0, 2), // Mniejszy offset
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                spreadRadius: 2,
-                blurRadius: 10,
-                offset: Offset(0, 0),
+                color: Colors.black.withOpacity(0.2),
+                spreadRadius: 1, // Mniejszy spread
+                blurRadius: 6,   // Mniejszy blur
+                offset: Offset(0, 2), // Mniejszy offset
               ),
             ],
           ),
@@ -240,14 +276,27 @@ class _LoginPageState extends State<LoginPage> {
             onFieldSubmitted: onFieldSubmitted,
           ),
         ),
-        if (errorText != null)
-          Text(
+        SizedBox(height: 6), // Odstęp od pola tekstowego
+
+        // Animowana wysokość kontenera dla błędu
+        AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          height: errorText != null ? 20 : 0, // Jeśli błąd istnieje, kontener ma wysokość 20
+          curve: Curves.easeInOut,
+          child: errorText != null
+              ? Text(
             errorText,
             style: TextStyle(color: Colors.red, fontSize: 12),
-          ),
+          )
+              : SizedBox.shrink(), // Jeśli brak błędu, wyświetla pusty widget
+        ),
       ],
     );
   }
+
+
+
+
 
   Widget _buildLoginButton(BuildContext context) {
     return AnimatedContainer(
@@ -257,9 +306,9 @@ class _LoginPageState extends State<LoginPage> {
         onPressed: () => _login(context),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black,
-          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+          minimumSize: Size(200, 60),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(12),
           ),
           elevation: 5,
         ),

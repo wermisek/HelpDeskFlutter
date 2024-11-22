@@ -49,7 +49,6 @@ class UserHomePage extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Przechodzenie na stronę ProblemyPage
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -104,7 +103,6 @@ class _AddProblemPageState extends State<AddProblemPage> {
         request.write(jsonEncode(problemData));
 
         final response = await request.close();
-        final responseBody = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 201) {
           _showDialog(
