@@ -22,16 +22,6 @@
 
 ---
 
-## 📸 Zrzuty ekranu / Screenshots
-
-![Ekran główny aplikacji](https://via.placeholder.com/800x400?text=Ekran+glowny+HelpDeskFlutter)  
-![Panel administratora](https://via.placeholder.com/800x400?text=Panel+Administratora)
-
-![Main screen of the application](https://via.placeholder.com/800x400?text=Main+screen+HelpDeskFlutter)  
-![Administrator panel](https://via.placeholder.com/800x400?text=Administrator+Panel)
-
----
-
 ## 🛠 Instalacja i uruchomienie / Installation and Launch
 
 ### Wersja Polska
