@@ -7,8 +7,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  // This is a mock of the current account name
-  String accountName = 'John Doe';
+  String accountName = 'John Doe'; // Mock account name
 
   @override
   Widget build(BuildContext context) {
@@ -16,128 +15,108 @@ class _SettingsPageState extends State<SettingsPage> {
       appBar: AppBar(
         title: Text('Ustawienia'),
         backgroundColor: Color(0xFFF5F5F5),
+        foregroundColor: Colors.black, // Black text color for AppBar
+        elevation: 0, // Remove shadow
       ),
       backgroundColor: Color(0xFFF5F5F5), // Set background color to f5f5f5
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 24.0),
-            // Account Name Change Option
+            // Change Account Name Tile
+            _buildSettingsTile(
+              context,
+              icon: Icons.account_circle,
+              text: 'Zmień nazwę konta',
+              onTap: () => _showChangeAccountNameDialog(context),
+            ),
+            SizedBox(height: 16.0),
+            // Change Password Tile
+            _buildSettingsTile(
+              context,
+              icon: Icons.lock,
+              text: 'Zmień hasło',
+              onTap: () => _showChangePasswordDialog(context),
+            ),
+            SizedBox(height: 16.0),
+            // About Us Tile
+            _buildSettingsTile(
+              context,
+              icon: Icons.info,
+              text: 'Informacje o nas',
+              onTap: () => _showAboutUsDialog(context),
+            ),
+            SizedBox(height: 16.0),
+            // App Info Tile
+            _buildSettingsTile(
+              context,
+              icon: Icons.apps,
+              text: 'Informacje o aplikacji',
+              onTap: () => _showAppInfoDialog(context),
+            ),
+            Spacer(), // Pushes the logout button to the bottom
+            // Logout Button
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center, // Center the button horizontally
               children: [
-                // Left Tile: Zmień nazwę konta
-                Container(
-                  width: 600, // Set the width of the tile
-                  decoration: BoxDecoration(
-                    color: Colors.black, // Set tile background color to black
-                    borderRadius: BorderRadius.circular(30), // Add border radius
-                  ),
-                  child: ListTile(
-                    leading: Icon(Icons.account_circle, color: Colors.grey[300]), // Icon color matches text color
-                    title: Text(
-                      'Zmień nazwe konta',
-                      style: TextStyle(fontSize: 18.0, color: Colors.grey[300]), // Text color set to light gray
+                SizedBox(
+                  width: 350, // Set a fixed width for the button
+                  height: 60, // Maintain the height
+                  child: ElevatedButton(
+                    onPressed: _logOut,
+                    child: Text(
+                      'Wyloguj się',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
-                    trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey[300]), // Arrow color matches text color
-                    onTap: () {
-                      _showChangeAccountNameDialog(context);
-                    },
-                  ),
-                ),
-                // Right Tile: Informacje o nas
-                Container(
-                  width: 600, // Set the width of the tile
-                  decoration: BoxDecoration(
-                    color: Colors.black, // Set tile background color to black
-                    borderRadius: BorderRadius.circular(30), // Add border radius
-                  ),
-                  child: ListTile(
-                    leading: Icon(Icons.info, color: Colors.grey[300]),
-                    title: Text(
-                      'Informacje o nas',
-                      style: TextStyle(fontSize: 18.0, color: Colors.grey[300]),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white, // White background
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30), // Rounded corners
+                      ),
+                      foregroundColor: Colors.black, // Black text
+                      elevation: 2.0, // Subtle shadow
                     ),
-                    trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey[300]),
-                    onTap: () {
-                      _showAboutUsDialog(context);
-                    },
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 16.0), // Space between tiles
-            // Change Password Option
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Left Tile: Zmień hasło
-                Container(
-                  width: 600, // Set the width of the tile
-                  decoration: BoxDecoration(
-                    color: Colors.black, // Set tile background color to black
-                    borderRadius: BorderRadius.circular(30), // Add border radius
-                  ),
-                  child: ListTile(
-                    leading: Icon(Icons.lock, color: Colors.grey[300]),
-                    title: Text(
-                      'Zmień hasło',
-                      style: TextStyle(fontSize: 18.0, color: Colors.grey[300]),
-                    ),
-                    trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey[300]),
-                    onTap: () {
-                      _showChangePasswordDialog(context);
-                    },
-                  ),
-                ),
-                // Right Tile: Informacje o aplikacji
-                Container(
-                  width: 600, // Set the width of the tile
-                  decoration: BoxDecoration(
-                    color: Colors.black, // Set tile background color to black
-                    borderRadius: BorderRadius.circular(30), // Add border radius
-                  ),
-                  child: ListTile(
-                    leading: Icon(Icons.apps, color: Colors.grey[300]),
-                    title: Text(
-                      'Informacje o aplikacji',
-                      style: TextStyle(fontSize: 18.0, color: Colors.grey[300]),
-                    ),
-                    trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey[300]),
-                    onTap: () {
-                      _showAppInfoDialog(context);
-                    },
-                  ),
-                ),
-              ],
-            ),
-            Spacer(), // Pushes the Log Out button to the bottom
-            // Log Out Button (with the same style as the login button)
-            Align(
-              alignment: Alignment.bottomCenter, // Center horizontally
-              child: ElevatedButton(
-                onPressed: _logOut,
-                child: Text(
-                  'Wyloguj się',
-                  style: TextStyle(
-                    fontSize: 18, // Increase font size for larger text
-                    fontWeight: FontWeight.w600, // Optional: Make text bold
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black, // Same color as login button
-                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40), // Increase padding for larger button
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30), // Rounded corners
-                  ),
-                  foregroundColor: Colors.white, // Text color set to white
-                ),
-              ),
-            ),
-            SizedBox(height: 16), // Optional, to add some space after the button
           ],
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build tiles
+  Widget _buildSettingsTile(BuildContext context,
+      {required IconData icon, required String text, required Function() onTap}) {
+    return Container(
+      height: 60, // Set the height of the tile to 60
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30), // Rounded corners for tile
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8.0,
+            offset: Offset(0, 2),
+            spreadRadius: 2.0, // This ensures the shadow has a rounded appearance
+          ),
+        ],
+      ),
+      child: Material(
+        borderRadius: BorderRadius.circular(30), // Make sure the Material is rounded too
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(30), // Rounded tap area
+          child: ListTile(
+            leading: Icon(icon, color: Colors.black),
+            title: Text(
+              text,
+              style: TextStyle(fontSize: 18.0, color: Colors.black),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.0), // Adjust padding
+            visualDensity: VisualDensity.standard, // Ensures proper alignment
+          ),
         ),
       ),
     );
@@ -153,7 +132,7 @@ class _SettingsPageState extends State<SettingsPage> {
         return AlertDialog(
           title: Text(
             'Zmień nazwę konta',
-            style: TextStyle(color: Colors.black), // Title text color set to black
+            style: TextStyle(color: Colors.black),
           ),
           content: TextField(
             controller: nameController,
@@ -161,13 +140,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-              ),
+              onPressed: () => Navigator.of(context).pop(),
               child: Text('Anuluj'),
             ),
             ElevatedButton(
@@ -180,10 +153,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 );
                 Navigator.of(context).pop();
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFF49402),
-                foregroundColor: Colors.white, // Button background color set to f49402
-              ),
               child: Text('Zapisz'),
             ),
           ],
@@ -204,7 +173,7 @@ class _SettingsPageState extends State<SettingsPage> {
         return AlertDialog(
           title: Text(
             'Zmień hasło',
-            style: TextStyle(color: Colors.black), // Title text color set to black
+            style: TextStyle(color: Colors.black),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -229,13 +198,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-              ),
+              onPressed: () => Navigator.of(context).pop(),
               child: Text('Anuluj'),
             ),
             ElevatedButton(
@@ -247,14 +210,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   Navigator.of(context).pop();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Hasło nie pasuje!')),
+                    SnackBar(content: Text('Hasła nie pasują!')),
                   );
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFF49402),
-                foregroundColor: Colors.white, // Button background color set to f49402
-              ),
               child: Text('Zapisz'),
             ),
           ],
@@ -263,7 +222,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-
+  // About Us Dialog
   void _showAboutUsDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -271,21 +230,15 @@ class _SettingsPageState extends State<SettingsPage> {
         return AlertDialog(
           title: Text(
             'Informacje o nas',
-            style: TextStyle(color: Colors.black), // Set title text color to black
+            style: TextStyle(color: Colors.black), // Set title text to black
           ),
           content: Text(
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            style: TextStyle(color: Colors.black), // Set content text color to black
+            style: TextStyle(color: Colors.black), // Set content text to black
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: Color(0xFFF49402), // Set button background color
-                foregroundColor: Colors.white, // Set button text color to white
-              ),
+              onPressed: () => Navigator.of(context).pop(),
               child: Text('OK'),
             ),
           ],
@@ -294,7 +247,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-// Show the "Informacje o aplikacji" dialog
+  // App Info Dialog
   void _showAppInfoDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -302,21 +255,15 @@ class _SettingsPageState extends State<SettingsPage> {
         return AlertDialog(
           title: Text(
             'Informacje o aplikacji',
-            style: TextStyle(color: Colors.black), // Set title text color to black
+            style: TextStyle(color: Colors.black), // Set title text to black
           ),
           content: Text(
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            style: TextStyle(color: Colors.black), // Set content text color to black
+            style: TextStyle(color: Colors.black), // Set content text to black
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: Color(0xFFF49402), // Set button background color
-                foregroundColor: Colors.white, // Set button text color to white
-              ),
+              onPressed: () => Navigator.of(context).pop(),
               child: Text('OK'),
             ),
           ],
@@ -324,8 +271,6 @@ class _SettingsPageState extends State<SettingsPage> {
       },
     );
   }
-
-
 
   // Log out functionality
   void _logOut() {
