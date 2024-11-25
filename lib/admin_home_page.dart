@@ -3,6 +3,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'settings.dart';
+import 'package:http/http.dart' as http;
+
 
 void main() {
   runApp(MyApp());
@@ -31,6 +33,7 @@ class AdminHomePage extends StatefulWidget {
 
 class _AdminHomePageState extends State<AdminHomePage> {
   List<dynamic> problems = [];
+  List<dynamic> users = [];  // New list for users
   Timer? _refreshTimer;
   bool showUsers = false;
   bool showProblems = true;
@@ -38,56 +41,32 @@ class _AdminHomePageState extends State<AdminHomePage> {
   int currentPage = 0;
   final int itemsPerPage = 12;
 
-
   Future<void> getProblems() async {
     try {
       var response =
-      await HttpClient().getUrl(
-          Uri.parse('http://192.168.10.188:8080/get_problems'));
+      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
       setState(() {
         problems = jsonDecode(content);
       });
     } catch (e) {
-      _showErrorDialog(
-          context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
+      _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
     }
   }
 
-  void _showErrorDialog(BuildContext context, String title, String message) {
-    showDialog(
-      context: context,
-      builder: (context) =>
-          AlertDialog(
-            title: Text(title),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
-          ),
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    getProblems();
-    _refreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      getProblems();
-    });
-  }
-
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    _pageController.dispose();
-    super.dispose();
+  Future<void> getUsers() async {
+    try {
+      var response =
+      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_users'));
+      var data = await response.close();
+      String content = await data.transform(utf8.decoder).join();
+      setState(() {
+        users = jsonDecode(content);
+      });
+    } catch (e) {
+      _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych użytkowników.');
+    }
   }
 
   Widget _buildProblemList() {
@@ -164,7 +143,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                   style: TextStyle(
                                       color: Colors.black,
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 16), // Zmniejszono rozmiar czcionki
+                                      fontSize: 16),
                                 ),
                                 SizedBox(height: 4),
                                 Text(
@@ -181,9 +160,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                SizedBox(height: 10), // Większa przerwa
+                                SizedBox(height: 10),
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 15.0), // Padding dla przycisku
+                                  padding: const EdgeInsets.only(top: 15.0),
                                   child: Center(
                                     child: ElevatedButton(
                                       onPressed: () {
@@ -196,14 +175,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                           borderRadius: BorderRadius.circular(20),
                                           side: BorderSide(color: Colors.black, width: 1),
                                         ),
-                                        minimumSize: Size(120, 36), // Mniejsza wysokość przycisku
+                                        minimumSize: Size(120, 36),
                                         padding: EdgeInsets.symmetric(horizontal: 20.0),
                                       ),
                                       child: Text(
                                         'Rozwiń',
                                         style: TextStyle(
-                                          fontSize: 14, // Zmniejszenie czcionki
-                                          fontWeight: FontWeight.w500, // Mniej pogrubione
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                     ),
@@ -259,44 +238,458 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  void _showPopup(BuildContext context, dynamic problem) {
-    showDialog(
-      context: context,
-      builder: (context) =>
-          AlertDialog(
-            backgroundColor: Color(0xFFF5F5F5),
-            contentPadding: EdgeInsets.all(20),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+  Widget _buildUserList() {
+    List<List<dynamic>> paginatedUsers = [];
+    for (int i = 0; i < users.length; i += 4) {
+      paginatedUsers.add(users.sublist(i, i + 4 > users.length ? users.length : i + 4));
+    }
+
+    return Expanded(
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+        child: paginatedUsers.isEmpty
+            ? Center(
+          child: Text(
+            'Brak użytkowników.',
+            style: TextStyle(fontSize: 16.0, color: Colors.black),
+          ),
+        )
+            : Column(
+          children: [
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: paginatedUsers.length,
+                onPageChanged: (pageIndex) {
+                  setState(() {
+                    currentPage = pageIndex;
+                  });
+                },
+                itemBuilder: (context, pageIndex) {
+                  var pageUsers = paginatedUsers[pageIndex];
+                  return GridView.builder(
+                    padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 8.0,
+                      mainAxisSpacing: 8.0,
+                      childAspectRatio: 1.87,
+                    ),
+                    itemCount: pageUsers.length,
+                    itemBuilder: (context, index) {
+                      var user = pageUsers[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 5.0),
+                        elevation: 10,
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Użytkownik: ${user['username'] ?? 'Nieznany użytkownik'}',
+                                    style: TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Rola: ${user['role'] ?? 'Brak roli'}',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Nowe przyciski na dole karty
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Tooltip(
+                                    message: 'Zmień login',
+                                    child: IconButton(
+                                      icon: Icon(Icons.edit, color: Colors.blue),
+                                      onPressed: () {
+                                        _changeUsername(user);
+                                      },
+                                    ),
+                                  ),
+                                  Tooltip(
+                                    message: 'Zmień hasło',
+                                    child: IconButton(
+                                      icon: Icon(Icons.lock, color: Colors.orange),
+                                      onPressed: () {
+                                        _changePassword(user);
+                                      },
+                                    ),
+                                  ),
+                                  Tooltip(
+                                    message: 'Usuń użytkownika',
+                                    child: IconButton(
+                                      icon: Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () {
+                                        _deleteUser(user);
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Zgłoszenie od: ${problem['username'] ?? 'Nieznany'}',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  IconButton(
+                    icon: Icon(Icons.arrow_back_ios, size: 20, color: Colors.black),
+                    onPressed: currentPage > 0
+                        ? () {
+                      _pageController.previousPage(
+                        duration: Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                        : null,
                   ),
-                  SizedBox(height: 10),
                   Text(
-                    'Pokój: ${problem['room'] ?? 'Nieznany'}',
-                    style: TextStyle(fontSize: 16),
+                    '${currentPage + 1} / ${paginatedUsers.length}',
+                    style: TextStyle(fontSize: 14.0, color: Colors.black),
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Treść zgłoszenia: ${problem['problem'] ?? 'Brak opisu'}',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('Zamknij'),
+                  IconButton(
+                    icon: Icon(Icons.arrow_forward_ios, size: 20, color: Colors.black),
+                    onPressed: currentPage < paginatedUsers.length - 1
+                        ? () {
+                      _pageController.nextPage(
+                        duration: Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                        : null,
                   ),
                 ],
               ),
             ),
-          ),
+          ],
+        ),
+      ),
     );
+  }
+
+  void _changeUsername(dynamic user) {
+    TextEditingController usernameController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0), // Zaokrąglone rogi
+          ),
+          backgroundColor: Colors.white, // Tło dopasowane do motywu
+          title: Text(
+            'Zmień login',
+            style: TextStyle(color: Colors.black), // Kolor tekstu nagłówka
+          ),
+          content: TextField(
+            controller: usernameController,
+            decoration: InputDecoration(
+              labelText: 'Nowy login',
+              labelStyle: TextStyle(color: Colors.black), // Kolor etykiety
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.greenAccent), // Kolor obramowania po zaznaczeniu
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            // Przycisk "Anuluj"
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.redAccent, // Kolor tła przycisku "Anuluj"
+                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+              ),
+              child: Text('Anuluj'),
+            ),
+            // Przycisk "Zapisz"
+            TextButton(
+              onPressed: () async {
+                String newUsername = usernameController.text.trim();
+                if (newUsername.isNotEmpty) {
+                  var response = await http.put(
+                    Uri.parse('http://192.168.10.188:8080/change_username'),
+                    body: json.encode({
+                      'oldUsername': user['username'], // Stary login użytkownika
+                      'newUsername': newUsername, // Nowy login
+                    }),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'role': 'admin', // Nagłówek potwierdzający rolę admina
+                    },
+                  );
+
+                  if (response.statusCode == 200) {
+                    print('Login został zmieniony');
+                    Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                  } else {
+                    print('Błąd zmiany loginu: ${response.body}');
+                    Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                  }
+                }
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.greenAccent, // Kolor tła przycisku "Zapisz"
+                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+              ),
+              child: Text('Zapisz'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+
+  void _changePassword(dynamic user) {
+    TextEditingController passwordController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0), // Zaokrąglone rogi
+          ),
+          backgroundColor: Colors.white, // Tło dopasowane do motywu
+          title: Text(
+            'Zmień hasło',
+            style: TextStyle(color: Colors.black), // Kolor tekstu nagłówka
+          ),
+          content: TextField(
+            controller: passwordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: 'Nowe hasło',
+              labelStyle: TextStyle(color: Colors.black), // Kolor etykiety
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.greenAccent), // Kolor obramowania po zaznaczeniu
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            // Przycisk "Anuluj"
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.redAccent, // Kolor tła przycisku "Anuluj"
+                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+              ),
+              child: Text('Anuluj'),
+            ),
+            // Przycisk "Zapisz"
+            TextButton(
+              onPressed: () async {
+                String newPassword = passwordController.text.trim();
+                if (newPassword.isNotEmpty) {
+                  var response = await http.put(
+                    Uri.parse('http://192.168.10.188:8080/change_password'),
+                    body: json.encode({
+                      'username': user['username'], // Nazwa użytkownika
+                      'newPassword': newPassword, // Nowe hasło
+                    }),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'role': 'admin', // Nagłówek potwierdzający rolę admina
+                    },
+                  );
+
+                  if (response.statusCode == 200) {
+                    print('Hasło zostało zmienione');
+                    Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                  } else {
+                    print('Błąd zmiany hasła: ${response.body}');
+                    Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                  }
+                }
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.greenAccent, // Kolor tła przycisku "Zapisz"
+                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+              ),
+              child: Text('Zapisz'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  void _deleteUser(dynamic user) {
+    // Wyświetlenie okna dialogowego potwierdzenia w stylu kafelków
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0), // Zaokrąglone rogi dla dialogu
+          ),
+          backgroundColor: Colors.white, // Tło okna dialogowego dopasowane do ciemnego motywu
+          title: Text(
+            'Potwierdź usunięcie',
+            style: TextStyle(color: Colors.black), // Kolor tekstu nagłówka
+          ),
+          content: Text(
+            'Czy na pewno chcesz usunąć użytkownika ${user['username']}?',
+            style: TextStyle(color: Colors.black), // Kolor tekstu w treści
+          ),
+          actions: <Widget>[
+            // Przycisk "Tak"
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.greenAccent, // Kolor tła przycisku "Anuluj"
+                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy przycisku
+              ),
+              child: Text('Anuluj'),
+            ),
+            TextButton(
+              onPressed: () async {
+                var response = await http.delete(
+                  Uri.parse('http://192.168.10.188:8080/delete_user'),
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'role': 'admin', // Nagłówek z rolą admina
+                  },
+                  body: json.encode({
+                    'username': user['username'], // Nazwa użytkownika do usunięcia
+                  }),
+                );
+
+                if (response.statusCode == 200) {
+                  print('Użytkownik został usunięty');
+                  Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                } else {
+                  print('Błąd usuwania użytkownika: ${response.body}');
+                  Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                }
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.redAccent, // Kolor tła przycisku "Tak"
+                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy przycisku
+              ),
+              child: Text('Tak'),
+            ),
+
+
+          ],
+        );
+      },
+    );
+  }
+
+
+
+
+
+
+
+
+  void _showErrorDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPopup(BuildContext context, dynamic problem) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFFF5F5F5),
+        contentPadding: EdgeInsets.all(20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Zgłoszenie od: ${problem['username'] ?? 'Nieznany'}',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              SizedBox(height: 10),
+              Text('Treść: ${problem['problem'] ?? 'Brak opisu'}'),
+              SizedBox(height: 10),
+              Text('Sala: ${problem['room'] ?? 'Brak informacji'}'),
+              SizedBox(height: 10),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Zamknij'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getProblems();
+    getUsers();  // Fetch users
+    _refreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      getProblems();
+      getUsers();  // Refresh users every second
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -306,48 +699,38 @@ class _AdminHomePageState extends State<AdminHomePage> {
         title: Text(
           'HelpDesk Admin Panel',
           style: TextStyle(
-            color: Colors.black, // Czarny tekst
+            color: Colors.black,
             fontWeight: FontWeight.w500,
           ),
         ),
-        backgroundColor: Color(0xFFFFFFFF), // Białe tło AppBar
-        elevation: 0, // Usunięcie cienia AppBar
+        backgroundColor: Color(0xFFFFFFFF),
+        elevation: 0,
       ),
       drawer: Drawer(
         child: Container(
-          color: Colors.white, // Ustawienie białego tła dla całego Drawer
+          color: Colors.white,
           child: ListView(
             padding: EdgeInsets.zero,
             children: <Widget>[
-              Container(
-                height: 73.0, // Zmniejszenie wysokości nagłówka
-                child: UserAccountsDrawerHeader(
-                  accountName: Text(
-                    'Helpdesk Admin', // Zmieniony na napis
-                    style: TextStyle(
-                      color: Colors.black, // Kolor tekstu na czarny
-                      fontSize: 22.0, // Zmniejszenie rozmiaru czcionki
-                      fontWeight: FontWeight.bold, // Pogrubienie tekstu
-                    ),
+              UserAccountsDrawerHeader(
+                accountName: Text(
+                  'Helpdesk Admin',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 22.0,
+                    fontWeight: FontWeight.bold,
                   ),
-                  accountEmail: null,
-                  currentAccountPicture: null,
-                  // Usunięcie profilowego obrazka
-                  decoration: BoxDecoration(
-                    color: Colors.white, // Kolor tła całego headera na biały
-                  ),
-                  margin: EdgeInsets
-                      .zero, // Zmniejszenie marginesu wokół headera
                 ),
+                accountEmail: null,
+                currentAccountPicture: null,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                ),
+                margin: EdgeInsets.zero,
               ),
               ListTile(
                 leading: Icon(Icons.report_problem, color: Colors.black),
-                // Kolor ikony na czarny
-                title: Text(
-                  'Zgłoszenia',
-                  style: TextStyle(
-                      color: Colors.black), // Kolor tekstu na czarny
-                ),
+                title: Text('Zgłoszenia', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   setState(() {
                     showProblems = true;
@@ -358,12 +741,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               ListTile(
                 leading: Icon(Icons.group, color: Colors.black),
-                // Kolor ikony na czarny
-                title: Text(
-                  'Użytkownicy',
-                  style: TextStyle(
-                      color: Colors.black), // Kolor tekstu na czarny
-                ),
+                title: Text('Użytkownicy', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   setState(() {
                     showProblems = false;
@@ -374,12 +752,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               ListTile(
                 leading: Icon(Icons.settings, color: Colors.black),
-                // Kolor ikony na czarny
-                title: Text(
-                  'Ustawienia',
-                  style: TextStyle(
-                      color: Colors.black), // Kolor tekstu na czarny
-                ),
+                title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -394,9 +767,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
       body: Column(
         children: [
           Divider(
-            color: Color(0xFF8A8A8A), // Czarna linia
-            thickness: 1.0, // Grubość linii
-            height: 1.0, // Wysokość przestrzeni wokół linii
+            color: Color(0xFF8A8A8A),
+            thickness: 1.0,
+            height: 1.0,
           ),
           Expanded(
             child: Padding(
@@ -404,6 +777,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               child: Column(
                 children: [
                   if (showProblems) _buildProblemList(),
+                  if (showUsers) _buildUserList(), // Show users
                 ],
               ),
             ),
