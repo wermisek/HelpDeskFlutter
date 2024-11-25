@@ -1,44 +1,7 @@
 # HelpDeskFlutter 🚀
 
-**HelpDeskFlutter** to aplikacja służąca do zarządzania problemami w szkołach. Umożliwia nauczycielom zgłaszanie problemów przez sieć lokalną oraz administratorom przeglądanie i rozwiązywanie zgłoszeń w jednym miejscu. Aplikacja jest zaprojektowana z myślą o prostocie i funkcjonalności, wykorzystując Fluttera do stworzenia intuicyjnego interfejsu użytkownika.
-
-**HelpDeskFlutter** is an application designed to manage issues in schools. It allows teachers to report problems via a local network and administrators to view and resolve issues in one place. The application is designed with simplicity and functionality in mind, utilizing Flutter to create an intuitive user interface.
-
-![Flutter Badge](https://img.shields.io/badge/Flutter-Framework-blue?style=for-the-badge&logo=flutter)
-![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red?style=for-the-badge)
-
----
-
-## ✨ Funkcje / Features
-
-- 📥 **Dodawanie zgłoszeń** / **Issue Reporting**: Nauczyciele mogą zgłaszać problemy, wprowadzając nazwę pokoju i opis problemu.  
-  Teachers can report issues by entering the room name and problem description.
-- 🛠 **Zarządzanie zgłoszeniami** / **Issue Management**: Administratorzy mogą przeglądać i aktualizować status zgłoszeń.  
-  Administrators can view and update the status of reported issues.
-- 🌐 **Obsługa sieci lokalnej** / **Local Network Support**: Aplikacja działa w oparciu o lokalną infrastrukturę sieciową.  
-  The application operates over a local network infrastructure.
-- 🎨 **Przyjazny interfejs** / **User-Friendly Interface**: Intuicyjny design z wykorzystaniem Fluttera.  
-  Intuitive design leveraging Flutter's capabilities.
-
----
-
-## 🛠 Instalacja i uruchomienie / Installation and Launch
-
-### Wersja Polska
-
-1. **Klonowanie repozytorium**:  
-   ```bash
-   git clone https://github.com/TwojeRepo/HelpDeskFlutter.git
-   cd HelpDeskFlutter
-
-Oto zaktualizowana wersja `README.md`, która zawiera zarówno polską, jak i angielską wersję:  
-
-```markdown
-# HelpDeskFlutter 🚀
-
-**HelpDeskFlutter** to aplikacja służąca do zarządzania problemami w szkołach. Umożliwia nauczycielom zgłaszanie problemów przez sieć lokalną oraz administratorom przeglądanie i rozwiązywanie zgłoszeń w jednym miejscu. Aplikacja jest zaprojektowana z myślą o prostocie i funkcjonalności, wykorzystując Fluttera do stworzenia intuicyjnego interfejsu użytkownika.
-
-**HelpDeskFlutter** is an application designed to manage issues in schools. It allows teachers to report problems via a local network and administrators to view and resolve issues in one place. The application is designed with simplicity and functionality in mind, utilizing Flutter to create an intuitive user interface.
+**HelpDeskFlutter** to aplikacja służąca do zarządzania problemami w szkołach.  
+**HelpDeskFlutter** is an application designed to manage issues in schools.
 
 ![Flutter Badge](https://img.shields.io/badge/Flutter-Framework-blue?style=for-the-badge&logo=flutter)
 ![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red?style=for-the-badge)
@@ -47,60 +10,44 @@ Oto zaktualizowana wersja `README.md`, która zawiera zarówno polską, jak i an
 
 ## ✨ Funkcje / Features
 
-- 📥 **Dodawanie zgłoszeń** / **Issue Reporting**: Nauczyciele mogą zgłaszać problemy, wprowadzając nazwę pokoju i opis problemu.  
+- **Dodawanie zgłoszeń** / **Issue Reporting**  
+  Nauczyciele mogą zgłaszać problemy, wprowadzając nazwę pokoju i opis problemu.  
   Teachers can report issues by entering the room name and problem description.
-- 🛠 **Zarządzanie zgłoszeniami** / **Issue Management**: Administratorzy mogą przeglądać i aktualizować status zgłoszeń.  
+
+- **Zarządzanie zgłoszeniami** / **Issue Management**  
+  Administratorzy mogą przeglądać i aktualizować status zgłoszeń.  
   Administrators can view and update the status of reported issues.
-- 🌐 **Obsługa sieci lokalnej** / **Local Network Support**: Aplikacja działa w oparciu o lokalną infrastrukturę sieciową.  
+
+- **Obsługa sieci lokalnej** / **Local Network Support**  
+  Aplikacja działa w oparciu o lokalną infrastrukturę sieciową.  
   The application operates over a local network infrastructure.
-- 🎨 **Przyjazny interfejs** / **User-Friendly Interface**: Intuicyjny design z wykorzystaniem Fluttera.  
+
+- **Przyjazny interfejs** / **User-Friendly Interface**  
+  Intuicyjny design z wykorzystaniem Fluttera.  
   Intuitive design leveraging Flutter's capabilities.
 
----
+- **Zarządzanie użytkownikami** / **User Management**  
+  Administratorzy mogą tworzyć, edytować dane oraz usuwać konta użytkowników.  
+  Administrators can create, edit, and delete user accounts.
 
-## 📸 Zrzuty ekranu / Screenshots
-
-![Ekran główny aplikacji](https://via.placeholder.com/800x400?text=Ekran+glowny+HelpDeskFlutter)  
-![Panel administratora](https://via.placeholder.com/800x400?text=Panel+Administratora)
-
-![Main screen of the application](https://via.placeholder.com/800x400?text=Main+screen+HelpDeskFlutter)  
-![Administrator panel](https://via.placeholder.com/800x400?text=Administrator+Panel)
 
 ---
 
 ## 🛠 Instalacja i uruchomienie / Installation and Launch
 
-### Wersja Polska
-
-1. **Klonowanie repozytorium**:  
+1. **Klonowanie repozytorium / Clone the repository**:  
    ```bash
    git clone https://github.com/TwojeRepo/HelpDeskFlutter.git
    cd HelpDeskFlutter
-   ```
-2. **Instalacja zależności**:  
+2. **Instalacja zależności / Install dependencies**:
    ```bash
    flutter pub get
-   ```
-3. **Uruchomienie aplikacji**:  
+3. **Uruchomienie aplikacji / Run the application**:
    ```bash
    flutter run
    ```
 
-### English Version
 
-1. **Clone the repository**:  
-   ```bash
-   git clone https://github.com/YourRepo/HelpDeskFlutter.git
-   cd HelpDeskFlutter
-   ```
-2. **Install dependencies**:  
-   ```bash
-   flutter pub get
-   ```
-3. **Run the application**:  
-   ```bash
-   flutter run
-   ```
 
 ---
 
@@ -115,10 +62,14 @@ Oto zaktualizowana wersja `README.md`, która zawiera zarówno polską, jak i an
 
 ## 🛡 Licencja / License
 
-**HelpDeskFlutter** jest objęty licencją **Custom License**, co oznacza, że aplikacja może być używana wyłącznie przez autoryzowane instytucje. Nieautoryzowane modyfikacje lub rozpowszechnianie aplikacji są zabronione.  
-**HelpDeskFlutter** is licensed under a **Custom License**, which means the application can only be used by authorized institutions. Unauthorized modifications or distribution are prohibited.
+**HelpDeskFlutter** jest objęty licencją niestandardową (Custom License).  
+Aplikacja może być używana wyłącznie przez autoryzowane instytucje.  
+Nieautoryzowane modyfikacje lub rozpowszechnianie są zabronione.  
 
-Jeśli chcesz uzyskać więcej informacji na temat licencji lub uzyskać dostęp do aplikacji, skontaktuj się z autorem: **Wiktor Dłużniewski**.  
-If you want more information about the license or access to the application, contact the author: **Wiktor Dłużniewski**.
-``` 
+**HelpDeskFlutter** is licensed under a Custom License.  
+The application can only be used by authorized institutions.  
+Unauthorized modifications or distribution are prohibited.
 
+**Full license can be seen in LICENSE.md file**
+
+**Autor / Author**: Wiktor Dłużniewski
