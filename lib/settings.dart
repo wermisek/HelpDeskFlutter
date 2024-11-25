@@ -8,6 +8,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String accountName = 'John Doe'; // Mock account name
+  Map<int, bool> hoverStates = {}; // To track hover state for each tile
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +27,7 @@ class _SettingsPageState extends State<SettingsPage> {
             // Change Account Name Tile
             _buildSettingsTile(
               context,
+              index: 0, // Tile index
               icon: Icons.account_circle,
               text: 'Zmień nazwę konta',
               onTap: () => _showChangeAccountNameDialog(context),
@@ -34,6 +36,7 @@ class _SettingsPageState extends State<SettingsPage> {
             // Change Password Tile
             _buildSettingsTile(
               context,
+              index: 1, // Tile index
               icon: Icons.lock,
               text: 'Zmień hasło',
               onTap: () => _showChangePasswordDialog(context),
@@ -42,6 +45,7 @@ class _SettingsPageState extends State<SettingsPage> {
             // About Us Tile
             _buildSettingsTile(
               context,
+              index: 2, // Tile index
               icon: Icons.info,
               text: 'Informacje o nas',
               onTap: () => _showAboutUsDialog(context),
@@ -50,6 +54,7 @@ class _SettingsPageState extends State<SettingsPage> {
             // App Info Tile
             _buildSettingsTile(
               context,
+              index: 3, // Tile index
               icon: Icons.apps,
               text: 'Informacje o aplikacji',
               onTap: () => _showAppInfoDialog(context),
@@ -86,25 +91,32 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // Helper method to build tiles
+  // Helper method to build tiles with hover effect for individual tiles
   Widget _buildSettingsTile(BuildContext context,
-      {required IconData icon, required String text, required Function() onTap}) {
-    return Container(
-      height: 60, // Set the height of the tile to 60
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30), // Rounded corners for tile
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8.0,
-            offset: Offset(0, 2),
-            spreadRadius: 2.0, // This ensures the shadow has a rounded appearance
-          ),
-        ],
-      ),
-      child: Material(
-        borderRadius: BorderRadius.circular(30), // Make sure the Material is rounded too
+      {required int index,
+        required IconData icon,
+        required String text,
+        required Function() onTap}) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => hoverStates[index] = true), // Set hover state for this tile
+      onExit: (_) => setState(() => hoverStates[index] = false), // Set hover state for this tile
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        height: 60, // Set the height of the tile to 60
+        decoration: BoxDecoration(
+          color: hoverStates[index] == true ? Colors.grey[300] : Colors.white, // Change color on hover
+          borderRadius: BorderRadius.circular(30), // Rounded corners for tile
+          boxShadow: [
+            BoxShadow(
+              color: hoverStates[index] == true
+                  ? Colors.black.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.1),
+              blurRadius: 8.0,
+              offset: Offset(0, 2),
+              spreadRadius: 2.0, // Ensures the shadow has a rounded appearance
+            ),
+          ],
+        ),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(30), // Rounded tap area
@@ -130,6 +142,7 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white, // White background for AlertDialog
           title: Text(
             'Zmień nazwę konta',
             style: TextStyle(color: Colors.black),
@@ -171,6 +184,7 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white, // White background for AlertDialog
           title: Text(
             'Zmień hasło',
             style: TextStyle(color: Colors.black),
@@ -228,6 +242,7 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white, // White background for AlertDialog
           title: Text(
             'Informacje o nas',
             style: TextStyle(color: Colors.black), // Set title text to black
@@ -253,6 +268,7 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white, // White background for AlertDialog
           title: Text(
             'Informacje o aplikacji',
             style: TextStyle(color: Colors.black), // Set title text to black
