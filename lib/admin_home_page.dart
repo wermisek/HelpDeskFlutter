@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'login.dart';
 import 'settings.dart';
 
 void main() {
@@ -38,37 +37,40 @@ class _AdminHomePageState extends State<AdminHomePage> {
   PageController _pageController = PageController();
   int currentPage = 0;
   final int itemsPerPage = 12;
-  String currentUser = "Jan Kowalski";  // Przykładowa nazwa użytkownika (zmień na dynamiczną)
+
 
   Future<void> getProblems() async {
     try {
       var response =
-      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
+      await HttpClient().getUrl(
+          Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
       setState(() {
         problems = jsonDecode(content);
       });
     } catch (e) {
-      _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
+      _showErrorDialog(
+          context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
     }
   }
 
   void _showErrorDialog(BuildContext context, String title, String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('OK'),
+      builder: (context) =>
+          AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -91,7 +93,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Widget _buildProblemList() {
     List<List<dynamic>> paginatedProblems = [];
     for (int i = 0; i < problems.length; i += itemsPerPage) {
-      paginatedProblems.add(problems.sublist(i, i + itemsPerPage > problems.length ? problems.length : i + itemsPerPage));
+      paginatedProblems.add(problems.sublist(i,
+          i + itemsPerPage > problems.length ? problems.length : i +
+              itemsPerPage));
     }
 
     return Expanded(
@@ -148,7 +152,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                               ),
                             ],
                           ),
-                          margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                          margin: EdgeInsets.symmetric(
+                              vertical: 5.0, horizontal: 10.0),
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
@@ -158,44 +163,49 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                   'Sala: ${problem['room'] ?? 'Nieznana'}',
                                   style: TextStyle(
                                       color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 19),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16), // Zmniejszono rozmiar czcionki
                                 ),
                                 SizedBox(height: 4),
                                 Text(
                                   'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
-                                  style: TextStyle(color: Colors.black, fontSize: 16),
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 14),
                                 ),
                                 SizedBox(height: 4),
                                 Text(
                                   'Treść: ${problem['problem'] ?? 'Brak opisu'}',
                                   style: TextStyle(
                                     color: Colors.black,
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                SizedBox(height: 5),
-                                Center(
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      _showPopup(context, problem);
-                                    },
-                                    child: Text(
-                                      'Rozwiń',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
+                                SizedBox(height: 10), // Większa przerwa
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 15.0), // Padding dla przycisku
+                                  child: Center(
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        _showPopup(context, problem);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: Colors.black,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(20),
+                                          side: BorderSide(color: Colors.black, width: 1),
+                                        ),
+                                        minimumSize: Size(120, 36), // Mniejsza wysokość przycisku
+                                        padding: EdgeInsets.symmetric(horizontal: 20.0),
                                       ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.black,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                      child: Text(
+                                        'Rozwiń',
+                                        style: TextStyle(
+                                          fontSize: 14, // Zmniejszenie czcionki
+                                          fontWeight: FontWeight.w500, // Mniej pogrubione
+                                        ),
                                       ),
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 15.0, horizontal: 20.0),
                                     ),
                                   ),
                                 ),
@@ -252,39 +262,40 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void _showPopup(BuildContext context, dynamic problem) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFFF5F5F5),
-        contentPadding: EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Zgłoszenie od: ${problem['username'] ?? 'Nieznany'}',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      builder: (context) =>
+          AlertDialog(
+            backgroundColor: Color(0xFFF5F5F5),
+            contentPadding: EdgeInsets.all(20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Zgłoszenie od: ${problem['username'] ?? 'Nieznany'}',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Pokój: ${problem['room'] ?? 'Nieznany'}',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Treść zgłoszenia: ${problem['problem'] ?? 'Brak opisu'}',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Zamknij'),
+                  ),
+                ],
               ),
-              SizedBox(height: 10),
-              Text(
-                'Pokój: ${problem['room'] ?? 'Nieznany'}',
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Treść zgłoszenia: ${problem['problem'] ?? 'Brak opisu'}',
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Zamknij'),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -292,8 +303,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('HelpDesk Admin Panel'),
-        backgroundColor: Color(0xFFFFFFFF),
+        title: Text(
+          'HelpDesk Admin Panel',
+          style: TextStyle(
+            color: Colors.black, // Czarny tekst
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        backgroundColor: Color(0xFFFFFFFF), // Białe tło AppBar
+        elevation: 0, // Usunięcie cienia AppBar
       ),
       drawer: Drawer(
         child: Container(
@@ -313,18 +331,22 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ),
                   ),
                   accountEmail: null,
-                  currentAccountPicture: null, // Usunięcie profilowego obrazka
+                  currentAccountPicture: null,
+                  // Usunięcie profilowego obrazka
                   decoration: BoxDecoration(
                     color: Colors.white, // Kolor tła całego headera na biały
                   ),
-                  margin: EdgeInsets.zero, // Zmniejszenie marginesu wokół headera
+                  margin: EdgeInsets
+                      .zero, // Zmniejszenie marginesu wokół headera
                 ),
               ),
               ListTile(
-                leading: Icon(Icons.report_problem, color: Colors.black), // Kolor ikony na czarny
+                leading: Icon(Icons.report_problem, color: Colors.black),
+                // Kolor ikony na czarny
                 title: Text(
                   'Zgłoszenia',
-                  style: TextStyle(color: Colors.black), // Kolor tekstu na czarny
+                  style: TextStyle(
+                      color: Colors.black), // Kolor tekstu na czarny
                 ),
                 onTap: () {
                   setState(() {
@@ -335,10 +357,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.group, color: Colors.black), // Kolor ikony na czarny
+                leading: Icon(Icons.group, color: Colors.black),
+                // Kolor ikony na czarny
                 title: Text(
                   'Użytkownicy',
-                  style: TextStyle(color: Colors.black), // Kolor tekstu na czarny
+                  style: TextStyle(
+                      color: Colors.black), // Kolor tekstu na czarny
                 ),
                 onTap: () {
                   setState(() {
@@ -349,10 +373,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.settings, color: Colors.black), // Kolor ikony na czarny
+                leading: Icon(Icons.settings, color: Colors.black),
+                // Kolor ikony na czarny
                 title: Text(
                   'Ustawienia',
-                  style: TextStyle(color: Colors.black), // Kolor tekstu na czarny
+                  style: TextStyle(
+                      color: Colors.black), // Kolor tekstu na czarny
                 ),
                 onTap: () {
                   Navigator.push(
@@ -365,16 +391,24 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ),
         ),
       ),
-
-
-
-      body: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          children: [
-            if (showProblems) _buildProblemList(),
-          ],
-        ),
+      body: Column(
+        children: [
+          Divider(
+            color: Color(0xFF8A8A8A), // Czarna linia
+            thickness: 1.0, // Grubość linii
+            height: 1.0, // Wysokość przestrzeni wokół linii
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                children: [
+                  if (showProblems) _buildProblemList(),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
