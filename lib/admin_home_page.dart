@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'settings.dart';
 import 'package:http/http.dart' as http;
+import 'problemtemp.dart';
 
 
 void main() {
@@ -16,8 +17,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'HelpDesk Admin',
       theme: ThemeData.light().copyWith(
-        primaryColor: Color(0xFFFFFFFF),
-        scaffoldBackgroundColor: Color(0xFFFFFFFF),
+        primaryColor: Color(0xFFF5F5F5),
+        scaffoldBackgroundColor: Color(0xFFF5F5F5),
         buttonTheme: ButtonThemeData(buttonColor: Colors.white),
         textTheme: TextTheme(bodyMedium: TextStyle(color: Colors.black)),
       ),
@@ -73,8 +74,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     List<List<dynamic>> paginatedProblems = [];
     for (int i = 0; i < problems.length; i += itemsPerPage) {
       paginatedProblems.add(problems.sublist(i,
-          i + itemsPerPage > problems.length ? problems.length : i +
-              itemsPerPage));
+          i + itemsPerPage > problems.length ? problems.length : i + itemsPerPage));
     }
 
     return Expanded(
@@ -89,6 +89,27 @@ class _AdminHomePageState extends State<AdminHomePage> {
         )
             : Column(
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Zgłoszenia',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 2),
+                        blurRadius: 4.0,
+                        color: Colors.grey.withOpacity(0.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10.0),
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -131,8 +152,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                               ),
                             ],
                           ),
-                          margin: EdgeInsets.symmetric(
-                              vertical: 5.0, horizontal: 10.0),
+                          margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
@@ -148,8 +168,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                 SizedBox(height: 4),
                                 Text(
                                   'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 14),
+                                  style: TextStyle(color: Colors.black, fontSize: 14),
                                 ),
                                 SizedBox(height: 4),
                                 Text(
@@ -166,7 +185,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                   child: Center(
                                     child: ElevatedButton(
                                       onPressed: () {
-                                        _showPopup(context, problem);
+                                        // Na nowym ekranie pokażemy szczegóły problemu
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ProblemTempPage(problem: problem),
+                                          ),
+                                        );
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.white,
@@ -238,10 +263,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
+
+
+
   Widget _buildUserList() {
     List<List<dynamic>> paginatedUsers = [];
-    for (int i = 0; i < users.length; i += 4) {
-      paginatedUsers.add(users.sublist(i, i + 4 > users.length ? users.length : i + 4));
+    for (int i = 0; i < users.length; i += 12) {
+      paginatedUsers.add(users.sublist(i, i + 12 > users.length ? users.length : i + 12));
     }
 
     return Expanded(
@@ -269,13 +297,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Color(0xFFF5F5F5),
                     borderRadius: BorderRadius.circular(8.0),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.4),
+                        color: Colors.black.withOpacity(0.2),
                         blurRadius: 12.0,
-                        spreadRadius: 2.0,
+                        spreadRadius: 1.0,
                         offset: Offset(0, 0),
                       ),
                     ],
@@ -465,6 +493,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ),
           content: TextField(
             controller: usernameController,
+            style: TextStyle(color: Colors.black), // Kolor tekstu w polu input
             decoration: InputDecoration(
               labelText: 'Nowy login',
               labelStyle: TextStyle(color: Colors.black), // Kolor etykiety
@@ -528,6 +557,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
 
 
+
   void _changePassword(dynamic user) {
     TextEditingController passwordController = TextEditingController();
     showDialog(
@@ -544,6 +574,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ),
           content: TextField(
             controller: passwordController,
+            style: TextStyle(color: Colors.black),
             obscureText: true,
             decoration: InputDecoration(
               labelText: 'Nowe hasło',
@@ -764,7 +795,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        backgroundColor: Color(0xFFFFFFFF),
+        backgroundColor: Color(0xFFF5F5F5),
         elevation: 0,
       ),//komentarz
       drawer: Drawer(
