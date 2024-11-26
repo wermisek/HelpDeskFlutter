@@ -39,11 +39,13 @@ class LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   String? _usernameError;
   String? _passwordError;
+  bool isLoading = false; // Zmienna do śledzenia stanu ładowania
 
   Future<void> _login(BuildContext context) async {
     setState(() {
       _usernameError = null;
       _passwordError = null;
+      isLoading = true; // Rozpoczynamy ładowanie
     });
 
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -54,6 +56,7 @@ class LoginPageState extends State<LoginPage> {
         if (_passwordController.text.isEmpty) {
           _passwordError = 'Proszę podać hasło';
         }
+        isLoading = false; // Kończymy ładowanie w przypadku błędu
       });
       return;
     }
@@ -68,10 +71,13 @@ class LoginPageState extends State<LoginPage> {
         }),
       );
 
+      setState(() {
+        isLoading = false; // Kończymy ładowanie po zakończeniu żądania
+      });
+
       if (response.statusCode == 200) {
         Map<String, dynamic> data = jsonDecode(response.body);
         String role = data['role'];
-
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -88,7 +94,7 @@ class LoginPageState extends State<LoginPage> {
               context,
               MaterialPageRoute(
                 builder: (context) =>
-                    AddProblemPage(username: _usernameController.text),
+                    UserHomePage(username: _usernameController.text), // Przejście do nowej strony głównej użytkownikao
               ),
             );
           } else {
@@ -111,6 +117,9 @@ class LoginPageState extends State<LoginPage> {
         });
       }
     } catch (e) {
+      setState(() {
+        isLoading = false; // Kończymy ładowanie w przypadku błędu połączenia
+      });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
 
@@ -178,10 +187,7 @@ class LoginPageState extends State<LoginPage> {
               alignment: Alignment.center,
               child: Image.asset(
                 'assets/images/drzewniak.png',
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width * 0.60,
+                width: MediaQuery.of(context).size.width * 0.60,
                 fit: BoxFit.cover,
               ),
             ),
@@ -212,7 +218,9 @@ class LoginPageState extends State<LoginPage> {
                         errorText: _passwordError,
                       ),
                       SizedBox(height: 40),
-                      _buildLoginButton(context),
+                      isLoading
+                          ? CircularProgressIndicator() // Animacja ładowania
+                          : _buildLoginButton(context),
                     ],
                   ),
                 ),
