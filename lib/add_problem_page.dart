@@ -25,7 +25,6 @@ class UserHomePage extends StatefulWidget {
   const UserHomePage({super.key, required this.username});
 
   @override
-  // ignore: library_private_types_in_public_api
   _UserHomePageState createState() => _UserHomePageState();
 }
 
@@ -58,14 +57,12 @@ class _UserHomePageState extends State<UserHomePage> {
 
         if (response.statusCode == 201) {
           _showDialog(
-            // ignore: use_build_context_synchronously
             context,
             title: 'Problem wysłany',
             message: 'Dziękujemy, ${widget.username}. Twój problem został przesłany.',
           );
         } else {
           _showDialog(
-            // ignore: use_build_context_synchronously
             context,
             title: 'Błąd',
             message: 'Nie udało się wysłać problemu. Serwer zwrócił: ${response.reasonPhrase}',
@@ -73,7 +70,6 @@ class _UserHomePageState extends State<UserHomePage> {
         }
       } catch (e) {
         _showDialog(
-          // ignore: use_build_context_synchronously
           context,
           title: 'Błąd połączenia',
           message: 'Nie udało się połączyć z serwerem. Sprawdź połączenie sieciowe.',
@@ -84,15 +80,11 @@ class _UserHomePageState extends State<UserHomePage> {
     }
   }
 
-
   void _showDialog(BuildContext context, {required String title, required String message}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          title,
-          style: TextStyle(color: Colors.black),
-        ),
+        title: Text(title, style: TextStyle(color: Colors.black)),
         content: Text(message),
         actions: [
           TextButton(
@@ -112,6 +104,8 @@ class _UserHomePageState extends State<UserHomePage> {
     bool enabled = true,
     int maxLines = 1,
     String? Function(String?)? validator,
+    bool isTeacherField = false, // Dodatkowy parametr, by ustawić szary tekst dla wypełnionego pola
+    int? maxLength,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -129,11 +123,10 @@ class _UserHomePageState extends State<UserHomePage> {
         controller: controller,
         maxLines: maxLines,
         enabled: enabled,
+        maxLength: maxLength,
         decoration: InputDecoration(
           labelText: labelText,
-          labelStyle: TextStyle(
-            color: Colors.black,
-          ),
+          labelStyle: TextStyle(color: Colors.black),
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
@@ -164,7 +157,7 @@ class _UserHomePageState extends State<UserHomePage> {
           floatingLabelBehavior: FloatingLabelBehavior.always,
         ),
         style: TextStyle(
-          color: Colors.black,
+          color: isTeacherField && controller.text.isNotEmpty ? Colors.grey : Colors.black, // Szary tekst dla pola Nauczyciel
         ),
         validator: validator,
         onChanged: (text) {
@@ -174,13 +167,8 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-
-
-
-
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -223,6 +211,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                     controller: _teacherController,
                                     labelText: 'Nauczyciel',
                                     enabled: false,
+                                    isTeacherField: true, // Używamy nowego parametru
                                   ),
                                 ),
                               ),
@@ -243,6 +232,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                       }
                                       return null;
                                     },
+                                    maxLength: 15, // Limit znaków dla pola Sala
                                   ),
                                 ),
                               ),
@@ -268,10 +258,8 @@ class _UserHomePageState extends State<UserHomePage> {
                           ),
                         ),
                         const SizedBox(height: 24.0),
-
-
                         Padding(
-                          padding: const EdgeInsets.only(top: 50.0),  // Zmienna wartość w pikselach
+                          padding: const EdgeInsets.only(top: 50.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -297,7 +285,6 @@ class _UserHomePageState extends State<UserHomePage> {
                             ],
                           ),
                         ),
-
                       ],
                     ),
                   ),
@@ -307,70 +294,68 @@ class _UserHomePageState extends State<UserHomePage> {
           ),
         ],
       ),
-        drawer: Drawer(
-          child: Container(
-            color: Colors.white,
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: <Widget>[
-                SizedBox(
-                  height: 80.0, // Wysokość nagłówka
-                  child: Container(
-                    color: Colors.white,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center, // Wyśrodkowanie pionowe
-                      crossAxisAlignment: CrossAxisAlignment.center, // Wyśrodkowanie poziome
-                      children: [
-                        Text(
-                          'Helpdesk Drzewniak',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 19.0,  // Ustalony rozmiar czcionki
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 6.0), // Przestrzeń między tekstem a linią
-                        Divider(  // Linia pod napisem
+      drawer: Drawer(
+        child: Container(
+          color: Colors.white,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              SizedBox(
+                height: 80.0,
+                child: Container(
+                  color: Colors.white,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Helpdesk Drzewniak',
+                        style: TextStyle(
                           color: Colors.black,
-                          thickness: 1.0, // Grubość linii
-                          indent: 0, // Brak wcięcia po lewej stronie
-                          endIndent: 0, // Brak wcięcia po prawej stronie
+                          fontSize: 19.0,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(height: 6.0),
+                      Divider(
+                        color: Colors.black,
+                        thickness: 1.0,
+                        indent: 0,
+                        endIndent: 0,
+                      ),
+                    ],
                   ),
                 ),
-                ListTile(
-                  leading: Icon(Icons.report_problem, color: Colors.black),
-                  title: Text('Dodaj problem', style: TextStyle(color: Colors.black)),
-                  onTap: () {
-                    setState(() {
-                      // Add your state change logic here if needed
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.group, color: Colors.black),
-                  title: Text('Moje problemy', style: TextStyle(color: Colors.black)),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.settings, color: Colors.black),
-                  title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SettingsPage()),
-                    );
-                  },
-                ),
-              ],
-            ),
+              ),
+              ListTile(
+                leading: Icon(Icons.report_problem, color: Colors.black),
+                title: Text('Dodaj problem', style: TextStyle(color: Colors.black)),
+                onTap: () {
+                  setState(() {});
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.group, color: Colors.black),
+                title: Text('Moje problemy', style: TextStyle(color: Colors.black)),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.settings, color: Colors.black),
+                title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SettingsPage()),
+                  );
+                },
+              ),
+            ],
           ),
         ),
+      ),
     );
   }
 }
