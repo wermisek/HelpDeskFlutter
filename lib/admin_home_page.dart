@@ -247,137 +247,197 @@ class _AdminHomePageState extends State<AdminHomePage> {
     return Expanded(
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
-        child: paginatedUsers.isEmpty
-            ? Center(
-          child: Text(
-            'Brak użytkowników.',
-            style: TextStyle(fontSize: 16.0, color: Colors.black),
-          ),
-        )
-            : Column(
+        child: Column(
           children: [
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: paginatedUsers.length,
-                onPageChanged: (pageIndex) {
-                  setState(() {
-                    currentPage = pageIndex;
-                  });
-                },
-                itemBuilder: (context, pageIndex) {
-                  var pageUsers = paginatedUsers[pageIndex];
-                  return GridView.builder(
-                    padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 8.0,
-                      mainAxisSpacing: 8.0,
-                      childAspectRatio: 1.87,
-                    ),
-                    itemCount: pageUsers.length,
-                    itemBuilder: (context, index) {
-                      var user = pageUsers[index];
-                      return Card(
-                        margin: EdgeInsets.symmetric(vertical: 5.0),
-                        elevation: 10,
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Column(
-                          children: [
-                            ListTile(
-                              contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-                              title: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Użytkownik: ${user['username'] ?? 'Nieznany użytkownik'}',
-                                    style: TextStyle(fontWeight: FontWeight.w600),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Rola: ${user['role'] ?? 'Brak roli'}',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Nowe przyciski na dole karty
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Tooltip(
-                                    message: 'Zmień login',
-                                    child: IconButton(
-                                      icon: Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () {
-                                        _changeUsername(user);
-                                      },
-                                    ),
-                                  ),
-                                  Tooltip(
-                                    message: 'Zmień hasło',
-                                    child: IconButton(
-                                      icon: Icon(Icons.lock, color: Colors.orange),
-                                      onPressed: () {
-                                        _changePassword(user);
-                                      },
-                                    ),
-                                  ),
-                                  Tooltip(
-                                    message: 'Usuń użytkownika',
-                                    child: IconButton(
-                                      icon: Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () {
-                                        _deleteUser(user);
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Zarządzanie użytkownikami',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 2),
+                        blurRadius: 4.0,
+                        color: Colors.grey.withOpacity(0.5),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.4),
+                        blurRadius: 12.0,
+                        spreadRadius: 2.0,
+                        offset: Offset(0, 0),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _showAddUserDialog(context); // Wywołanie funkcji do wyświetlenia popupu
                     },
-                  );
-                },
-              ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                      shadowColor: Colors.transparent,
+                    ),
+                    child: Text(
+                      'Dodaj użytkownika',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+            SizedBox(height: 10.0),
+            Expanded(
+              child: paginatedUsers.isEmpty
+                  ? Center(
+                child: Text(
+                  'Brak użytkowników.',
+                  style: TextStyle(fontSize: 16.0, color: Colors.black),
+                ),
+              )
+                  : Column(
                 children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios, size: 20, color: Colors.black),
-                    onPressed: currentPage > 0
-                        ? () {
-                      _pageController.previousPage(
-                        duration: Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                        : null,
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: paginatedUsers.length,
+                      onPageChanged: (pageIndex) {
+                        setState(() {
+                          currentPage = pageIndex;
+                        });
+                      },
+                      itemBuilder: (context, pageIndex) {
+                        var pageUsers = paginatedUsers[pageIndex];
+                        return GridView.builder(
+                          padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                            childAspectRatio: 1.87,
+                          ),
+                          itemCount: pageUsers.length,
+                          itemBuilder: (context, index) {
+                            var user = pageUsers[index];
+                            return Card(
+                              margin: EdgeInsets.symmetric(vertical: 5.0),
+                              elevation: 10,
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              child: Column(
+                                children: [
+                                  ListTile(
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+                                    title: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Użytkownik: ${user['username'] ?? 'Nieznany użytkownik'}',
+                                          style: TextStyle(fontWeight: FontWeight.w600),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'Rola: ${user['role'] ?? 'Brak roli'}',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Tooltip(
+                                          message: 'Zmień login',
+                                          child: IconButton(
+                                            icon: Icon(Icons.edit, color: Colors.blue),
+                                            onPressed: () {
+                                              _changeUsername(user);
+                                            },
+                                          ),
+                                        ),
+                                        Tooltip(
+                                          message: 'Zmień hasło',
+                                          child: IconButton(
+                                            icon: Icon(Icons.lock, color: Colors.orange),
+                                            onPressed: () {
+                                              _changePassword(user);
+                                            },
+                                          ),
+                                        ),
+                                        Tooltip(
+                                          message: 'Usuń użytkownika',
+                                          child: IconButton(
+                                            icon: Icon(Icons.delete, color: Colors.red),
+                                            onPressed: () {
+                                              _deleteUser(user);
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
-                  Text(
-                    '${currentPage + 1} / ${paginatedUsers.length}',
-                    style: TextStyle(fontSize: 14.0, color: Colors.black),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.arrow_forward_ios, size: 20, color: Colors.black),
-                    onPressed: currentPage < paginatedUsers.length - 1
-                        ? () {
-                      _pageController.nextPage(
-                        duration: Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                        : null,
+                  Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.arrow_back_ios, size: 20, color: Colors.black),
+                          onPressed: currentPage > 0
+                              ? () {
+                            _pageController.previousPage(
+                              duration: Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                              : null,
+                        ),
+                        Text(
+                          '${currentPage + 1} / ${paginatedUsers.length}',
+                          style: TextStyle(fontSize: 14.0, color: Colors.black),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.arrow_forward_ios, size: 20, color: Colors.black),
+                          onPressed: currentPage < paginatedUsers.length - 1
+                              ? () {
+                            _pageController.nextPage(
+                              duration: Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                              : null,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -387,6 +447,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
     );
   }
+
 
   void _changeUsername(dynamic user) {
     TextEditingController usernameController = TextEditingController();
@@ -773,7 +834,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(10.0),
+              padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
                   if (showProblems) _buildProblemList(),
@@ -785,5 +846,128 @@ class _AdminHomePageState extends State<AdminHomePage> {
         ],
       ),
     );
+  }
+}
+void _showAddUserDialog(BuildContext context) {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController roleController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.white,  // Ciemne tło (dopasowane do reszty)
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),  // Zaokrąglone rogi
+        ),
+        title: Text(
+          'Dodaj użytkownika',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+            fontSize: 18.0,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: usernameController,
+              style: TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                labelText: 'Login',
+                labelStyle: TextStyle(color: Colors.black),
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              style: TextStyle(color: Colors.black),
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Hasło',
+                labelStyle: TextStyle(color: Colors.black),
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: roleController,
+              style: TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                labelText: 'Rola',
+                labelStyle: TextStyle(color: Colors.black),
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();  // Zamknij popup
+            },
+            child: Text(
+              'Anuluj',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              final username = usernameController.text;
+              final password = passwordController.text;
+              final role = roleController.text;
+
+              // Tutaj wywołaj funkcję do utworzenia użytkownika
+              _createUser(username, password, role);
+              Navigator.of(context).pop();  // Zamknij popup po stworzeniu użytkownika
+            },
+            child: Text(
+              'Stwórz',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+void _createUser(String username, String password, String role) async {
+  var newUser = {
+    "username": username,
+    "password": password,
+    "role": role,
+  };
+
+  try {
+    final response = await http.post(
+      Uri.parse('http://localhost:8080/register'),  // Upewnij się, że adres jest poprawny
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(newUser),
+    );
+
+    if (response.statusCode == 201) {
+      // Jeśli użytkownik został pomyślnie utworzony
+      print("Użytkownik stworzony: ${response.body}");
+    } else {
+      // Jeśli wystąpił błąd przy tworzeniu użytkownika
+      final responseBody = json.decode(response.body);
+      print("Błąd tworzenia użytkownika: ${responseBody['message']}");
+    }
+  } catch (e) {
+    print("Błąd podczas wysyłania zapytania: $e");
   }
 }
