@@ -65,7 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
               mainAxisAlignment: MainAxisAlignment.center, // Center the button horizontally
               children: [
                 SizedBox(
-                  width: 350, // Set a fixed width for the button
+                  width: 310, // Set a fixed width for the button
                   height: 60, // Maintain the height
                   child: ElevatedButton(
                     onPressed: _logOut,
