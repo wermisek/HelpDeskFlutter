@@ -19,8 +19,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'HelpDesk Admin',
       theme: ThemeData.light().copyWith(
-        primaryColor: Color(0xFFF5F5F5),
-        scaffoldBackgroundColor: Color(0xFFF5F5F5),
+        primaryColor: Color(0xFFFFFFFF),
+        scaffoldBackgroundColor: Color(0xFFFFFFFF),
         buttonTheme: ButtonThemeData(buttonColor: Colors.white),
         textTheme: TextTheme(bodyMedium: TextStyle(color: Colors.black)),
       ),
@@ -299,7 +299,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: Color(0xFFF5F5F5),
+                    color: Color(0xFFFFFFFF),
                     borderRadius: BorderRadius.circular(8.0),
                     boxShadow: [
                       BoxShadow(
@@ -735,7 +735,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFFF5F5F5),
+        backgroundColor: Color(0xFFFFFFFF),
         contentPadding: EdgeInsets.all(20),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -797,7 +797,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        backgroundColor: Color(0xFFF5F5F5),
+        backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,
       ),//komentarz
         drawer: Drawer(
@@ -903,7 +903,7 @@ void _showAddUserDialog(BuildContext context) {
       return AlertDialog(
         backgroundColor: Colors.white,  // Ciemne tło (dopasowane do reszty)
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),  // Zaokrąglone rogi
+          borderRadius: BorderRadius.circular(10.0),  // Zaokrąglone rogi
         ),
         title: Text(
           'Dodaj użytkownika',
