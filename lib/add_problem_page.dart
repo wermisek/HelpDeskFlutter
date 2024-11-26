@@ -178,7 +178,6 @@ class _UserHomePageState extends State<UserHomePage> {
 
 
 
-
   @override
   Widget build(BuildContext context) {
 
@@ -237,6 +236,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                   child: _buildInputField(
                                     controller: _roomController,
                                     labelText: 'Sala',
+                                    maxLines: 2,
                                     validator: (value) {
                                       if (value?.isEmpty ?? true) {
                                         return 'Wprowadź nazwę Sali';
