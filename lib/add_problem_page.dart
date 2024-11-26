@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'settings.dart'; // Keep the import for SettingsPage
-import 'problemy.dart';
+import 'settings.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -21,31 +22,29 @@ class MyApp extends StatelessWidget {
 class UserHomePage extends StatefulWidget {
   final String username;
 
-  UserHomePage({required this.username});
+  const UserHomePage({super.key, required this.username});
 
   @override
+  // ignore: library_private_types_in_public_api
   _UserHomePageState createState() => _UserHomePageState();
 }
 
 class _UserHomePageState extends State<UserHomePage> {
-  final _teacherController = TextEditingController(text: 'Nauczyciel X'); // Pre-filled teacher
+  final _teacherController = TextEditingController(text: 'Wypełnione automatycznie');
   final _roomController = TextEditingController();
   final _problemController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool showUsers = false;
-  bool showProblems = true;
 
   Future<void> _submitProblem(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
       String room = _roomController.text;
       String problem = _problemController.text;
 
-      // Add 'read' parameter with value 0 (unread)
       Map<String, dynamic> problemData = {
         'username': widget.username,
         'room': room,
         'problem': problem,
-        'read': 0, // Status set to unread
+        'read': 0,
       };
 
       try {
@@ -59,12 +58,14 @@ class _UserHomePageState extends State<UserHomePage> {
 
         if (response.statusCode == 201) {
           _showDialog(
+            // ignore: use_build_context_synchronously
             context,
             title: 'Problem wysłany',
             message: 'Dziękujemy, ${widget.username}. Twój problem został przesłany.',
           );
         } else {
           _showDialog(
+            // ignore: use_build_context_synchronously
             context,
             title: 'Błąd',
             message: 'Nie udało się wysłać problemu. Serwer zwrócił: ${response.reasonPhrase}',
@@ -72,13 +73,17 @@ class _UserHomePageState extends State<UserHomePage> {
         }
       } catch (e) {
         _showDialog(
+          // ignore: use_build_context_synchronously
           context,
           title: 'Błąd połączenia',
           message: 'Nie udało się połączyć z serwerem. Sprawdź połączenie sieciowe.',
         );
       }
+    } else {
+      setState(() {});
     }
   }
+
 
   void _showDialog(BuildContext context, {required String title, required String message}) {
     showDialog(
@@ -115,7 +120,7 @@ class _UserHomePageState extends State<UserHomePage> {
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.5),
-            offset: Offset(0, 2), // Shadow only at the bottom
+            offset: Offset(0, 2),
             blurRadius: 4,
           ),
         ],
@@ -126,54 +131,56 @@ class _UserHomePageState extends State<UserHomePage> {
         enabled: enabled,
         decoration: InputDecoration(
           labelText: labelText,
+          labelStyle: TextStyle(
+            color: Colors.black,
+          ),
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide.none, // No border
+            borderSide: BorderSide.none,
           ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: BorderSide.none,
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: BorderSide.none,
+          ),
+          hoverColor: Colors.transparent,
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: BorderSide.none,
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: BorderSide.none,
+          ),
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+        ),
+        style: TextStyle(
+          color: Colors.black,
         ),
         validator: validator,
+        onChanged: (text) {
+          setState(() {});
+        },
       ),
     );
   }
 
-  Widget _buildSubmitButton(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            offset: Offset(0, 2), // Shadow only at the bottom
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          padding: EdgeInsets.symmetric(vertical: 14.0, horizontal: 24.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          // Disable hover effect
-          shadowColor: Colors.transparent, // Removes the hover effect
-          elevation: 0, // Removes elevation
-        ),
-        onPressed: () => _submitProblem(context),
-        child: Text('Zgłoś problem'),
-      ),
-    );
-  }
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
-    // Define height of the input fields for 'Nauczyciel' and 'Pokój'
-    double problemFieldHeight = 80.0; // Height of 'Opis problemu' input
-    double inputHeight = problemFieldHeight * 0.75; // 75% of 'Opis problemu' height
 
     return Scaffold(
       appBar: AppBar(
@@ -190,10 +197,9 @@ class _UserHomePageState extends State<UserHomePage> {
       ),
       body: Column(
         children: [
-          // Divider to add line separating AppBar and the main screen
           Container(
             color: Color(0xFF8A8A8A),
-            height: 1.0, // Line thickness
+            height: 1.0,
           ),
           Expanded(
             child: Container(
@@ -206,51 +212,92 @@ class _UserHomePageState extends State<UserHomePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Row for 'Nauczyciel' and 'Pokój' side by side
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: MediaQuery.of(context).size.width * 0.45, // Adjust width to fit 75% of 'Opis problemu'
-                              height: inputHeight,
-                              child: _buildInputField(
-                                controller: _teacherController,
-                                labelText: 'Nauczyciel',
-                                enabled: false,
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 120.0, right: 0.0, bottom: 20),
+                                child: SizedBox(
+                                  height: 90.0,
+                                  child: _buildInputField(
+                                    controller: _teacherController,
+                                    labelText: 'Nauczyciel',
+                                    enabled: false,
+                                  ),
+                                ),
                               ),
                             ),
-                            SizedBox(width: 16), // Space between the two input fields
-                            Container(
-                              width: MediaQuery.of(context).size.width * 0.45,
-                              height: inputHeight,
-                              child: _buildInputField(
-                                controller: _roomController,
-                                labelText: 'Pokój',
-                                validator: (value) {
-                                  if (value?.isEmpty ?? true) {
-                                    return 'Wprowadź pokój';
-                                  }
-                                  return null;
-                                },
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 120.0, left: 30, bottom: 20),
+                                child: SizedBox(
+                                  height: 90.0,
+                                  child: _buildInputField(
+                                    controller: _roomController,
+                                    labelText: 'Sala',
+                                    validator: (value) {
+                                      if (value?.isEmpty ?? true) {
+                                        return 'Wprowadź nazwę Sali';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16.0),
-                        // Input for 'Opis problemu'
-                        _buildInputField(
-                          controller: _problemController,
-                          labelText: 'Opis problemu',
-                          maxLines: 5,
-                          validator: (value) {
-                            if (value?.isEmpty ?? true) {
-                              return 'Wprowadź opis problemu';
-                            }
-                            return null;
-                          },
+                        FractionallySizedBox(
+                          widthFactor: 0.8,
+                          child: SizedBox(
+                            height: 160.0,
+                            child: _buildInputField(
+                              controller: _problemController,
+                              labelText: 'Opis problemu',
+                              maxLines: 5,
+                              validator: (value) {
+                                if (value?.isEmpty ?? true) {
+                                  return 'Wprowadź opis problemu';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 24.0),
-                        _buildSubmitButton(context),
+
+
+                        Padding(
+                          padding: const EdgeInsets.only(top: 50.0),  // Zmienna wartość w pikselach
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 310,
+                                height: 60,
+                                child: ElevatedButton(
+                                  onPressed: () => _submitProblem(context),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    foregroundColor: Colors.black,
+                                    elevation: 2.0,
+                                  ),
+                                  child: Text(
+                                    'Wyślij',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
                       ],
                     ),
                   ),
@@ -266,7 +313,7 @@ class _UserHomePageState extends State<UserHomePage> {
           child: ListView(
             padding: EdgeInsets.zero,
             children: <Widget>[
-              Container(
+              SizedBox(
                 height: 73.0,
                 child: UserAccountsDrawerHeader(
                   accountName: Text(
@@ -290,8 +337,7 @@ class _UserHomePageState extends State<UserHomePage> {
                 title: Text('Dodaj problem', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   setState(() {
-                    showProblems = true;
-                    showUsers = false;
+                    // Add your state change logic here if needed
                   });
                   Navigator.pop(context);
                 },
@@ -300,10 +346,6 @@ class _UserHomePageState extends State<UserHomePage> {
                 leading: Icon(Icons.group, color: Colors.black),
                 title: Text('Moje problemy', style: TextStyle(color: Colors.black)),
                 onTap: () {
-                  setState(() {
-                    showProblems = false;
-                    showUsers = true;
-                  });
                   Navigator.pop(context);
                 },
               ),
