@@ -983,7 +983,7 @@ void _createUser(String username, String password, String role) async {
 
   try {
     final response = await http.post(
-      Uri.parse('http://localhost:8080/register'),  // Upewnij się, że adres jest poprawny
+      Uri.parse('http://192.168.10.188:8080/register'),  // Upewnij się, że adres jest poprawny
       headers: {
         'Content-Type': 'application/json',
       },
