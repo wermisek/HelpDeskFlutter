@@ -307,62 +307,70 @@ class _UserHomePageState extends State<UserHomePage> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: Container(
-          color: Colors.white,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              SizedBox(
-                height: 73.0,
-                child: UserAccountsDrawerHeader(
-                  accountName: Text(
-                    'Helpdesk Admin',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.bold,
+        drawer: Drawer(
+          child: Container(
+            color: Colors.white,
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: <Widget>[
+                SizedBox(
+                  height: 80.0, // Wysokość nagłówka
+                  child: Container(
+                    color: Colors.white,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center, // Wyśrodkowanie pionowe
+                      crossAxisAlignment: CrossAxisAlignment.center, // Wyśrodkowanie poziome
+                      children: [
+                        Text(
+                          'Helpdesk Drzewniak',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 19.0,  // Ustalony rozmiar czcionki
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 6.0), // Przestrzeń między tekstem a linią
+                        Divider(  // Linia pod napisem
+                          color: Colors.black,
+                          thickness: 1.0, // Grubość linii
+                          indent: 0, // Brak wcięcia po lewej stronie
+                          endIndent: 0, // Brak wcięcia po prawej stronie
+                        ),
+                      ],
                     ),
                   ),
-                  accountEmail: null,
-                  currentAccountPicture: null,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                  ),
-                  margin: EdgeInsets.zero,
                 ),
-              ),
-              ListTile(
-                leading: Icon(Icons.report_problem, color: Colors.black),
-                title: Text('Dodaj problem', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  setState(() {
-                    // Add your state change logic here if needed
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.group, color: Colors.black),
-                title: Text('Moje problemy', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.settings, color: Colors.black),
-                title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SettingsPage()),
-                  );
-                },
-              ),
-            ],
+                ListTile(
+                  leading: Icon(Icons.report_problem, color: Colors.black),
+                  title: Text('Dodaj problem', style: TextStyle(color: Colors.black)),
+                  onTap: () {
+                    setState(() {
+                      // Add your state change logic here if needed
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.group, color: Colors.black),
+                  title: Text('Moje problemy', style: TextStyle(color: Colors.black)),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.settings, color: Colors.black),
+                  title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SettingsPage()),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
-      ),
     );
   }
 }
