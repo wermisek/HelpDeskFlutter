@@ -24,15 +24,6 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
         child: Column(
           children: [
-            // Change Account Name Tile
-            _buildSettingsTile(
-              context,
-              index: 0, // Tile index
-              icon: Icons.account_circle,
-              text: 'Zmień nazwę konta',
-              onTap: () => _showChangeAccountNameDialog(context),
-            ),
-            SizedBox(height: 16.0),
             // Change Password Tile
             _buildSettingsTile(
               context,
@@ -131,46 +122,6 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
-    );
-  }
-
-  // Dialog to change the account name
-  void _showChangeAccountNameDialog(BuildContext context) {
-    final nameController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white, // White background for AlertDialog
-          title: Text(
-            'Zmień nazwę konta',
-            style: TextStyle(color: Colors.black),
-          ),
-          content: TextField(
-            controller: nameController,
-            decoration: InputDecoration(labelText: 'Nowa nazwa konta'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Anuluj'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  accountName = nameController.text;
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Zmieniono nazwę konta na $accountName')),
-                );
-                Navigator.of(context).pop();
-              },
-              child: Text('Zapisz'),
-            ),
-          ],
-        );
-      },
     );
   }
 
