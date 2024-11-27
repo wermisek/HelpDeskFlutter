@@ -199,6 +199,15 @@ class _UserHomePageState extends State<UserHomePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Text(
+                          'Zgłoś problem',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        SizedBox(height: 16.0), // Odstęp między tytułem a formularzem
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -211,7 +220,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                     controller: _teacherController,
                                     labelText: 'Nauczyciel',
                                     enabled: false,
-                                    isTeacherField: true, // Używamy nowego parametru
+                                    isTeacherField: true,
                                   ),
                                 ),
                               ),
@@ -232,7 +241,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                       }
                                       return null;
                                     },
-                                    maxLength: 15, // Limit znaków dla pola Sala
+                                    maxLength: 15,
                                   ),
                                 ),
                               ),
