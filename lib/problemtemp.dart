@@ -22,7 +22,7 @@ class ProblemTempPage extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: Colors.grey.withOpacity(0.5), // Kolor linii
+                  color: Color(0xFFF49402), // Kolor linii
                   width: 1.0, // Grubość linii
                 ),
               ),
