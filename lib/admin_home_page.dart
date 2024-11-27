@@ -416,7 +416,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                         Tooltip(
                                           message: 'Zmień login',
                                           child: IconButton(
-                                            icon: Icon(Icons.edit, color: Colors.blue),
+                                            icon: Icon(Icons.edit, color: Colors.black),
                                             onPressed: () {
                                               _changeUsername(user);
                                             },
@@ -425,7 +425,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                         Tooltip(
                                           message: 'Zmień hasło',
                                           child: IconButton(
-                                            icon: Icon(Icons.lock, color: Colors.orange),
+                                            icon: Icon(Icons.lock, color: Colors.black),
                                             onPressed: () {
                                               _changePassword(user);
                                             },
@@ -434,7 +434,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                         Tooltip(
                                           message: 'Usuń użytkownika',
                                           child: IconButton(
-                                            icon: Icon(Icons.delete, color: Colors.red),
+                                            icon: Icon(Icons.delete, color: Colors.black),
                                             onPressed: () {
                                               _deleteUser(user);
                                             },
