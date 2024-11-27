@@ -147,8 +147,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                 offset: Offset(-3, 0),
                               ),
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
+                                color: Color(0xFF000000).withOpacity(0.2),
+                                blurRadius: 10.0,
                                 spreadRadius: 0,
                                 offset: Offset(3, 0),
                               ),
@@ -247,7 +247,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.arrow_back_ios, size: 20, color: Colors.black),
+                    icon: Icon(Icons.arrow_back_ios, size: 20, color: Color(0xFFF49402)),
                     onPressed: currentPage > 0
                         ? () {
                       _pageController.previousPage(
@@ -262,7 +262,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     style: TextStyle(fontSize: 14.0, color: Colors.black),
                   ),
                   IconButton(
-                    icon: Icon(Icons.arrow_forward_ios, size: 20, color: Colors.black),
+                    icon: Icon(Icons.arrow_forward_ios, size: 20, color: Color(0xFFF49402)),
                     onPressed: currentPage < paginatedProblems.length - 1
                         ? () {
                       _pageController.nextPage(
@@ -319,9 +319,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     borderRadius: BorderRadius.circular(8.0),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 12.0,
-                        spreadRadius: 1.0,
+                        color: Color(0xFF000000).withOpacity(0.3),
+                        blurRadius: 10.0,
+                        spreadRadius: 0,
                         offset: Offset(0, 0),
                       ),
                     ],
@@ -457,7 +457,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.arrow_back_ios, size: 20, color: Colors.black),
+                          icon: Icon(Icons.arrow_back_ios, size: 20, color: Color(0xFFF49402)),
                           onPressed: currentPage > 0
                               ? () {
                             _pageController.previousPage(
@@ -472,7 +472,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           style: TextStyle(fontSize: 14.0, color: Colors.black),
                         ),
                         IconButton(
-                          icon: Icon(Icons.arrow_forward_ios, size: 20, color: Colors.black),
+                          icon: Icon(Icons.arrow_forward_ios, size: 20, color: Color(0xFFF49402)),
                           onPressed: currentPage < paginatedUsers.length - 1
                               ? () {
                             _pageController.nextPage(
@@ -516,7 +516,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               labelText: 'Nowy login',
               labelStyle: TextStyle(color: Colors.black), // Kolor etykiety
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.greenAccent), // Kolor obramowania po zaznaczeniu
+                borderSide: BorderSide(color: Color(0xFFF49402)), // Kolor obramowania po zaznaczeniu
               ),
             ),
           ),
@@ -527,8 +527,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 Navigator.of(context).pop(); // Zamknięcie okna dialogowego
               },
               style: TextButton.styleFrom(
-                backgroundColor: Colors.redAccent, // Kolor tła przycisku "Anuluj"
-                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                backgroundColor: Colors.white, // Kolor tła przycisku "Anuluj"
+                foregroundColor: Colors.black, // Kolor tekstu przycisku
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
               ),
               child: Text('Anuluj'),
@@ -560,8 +560,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 }
               },
               style: TextButton.styleFrom(
-                backgroundColor: Colors.greenAccent, // Kolor tła przycisku "Zapisz"
-                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                backgroundColor: Colors.white, // Kolor tła przycisku "Zapisz"
+                foregroundColor: Colors.black, // Kolor tekstu przycisku
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
               ),
               child: Text('Zapisz'),
@@ -598,7 +598,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               labelText: 'Nowe hasło',
               labelStyle: TextStyle(color: Colors.black), // Kolor etykiety
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.greenAccent), // Kolor obramowania po zaznaczeniu
+                borderSide: BorderSide(color: Color(0xFFF49402)), // Kolor obramowania po zaznaczeniu
               ),
             ),
           ),
@@ -609,8 +609,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 Navigator.of(context).pop(); // Zamknięcie okna dialogowego
               },
               style: TextButton.styleFrom(
-                backgroundColor: Colors.redAccent, // Kolor tła przycisku "Anuluj"
-                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                backgroundColor: Colors.white, // Kolor tła przycisku "Anuluj"
+                foregroundColor: Colors.black, // Kolor tekstu przycisku
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
               ),
               child: Text('Anuluj'),
@@ -642,8 +642,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 }
               },
               style: TextButton.styleFrom(
-                backgroundColor: Colors.greenAccent, // Kolor tła przycisku "Zapisz"
-                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                backgroundColor: Colors.white, // Kolor tła przycisku "Zapisz"
+                foregroundColor: Colors.black, // Kolor tekstu przycisku
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
               ),
               child: Text('Zapisz'),
@@ -680,8 +680,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 Navigator.of(context).pop(); // Zamknięcie okna dialogowego
               },
               style: TextButton.styleFrom(
-                backgroundColor: Colors.greenAccent, // Kolor tła przycisku "Anuluj"
-                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                backgroundColor: Colors.white, // Kolor tła przycisku "Anuluj"
+                foregroundColor: Colors.black, // Kolor tekstu przycisku
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy przycisku
               ),
               child: Text('Anuluj'),
@@ -708,8 +708,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 }
               },
               style: TextButton.styleFrom(
-                backgroundColor: Colors.redAccent, // Kolor tła przycisku "Tak"
-                foregroundColor: Colors.white, // Kolor tekstu przycisku
+                backgroundColor: Colors.white, // Kolor tła przycisku "Tak"
+                foregroundColor: Colors.black, // Kolor tekstu przycisku
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy przycisku
               ),
               child: Text('Usun'),
@@ -816,79 +816,79 @@ class _AdminHomePageState extends State<AdminHomePage> {
         backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,
       ),//komentarz
-        drawer: Drawer(
-          child: Container(
-            color: Colors.white,
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: <Widget>[
-                SizedBox(
-                  height: 80.0, // Wysokość nagłówka
-                  child: Container(
-                    color: Colors.white,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center, // Wyśrodkowanie pionowe
-                      crossAxisAlignment: CrossAxisAlignment.center, // Wyśrodkowanie poziome
-                      children: [
-                        Text(
-                          'Helpdesk Admin',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 19.0,  // Ustalony rozmiar czcionki
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 6.0), // Przestrzeń między tekstem a linią
-                        Divider(  // Linia pod napisem
+      drawer: Drawer(
+        child: Container(
+          color: Colors.white,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              SizedBox(
+                height: 80.0, // Wysokość nagłówka
+                child: Container(
+                  color: Colors.white,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center, // Wyśrodkowanie pionowe
+                    crossAxisAlignment: CrossAxisAlignment.center, // Wyśrodkowanie poziome
+                    children: [
+                      Text(
+                        'Helpdesk Admin',
+                        style: TextStyle(
                           color: Colors.black,
-                          thickness: 1.0, // Grubość linii
-                          indent: 0, // Brak wcięcia po lewej stronie
-                          endIndent: 0, // Brak wcięcia po prawej stronie
+                          fontSize: 19.0,  // Ustalony rozmiar czcionki
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(height: 6.0), // Przestrzeń między tekstem a linią
+                      Divider(  // Linia pod napisem
+                        color: Color(0xFFF49402),
+                        thickness: 1.0, // Grubość linii
+                        indent: 0, // Brak wcięcia po lewej stronie
+                        endIndent: 0, // Brak wcięcia po prawej stronie
+                      ),
+                    ],
                   ),
                 ),
-                ListTile(
-                  leading: Icon(Icons.report_problem, color: Colors.black),
-                  title: Text('Zgłoszenia', style: TextStyle(color: Colors.black)),
-                  onTap: () {
-                    setState(() {
-                      showProblems = true;
-                      showUsers = false;
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.group, color: Colors.black),
-                  title: Text('Użytkownicy', style: TextStyle(color: Colors.black)),
-                  onTap: () {
-                    setState(() {
-                      showProblems = false;
-                      showUsers = true;
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.settings, color: Colors.black),
-                  title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SettingsPage()),
-                    );
-                  },
-                ),
-              ],
-            ),
+              ),
+              ListTile(
+                leading: Icon(Icons.report_problem, color: Colors.black),
+                title: Text('Zgłoszenia', style: TextStyle(color: Colors.black)),
+                onTap: () {
+                  setState(() {
+                    showProblems = true;
+                    showUsers = false;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.group, color: Colors.black),
+                title: Text('Użytkownicy', style: TextStyle(color: Colors.black)),
+                onTap: () {
+                  setState(() {
+                    showProblems = false;
+                    showUsers = true;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.settings, color: Colors.black),
+                title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SettingsPage()),
+                  );
+                },
+              ),
+            ],
           ),
         ),
+      ),
       body: Column(
         children: [
           Divider(
-            color: Color(0xFF8A8A8A),
+            color: Color(0xFFF49402),
             thickness: 1.0,
             height: 1.0,
           ),
@@ -940,7 +940,7 @@ void _showAddUserDialog(BuildContext context) {
                 labelStyle: TextStyle(color: Colors.black),
                 border: OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
+                  borderSide: BorderSide(color: Color(0xFFF49402)),
                 ),
               ),
             ),
@@ -954,7 +954,7 @@ void _showAddUserDialog(BuildContext context) {
                 labelStyle: TextStyle(color: Colors.black),
                 border: OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
+                  borderSide: BorderSide(color: Color(0xFFF49402)),
                 ),
               ),
             ),
@@ -967,7 +967,7 @@ void _showAddUserDialog(BuildContext context) {
                 labelStyle: TextStyle(color: Colors.black),
                 border: OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
+                  borderSide: BorderSide(color: Color(0xFFF49402)),
                 ),
               ),
             ),

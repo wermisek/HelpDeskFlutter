@@ -10,7 +10,6 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   String accountName = 'John Doe'; // Mock account name
   Map<int, bool> hoverStates = {}; // To track hover state for each tile
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,67 +20,80 @@ class _SettingsPageState extends State<SettingsPage> {
         elevation: 0, // Remove shadow
       ),
       backgroundColor: Color(0xFFF5F5F5), // Set background color to f5f5f5
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-        child: Column(
-          children: [
-            // Change Password Tile
-            _buildSettingsTile(
-              context,
-              index: 1, // Tile index
-              icon: Icons.lock,
-              text: 'Zmień hasło',
-              onTap: () => _showPasswordChangeMessage(context),
-            ),
-            SizedBox(height: 16.0),
-            // About Us Tile
-            _buildSettingsTile(
-              context,
-              index: 2, // Tile index
-              icon: Icons.gavel,
-              text: 'Licencja aplikacji',
-              onTap: () => _showAboutUsDialog(context),
-            ),
-            SizedBox(height: 16.0),
-            // App Info Tile
-            _buildSettingsTile(
-              context,
-              index: 3, // Tile index
-              icon: Icons.apps,
-              text: 'Informacje o aplikacji',
-              onTap: () => _showAppInfoDialog(context),
-            ),
-            Spacer(), // Pushes the logout button to the bottom
-            // Logout Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center, // Center the button horizontally
-              children: [
-                SizedBox(
-                  width: 310, // Set a fixed width for the button
-                  height: 60, // Maintain the height
-                  child: ElevatedButton(
-                    onPressed: _logOut,
-                    child: Text(
-                      'Wyloguj się',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white, // White background
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30), // Rounded corners
-                      ),
-                      foregroundColor: Colors.black, // Black text
-                      elevation: 2.0, // Subtle shadow
-                    ),
+      body: Column(
+        children: [
+          // Black divider below AppBar
+          Divider(
+            color: Color(0xFFF49402), // Black divider
+            thickness: 1, // Divider thickness
+            height: 1, // Ensures it does not take additional space
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 36.0),
+              child: Column(
+                children: [
+                  // Change Password Tile
+                  _buildSettingsTile(
+                    context,
+                    index: 1, // Tile index
+                    icon: Icons.lock,
+                    text: 'Zmień hasło',
+                    onTap: () => _showPasswordChangeMessage(context),
                   ),
-                ),
-              ],
+                  SizedBox(height: 16.0),
+                  // About Us Tile
+                  _buildSettingsTile(
+                    context,
+                    index: 2, // Tile index
+                    icon: Icons.gavel,
+                    text: 'Licencja aplikacji',
+                    onTap: () => _showAboutUsDialog(context),
+                  ),
+                  SizedBox(height: 16.0),
+                  // App Info Tile
+                  _buildSettingsTile(
+                    context,
+                    index: 3, // Tile index
+                    icon: Icons.apps,
+                    text: 'Informacje o aplikacji',
+                    onTap: () => _showAppInfoDialog(context),
+                  ),
+                  Spacer(), // Pushes the logout button to the bottom
+                  // Logout Button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center, // Center the button horizontally
+                    children: [
+                      SizedBox(
+                        width: 310, // Set a fixed width for the button
+                        height: 60, // Maintain the height
+                        child: ElevatedButton(
+                          onPressed: _logOut,
+                          child: Text(
+                            'Wyloguj się',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white, // White background
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30), // Rounded corners
+                            ),
+                            foregroundColor: Colors.black, // Black text
+                            elevation: 2.0, // Subtle shadow
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+
 
   // Helper method to build tiles with hover effect for individual tiles
   Widget _buildSettingsTile(BuildContext context,
@@ -132,30 +144,40 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white, // White background for AlertDialog
+          backgroundColor: Colors.white,
           title: Text(
             'Zmiana hasła',
             style: TextStyle(color: Colors.black),
           ),
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Jeżeli chciałbyś zmienić hasło do swojego konta musisz wysłać zgłoszenie do administratora.',
-                style: TextStyle(color: Colors.black),
-              ),
-              SizedBox(height: 16),
-              SizedBox(height: 16),
-              Text(
-                'Wyslij zgłoszenie i wpisz:\nSala: "Zmiana hasła"\nOpis: Login: "Twoj login", Nowe hasło: "Twoje nowe wymyslone haslo"',
-                style: TextStyle(color: Colors.black),
-              ),
-            ],
+          content: Container(
+            width: 500, // Set a smaller width for the dialog
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Minimize height
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Jeżeli chciałbyś zmienić hasło do swojego konta musisz wysłać zgłoszenie do administratora.',
+                  style: TextStyle(color: Colors.black),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Wyslij zgłoszenie i wpisz:\nSala: "Zmiana hasła"\nOpis: Login: "Twoj login", Nowe hasło: "Twoje nowe wymyslone haslo"',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text('OK'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black, // Text color
+                backgroundColor: Colors.white, // Button background color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0), // Rounded corners
+                ),
+              ),
             ),
           ],
         );
@@ -163,20 +185,24 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+
+
   // About Us Dialog
   void _showAboutUsDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white, // Białe tło dla AlertDialog
+          backgroundColor: Colors.white,
           title: Text(
             'Licencja aplikacji',
             style: TextStyle(color: Colors.black),
           ),
-          content: SingleChildScrollView(
-            child: Text(
-              '''
+          content: Container(
+            width: 500, // Set a smaller width for the dialog
+            child: SingleChildScrollView(
+              child: Text(
+                '''
 Umowa Licencyjna
 ================
 
@@ -188,13 +214,21 @@ W przypadku zapytań dotyczących licencji, prosimy o kontakt z autorem projektu
 
 Konto Github: https://github.com/wermisek
 ''',
-              style: TextStyle(color: Colors.black),
+                style: TextStyle(color: Colors.black),
+              ),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text('OK'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black, // Text color
+                backgroundColor: Colors.white, // Button background color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0), // Rounded corners
+                ),
+              ),
             ),
           ],
         );
@@ -203,20 +237,22 @@ Konto Github: https://github.com/wermisek
   }
 
 
-  // App Info Dialog
+
   void _showAppInfoDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white, // White background for AlertDialog
+          backgroundColor: Colors.white,
           title: Text(
             'Informacje o aplikacji',
             style: TextStyle(color: Colors.black),
           ),
-          content: SingleChildScrollView(
-            child: Text(
-              '''
+          content: Container(
+            width: 500, // Set a smaller width for the dialog
+            child: SingleChildScrollView(
+              child: Text(
+                '''
 Pełny kod aplikacji oraz wszystkie jej funkcje są dostępne w repozytorium GitHub. 
 Możesz zapoznać się z dokumentacją, zgłaszać błędy lub proponować zmiany.
 
@@ -224,19 +260,28 @@ Wszystkie szczegóły i kod źródłowy są dostępne pod tym linkiem:
 
 https://github.com/wermisek/HelpDeskFlutter
 ''',
-              style: TextStyle(color: Colors.black),
+                style: TextStyle(color: Colors.black),
+              ),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text('OK'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black, // Text color
+                backgroundColor: Colors.white, // Button background color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0), // Rounded corners
+                ),
+              ),
             ),
           ],
         );
       },
     );
   }
+
 
 
   // Log out functionality
