@@ -186,14 +186,29 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                   padding: const EdgeInsets.only(top: 15.0),
                                   child: Center(
                                     child: ElevatedButton(
-                                      onPressed: () {
-                                        // Na nowym ekranie pokażemy szczegóły problemu
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ProblemTempPage(problem: problem),
-                                          ),
+                                      onPressed: () async {
+                                        // Wywołanie endpointu do oznaczenia zgłoszenia jako przeczytane
+                                        final response = await http.put(
+                                          Uri.parse('http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
                                         );
+
+                                        if (response.statusCode == 200) {
+                                          // Przejdź na nową stronę, gdy status zmieniony pomyślnie
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ProblemTempPage(problem: problem),
+                                            ),
+                                          );
+                                        } else {
+                                          // Obsługa błędów
+                                          print('Błąd oznaczania zgłoszenia jako przeczytane: ${response.body}');
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
+                                            ),
+                                          );
+                                        }
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.white,
@@ -215,6 +230,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                     ),
                                   ),
                                 ),
+
                               ],
                             ),
                           ),
