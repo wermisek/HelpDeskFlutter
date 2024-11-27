@@ -712,7 +712,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 foregroundColor: Colors.white, // Kolor tekstu przycisku
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy przycisku
               ),
-              child: Text('Tak'),
+              child: Text('Usun'),
             ),
 
 
