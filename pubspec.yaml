@@ -24,10 +24,3 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Adding assets
-  assets:
-    - assets/images/  # This will load all images from the "images" folder inside "assets"
-    # You can also specify individual files like so:
-    # - assets/images/logo.png
-    # - assets/images/banner.jpg
-
