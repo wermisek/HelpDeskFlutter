@@ -300,10 +300,12 @@ class _UserHomePageState extends State<UserHomePage> {
               ),
               ListTile(
                 leading: Icon(Icons.group, color: Colors.black),
-                title: Text(
-                    'Moje problemy', style: TextStyle(color: Colors.black)),
+                title: Text('Moje problemy', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   _switchView(CurrentView.myProblems);
+                  setState(() {
+                    currentPage = 0;
+                  });
                   Navigator.pop(context);
                 },
               ),
