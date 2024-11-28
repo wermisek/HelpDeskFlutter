@@ -38,8 +38,24 @@ bool FlutterWindow::OnCreate() {
     // window is shown. It is a no-op if the first frame hasn't completed yet.
     flutter_controller_->ForceRedraw();
 
-
     UpdateTitleBarColor(GetHandle());
+
+    // Now calculate the screen center position and move the window there
+    RECT rect;
+    GetWindowRect(GetHandle(), &rect);
+    int windowWidth = rect.right - rect.left;
+    int windowHeight = rect.bottom - rect.top;
+
+    // Get screen width and height
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+    // Calculate the position to center the window
+    int posX = (screenWidth - windowWidth) / 2;
+    int posY = (screenHeight - windowHeight) / 2;
+
+    // Move the window to the center of the screen
+    SetWindowPos(GetHandle(), HWND_TOP, posX, posY, 0, 0, SWP_NOSIZE);
 
     return true;
 }
