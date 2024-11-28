@@ -7,7 +7,7 @@ class ProblemTempPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Pobranie i formatowanie timestampu
+    // Pobranie i formatowanie timestampu push
     DateTime timestamp = DateTime.parse(problem['timestamp'] ?? DateTime.now().toString());
     String formattedTimestamp = "${timestamp.day}-${timestamp.month}-${timestamp.year} ${timestamp.hour}:${timestamp.minute}";
 
