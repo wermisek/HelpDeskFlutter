@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -27,6 +29,7 @@ class UserHomePage extends StatefulWidget {
   const UserHomePage({super.key, required this.username});
 
   @override
+  // ignore: library_private_types_in_public_api
   _UserHomePageState createState() => _UserHomePageState();
 }
 
@@ -40,10 +43,10 @@ class _UserHomePageState extends State<UserHomePage> {
   final _formKey = GlobalKey<FormState>();
   CurrentView currentView = CurrentView.home;
   final int itemsPerPage = 12;
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
   int currentPage = 0;
   List<dynamic> problems = [];
-  bool isLoading = false; // Definicja zmiennej isLoading.
+  bool isLoading = false;
 
 
   @override
@@ -117,7 +120,7 @@ class _UserHomePageState extends State<UserHomePage> {
             message: 'Dziękujemy, ${widget
                 .username}. Twój problem został przesłany.',
           );
-          _fetchUserProblems(); // Refresh problems after submission
+          _fetchUserProblems();
         } else {
           _showDialog(
             context,
@@ -245,8 +248,8 @@ class _UserHomePageState extends State<UserHomePage> {
             ? PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Divider(
-            color: Color(0xFF8A8A8A), // Kolor dopasowany do aplikacji
-            thickness: 1.0, // Grubość tak jak w zakładce wysyłania zgłoszenia
+            color: Color(0xFF8A8A8A),
+            thickness: 1.0,
             height: 1.0,
           ),
         )
@@ -280,8 +283,7 @@ class _UserHomePageState extends State<UserHomePage> {
                       SizedBox(height: 6.0),
                       Divider(
                         color: Color(0xFF8A8A8A),
-                        // Kolor dopasowany do aplikacji
-                        thickness: 1.0, // Grubość identyczna jak w zakładce wysyłania zgłoszenia
+                        thickness: 1.0,
                       ),
                     ],
                   ),
@@ -328,9 +330,7 @@ class _UserHomePageState extends State<UserHomePage> {
       children: [
         Divider(
           color: Color(0xFF8A8A8A),
-          // Kolor dopasowany do aplikacji
           thickness: 1.0,
-          // Grubość identyczna jak w zakładce wysyłania zgłoszenia
           height: 1.0,
         ),
         Expanded(
@@ -571,7 +571,6 @@ class _UserHomePageState extends State<UserHomePage> {
                                           fontWeight: FontWeight.w600,
                                           fontSize: 16),
                                     ),
-                                    // Tooltip dla ikony widoczności
                                     Tooltip(
                                       message: isRead
                                           ? 'Przeczytana wiadomość'
@@ -620,145 +619,36 @@ class _UserHomePageState extends State<UserHomePage> {
                                             context: context,
                                             builder: (BuildContext context) {
                                               return AlertDialog(
+                                                backgroundColor: Colors.white,
                                                 title: Text(
                                                   'Szczegóły zgłoszenia',
                                                   style: TextStyle(
                                                     color: Colors.black,
                                                     fontSize: 16.0,
-                                                    fontWeight:
-                                                    FontWeight.bold,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
                                                 content: Column(
-                                                  mainAxisSize:
-                                                  MainAxisSize.min,
-                                                  crossAxisAlignment:
-                                                  CrossAxisAlignment
-                                                      .start,
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
                                                     SizedBox(height: 8),
-                                                    Text(
-                                                        'Sala: ${problem['room'] ??
-                                                            'Nieznana'}'),
+                                                    Text('Sala: ${problem['room'] ?? 'Nieznana'}'),
                                                     SizedBox(height: 8),
-                                                    Text(
-                                                        'Nauczyciel: ${problem['username'] ??
-                                                            'Nieznany'}'),
+                                                    Text('Nauczyciel: ${problem['username'] ?? 'Nieznany'}'),
                                                     SizedBox(height: 8),
-                                                    Text(
-                                                        'Treść: ${problem['problem'] ??
-                                                            'Brak opisu'}'),
+                                                    Text('Treść: ${problem['problem'] ?? 'Brak opisu'}'),
                                                     SizedBox(height: 8),
-                                                    Text(
-                                                        'Czas zgłoszenia: ${_formatTimestamp(
-                                                            problem['timestamp'])}'),
+                                                    Text('Czas zgłoszenia: ${_formatTimestamp(problem['timestamp'])}'),
                                                   ],
                                                 ),
                                                 actions: [
                                                   Row(
-                                                    mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: [
-                                                      // Przycisk "Usuń" po lewej stronie
-                                                      TextButton(
-                                                        onPressed: () async {
-                                                          // URL do API usuwania zgłoszenia
-                                                          final response =
-                                                          await http.delete(
-                                                            Uri.parse(
-                                                                'http://192.168.10.188:8080/delete_problem/${problem['id']}'),
-                                                          );
-
-                                                          if (response
-                                                              .statusCode ==
-                                                              200) {
-                                                            // Jeśli usunięcie zakończy się sukcesem
-                                                            ScaffoldMessenger
-                                                                .of(
-                                                                context)
-                                                                .showSnackBar(
-                                                              SnackBar(
-                                                                content: Text(
-                                                                    'Zgłoszenie zostało usunięte.'),
-                                                              ),
-                                                            );
-                                                            Navigator.of(
-                                                                context)
-                                                                .pop(); // Zamknięcie dialogu
-                                                            setState(() {
-                                                              // Zaktualizowanie UI - usunięcie zgłoszenia z listy
-                                                              problems
-                                                                  .removeWhere(
-                                                                      (item) =>
-                                                                  item[
-                                                                  'id'] ==
-                                                                      problem[
-                                                                      'id']);
-                                                            });
-                                                          } else {
-                                                            // Jeśli wystąpił błąd podczas usuwania
-                                                            ScaffoldMessenger
-                                                                .of(
-                                                                context)
-                                                                .showSnackBar(
-                                                              SnackBar(
-                                                                content: Text(
-                                                                    'Nie udało się usunąć zgłoszenia.'),
-                                                              ),
-                                                            );
-                                                          }
-                                                        },
-                                                        style: ButtonStyle(
-                                                          side: WidgetStateProperty
-                                                              .all(BorderSide(
-                                                              color: Colors
-                                                                  .red)),
-                                                          // Czerwone obramowanie
-                                                          foregroundColor: WidgetStateProperty
-                                                              .resolveWith<
-                                                              Color>(
-                                                                (Set<
-                                                                WidgetState> states) {
-                                                              if (states
-                                                                  .contains(
-                                                                  WidgetState
-                                                                      .hovered)) {
-                                                                return Colors
-                                                                    .white; // Biały tekst przy hoverze
-                                                              }
-                                                              return Colors
-                                                                  .black; // Czarny tekst domyślnie
-                                                            },
-                                                          ),
-                                                          backgroundColor: WidgetStateProperty
-                                                              .resolveWith<
-                                                              Color>(
-                                                                (Set<
-                                                                WidgetState> states) {
-                                                              if (states
-                                                                  .contains(
-                                                                  WidgetState
-                                                                      .hovered)) {
-                                                                return Colors
-                                                                    .red; // Czerwone tło przy hoverze
-                                                              }
-                                                              return Colors
-                                                                  .white; // Domyślne tło
-                                                            },
-                                                          ),
-                                                        ),
-                                                        child: Text(
-                                                          'Usuń',
-                                                          style: TextStyle(
-                                                              fontSize: 14),
-                                                        ),
-                                                      ),
-                                                      // Przycisk "Zamknij" po prawej stronie
                                                       TextButton(
                                                         onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
+                                                          Navigator.of(context).pop();
                                                         },
                                                         child: Text(
                                                           'Zamknij',
@@ -767,12 +657,63 @@ class _UserHomePageState extends State<UserHomePage> {
                                                           ),
                                                         ),
                                                       ),
+                                                      TextButton(
+                                                        onPressed: () async {
+                                                          final response = await http.delete(
+                                                            Uri.parse(
+                                                                'http://192.168.10.188:8080/delete_problem/${problem['id']}'),
+                                                          );
+
+                                                          if (response.statusCode == 200) {
+                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                              SnackBar(
+                                                                content: Text('Zgłoszenie zostało usunięte.'),
+                                                              ),
+                                                            );
+                                                            Navigator.of(context).pop();
+                                                            setState(() {
+                                                              problems.removeWhere(
+                                                                      (item) => item['id'] == problem['id']);
+                                                            });
+                                                          } else {
+                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                              SnackBar(
+                                                                content: Text('Nie udało się usunąć zgłoszenia.'),
+                                                              ),
+                                                            );
+                                                          }
+                                                        },
+                                                        style: ButtonStyle(
+                                                          side: WidgetStateProperty.all(BorderSide(color: Colors.red)),
+                                                          foregroundColor: WidgetStateProperty.resolveWith<Color>(
+                                                                (Set<WidgetState> states) {
+                                                              if (states.contains(WidgetState.hovered)) {
+                                                                return Colors.white;
+                                                              }
+                                                              return Colors.black;
+                                                            },
+                                                          ),
+                                                          backgroundColor: WidgetStateProperty.resolveWith<Color>(
+                                                                (Set<WidgetState> states) {
+                                                              if (states.contains(WidgetState.hovered)) {
+                                                                return Colors.red;
+                                                              }
+                                                              return Colors.white;
+                                                            },
+                                                          ),
+                                                        ),
+                                                        child: Text(
+                                                          'Usuń',
+                                                          style: TextStyle(fontSize: 14),
+                                                        ),
+                                                      ),
                                                     ],
                                                   ),
                                                 ],
                                               );
                                             },
                                           );
+
                                         } else {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(SnackBar(
