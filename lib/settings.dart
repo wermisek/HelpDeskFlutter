@@ -37,7 +37,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   _buildSettingsTile(
                     context,
                     index: 1, // Tile index
-                    icon: Icons.lock,
+                    icon: Icons.lock,//push
                     text: 'Zmień hasło',
                     onTap: () => _showPasswordChangeMessage(context),
                   ),
