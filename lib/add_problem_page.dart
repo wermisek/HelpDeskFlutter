@@ -43,6 +43,7 @@ class _UserHomePageState extends State<UserHomePage> {
   PageController _pageController = PageController();
   int currentPage = 0;
   List<dynamic> problems = [];
+  bool isLoading = false; // Definicja zmiennej isLoading.
 
 
   @override
@@ -51,37 +52,35 @@ class _UserHomePageState extends State<UserHomePage> {
     _fetchUserProblems();
   }
 
-  void _fetchUserProblems() async {
+  Future<void> _fetchUserProblems() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      final response = await HttpClient().getUrl(
-          Uri.parse('http://192.168.10.188:8080/get_problems/'));
-      final data = await response.close();
-      String content = await data.transform(utf8.decoder).join();
+      final response =
+      await http.get(Uri.parse('http://192.168.10.188:8080/get_problems'));
 
-      // Debug log, żeby sprawdzić odpowiedź serwera
-      print("Response from server: $content");
-
-      // Przekształcamy odpowiedź na listę problemów
-      List<dynamic> allProblems = jsonDecode(content);
-
-      // Sprawdzamy zawartość
-      print("All Problems: $allProblems");
-
-      // Filtrowanie problemów dla bieżącego użytkownika
-      List<dynamic> userProblems = allProblems.where((problem) {
-        return problem['username'] ==
-            widget.username; // Filtrowanie po nazwie użytkownika
-      }).toList();
-
-      // Debug log, żeby sprawdzić, czy filtracja działa poprawnie
-      print("Filtered Problems: $userProblems");
-
-      setState(() {
-        problems = userProblems; // Przypisanie problemów użytkownika
-      });
+      if (response.statusCode == 200) {
+        setState(() {
+          problems = List<dynamic>.from(json.decode(response.body));
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Nie udało się załadować zgłoszeń.')),
+        );
+      }
     } catch (e) {
-      _showDialog(context, title: 'Błąd połączenia',
-          message: 'Nie udało się połączyć z serwerem.');
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Błąd połączenia z serwerem.')),
+      );
     }
   }
 
@@ -104,29 +103,39 @@ class _UserHomePageState extends State<UserHomePage> {
       };
 
       try {
-        final request = await HttpClient().postUrl(
-            Uri.parse('http://192.168.10.188:8080/add_problem'));
+        final request = await HttpClient()
+            .postUrl(Uri.parse('http://192.168.10.188:8080/add_problem'));
         request.headers.contentType = ContentType.json;
         request.write(jsonEncode(problemData));
 
         final response = await request.close();
 
         if (response.statusCode == 201) {
-          _showDialog(context, title: 'Problem wysłany',
-              message: 'Dziękujemy, ${widget
-                  .username}. Twój problem został przesłany.');
+          _showDialog(
+            context,
+            title: 'Problem wysłany',
+            message: 'Dziękujemy, ${widget
+                .username}. Twój problem został przesłany.',
+          );
           _fetchUserProblems(); // Refresh problems after submission
         } else {
-          _showDialog(context, title: 'Błąd',
-              message: 'Nie udało się wysłać problemu. Serwer zwrócił: ${response
-                  .reasonPhrase}');
+          _showDialog(
+            context,
+            title: 'Błąd',
+            message: 'Nie udało się wysłać problemu. Serwer zwrócił: ${response
+                .reasonPhrase}',
+          );
         }
       } catch (e) {
-        _showDialog(context, title: 'Błąd połączenia',
-            message: 'Nie udało się połączyć z serwerem. Sprawdź połączenie sieciowe.');
+        _showDialog(
+          context,
+          title: 'Błąd połączenia',
+          message: 'Nie udało się połączyć z serwerem. Sprawdź połączenie sieciowe.',
+        );
       }
     }
   }
+
 
   void _showDialog(BuildContext context,
       {required String title, required String message}) {
@@ -236,8 +245,8 @@ class _UserHomePageState extends State<UserHomePage> {
             ? PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Divider(
-            color: Color(0xFF8A8A8A),  // Kolor dopasowany do aplikacji
-            thickness: 1.0,  // Grubość tak jak w zakładce wysyłania zgłoszenia
+            color: Color(0xFF8A8A8A), // Kolor dopasowany do aplikacji
+            thickness: 1.0, // Grubość tak jak w zakładce wysyłania zgłoszenia
             height: 1.0,
           ),
         )
@@ -270,8 +279,9 @@ class _UserHomePageState extends State<UserHomePage> {
                       ),
                       SizedBox(height: 6.0),
                       Divider(
-                        color: Color(0xFF8A8A8A),  // Kolor dopasowany do aplikacji
-                        thickness: 1.0,  // Grubość identyczna jak w zakładce wysyłania zgłoszenia
+                        color: Color(0xFF8A8A8A),
+                        // Kolor dopasowany do aplikacji
+                        thickness: 1.0, // Grubość identyczna jak w zakładce wysyłania zgłoszenia
                       ),
                     ],
                   ),
@@ -317,8 +327,10 @@ class _UserHomePageState extends State<UserHomePage> {
     return Column(
       children: [
         Divider(
-          color: Color(0xFF8A8A8A), // Kolor dopasowany do aplikacji
-          thickness: 1.0,  // Grubość identyczna jak w zakładce wysyłania zgłoszenia
+          color: Color(0xFF8A8A8A),
+          // Kolor dopasowany do aplikacji
+          thickness: 1.0,
+          // Grubość identyczna jak w zakładce wysyłania zgłoszenia
           height: 1.0,
         ),
         Expanded(
@@ -439,12 +451,27 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
+  String _formatTimestamp(String timestamp) {
+    try {
+      DateTime parsedTimestamp = DateTime.parse(timestamp);
+      return '${parsedTimestamp.day}-${parsedTimestamp.month}-${parsedTimestamp
+          .year} ${parsedTimestamp.hour}:${parsedTimestamp
+          .minute}:${parsedTimestamp.second}';
+    } catch (e) {
+      return 'Nieprawidłowy format daty';
+    }
+  }
+
   Widget _buildMyProblemsView() {
     List<List<dynamic>> paginatedProblems = [];
     for (int i = 0; i < problems.length; i += itemsPerPage) {
-      paginatedProblems.add(problems.sublist(i,
-          i + itemsPerPage > problems.length ? problems.length : i +
-              itemsPerPage));
+      paginatedProblems.add(problems.sublist(
+          i, i + itemsPerPage > problems.length ? problems.length : i +
+          itemsPerPage));
+    }
+
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
     }
 
     return Scaffold(
@@ -503,6 +530,8 @@ class _UserHomePageState extends State<UserHomePage> {
                     itemCount: pageProblems.length,
                     itemBuilder: (context, index) {
                       var problem = pageProblems[index];
+                      bool isRead = problem['read'] == 1;
+
                       return IntrinsicHeight(
                         child: Container(
                           decoration: BoxDecoration(
@@ -528,14 +557,35 @@ class _UserHomePageState extends State<UserHomePage> {
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment:
+                              CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Sala: ${problem['room'] ?? 'Nieznana'}',
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16),
+                                Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Sala: ${problem['room'] ?? 'Nieznana'}',
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16),
+                                    ),
+                                    // Tooltip dla ikony widoczności
+                                    Tooltip(
+                                      message: isRead
+                                          ? 'Przeczytana wiadomość'
+                                          : 'Nieprzeczytana wiadomość',
+                                      child: Icon(
+                                        isRead
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
+                                        color: isRead
+                                            ? Colors.green
+                                            : Colors.grey,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 SizedBox(height: 4),
                                 Text(
@@ -556,7 +606,8 @@ class _UserHomePageState extends State<UserHomePage> {
                                 ),
                                 SizedBox(height: 10),
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 15.0),
+                                  padding:
+                                  const EdgeInsets.only(top: 15.0),
                                   child: Center(
                                     child: ElevatedButton(
                                       onPressed: () async {
@@ -564,32 +615,178 @@ class _UserHomePageState extends State<UserHomePage> {
                                           Uri.parse(
                                               'http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
                                         );
-
                                         if (response.statusCode == 200) {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ProblemTempPage(
-                                                      problem: problem),
-                                            ),
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                title: Text(
+                                                  'Szczegóły zgłoszenia',
+                                                  style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 16.0,
+                                                    fontWeight:
+                                                    FontWeight.bold,
+                                                  ),
+                                                ),
+                                                content: Column(
+                                                  mainAxisSize:
+                                                  MainAxisSize.min,
+                                                  crossAxisAlignment:
+                                                  CrossAxisAlignment
+                                                      .start,
+                                                  children: [
+                                                    SizedBox(height: 8),
+                                                    Text(
+                                                        'Sala: ${problem['room'] ??
+                                                            'Nieznana'}'),
+                                                    SizedBox(height: 8),
+                                                    Text(
+                                                        'Nauczyciel: ${problem['username'] ??
+                                                            'Nieznany'}'),
+                                                    SizedBox(height: 8),
+                                                    Text(
+                                                        'Treść: ${problem['problem'] ??
+                                                            'Brak opisu'}'),
+                                                    SizedBox(height: 8),
+                                                    Text(
+                                                        'Czas zgłoszenia: ${_formatTimestamp(
+                                                            problem['timestamp'])}'),
+                                                  ],
+                                                ),
+                                                actions: [
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                    children: [
+                                                      // Przycisk "Usuń" po lewej stronie
+                                                      TextButton(
+                                                        onPressed: () async {
+                                                          // URL do API usuwania zgłoszenia
+                                                          final response =
+                                                          await http.delete(
+                                                            Uri.parse(
+                                                                'http://192.168.10.188:8080/delete_problem/${problem['id']}'),
+                                                          );
+
+                                                          if (response
+                                                              .statusCode ==
+                                                              200) {
+                                                            // Jeśli usunięcie zakończy się sukcesem
+                                                            ScaffoldMessenger
+                                                                .of(
+                                                                context)
+                                                                .showSnackBar(
+                                                              SnackBar(
+                                                                content: Text(
+                                                                    'Zgłoszenie zostało usunięte.'),
+                                                              ),
+                                                            );
+                                                            Navigator.of(
+                                                                context)
+                                                                .pop(); // Zamknięcie dialogu
+                                                            setState(() {
+                                                              // Zaktualizowanie UI - usunięcie zgłoszenia z listy
+                                                              problems
+                                                                  .removeWhere(
+                                                                      (item) =>
+                                                                  item[
+                                                                  'id'] ==
+                                                                      problem[
+                                                                      'id']);
+                                                            });
+                                                          } else {
+                                                            // Jeśli wystąpił błąd podczas usuwania
+                                                            ScaffoldMessenger
+                                                                .of(
+                                                                context)
+                                                                .showSnackBar(
+                                                              SnackBar(
+                                                                content: Text(
+                                                                    'Nie udało się usunąć zgłoszenia.'),
+                                                              ),
+                                                            );
+                                                          }
+                                                        },
+                                                        style: ButtonStyle(
+                                                          side: WidgetStateProperty
+                                                              .all(BorderSide(
+                                                              color: Colors
+                                                                  .red)),
+                                                          // Czerwone obramowanie
+                                                          foregroundColor: WidgetStateProperty
+                                                              .resolveWith<
+                                                              Color>(
+                                                                (Set<
+                                                                WidgetState> states) {
+                                                              if (states
+                                                                  .contains(
+                                                                  WidgetState
+                                                                      .hovered)) {
+                                                                return Colors
+                                                                    .white; // Biały tekst przy hoverze
+                                                              }
+                                                              return Colors
+                                                                  .black; // Czarny tekst domyślnie
+                                                            },
+                                                          ),
+                                                          backgroundColor: WidgetStateProperty
+                                                              .resolveWith<
+                                                              Color>(
+                                                                (Set<
+                                                                WidgetState> states) {
+                                                              if (states
+                                                                  .contains(
+                                                                  WidgetState
+                                                                      .hovered)) {
+                                                                return Colors
+                                                                    .red; // Czerwone tło przy hoverze
+                                                              }
+                                                              return Colors
+                                                                  .white; // Domyślne tło
+                                                            },
+                                                          ),
+                                                        ),
+                                                        child: Text(
+                                                          'Usuń',
+                                                          style: TextStyle(
+                                                              fontSize: 14),
+                                                        ),
+                                                      ),
+                                                      // Przycisk "Zamknij" po prawej stronie
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                        child: Text(
+                                                          'Zamknij',
+                                                          style: TextStyle(
+                                                            color: Colors.black,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              );
+                                            },
                                           );
                                         } else {
                                           ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                  'Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
-                                            ),
-                                          );
+                                              .showSnackBar(SnackBar(
+                                            content: Text(
+                                                'Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
+                                          ));
                                         }
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.white,
                                         foregroundColor: Colors.black,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              20),
+                                          borderRadius:
+                                          BorderRadius.circular(20),
                                           side: BorderSide(
                                               color: Colors.black, width: 1),
                                         ),
@@ -623,8 +820,8 @@ class _UserHomePageState extends State<UserHomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: Icon(
-                        Icons.arrow_back_ios, size: 20, color: Colors.black),
+                    icon: Icon(Icons.arrow_back_ios,
+                        size: 20, color: Colors.black),
                     onPressed: currentPage > 0
                         ? () {
                       _pageController.previousPage(
@@ -639,9 +836,10 @@ class _UserHomePageState extends State<UserHomePage> {
                     style: TextStyle(fontSize: 14.0, color: Colors.black),
                   ),
                   IconButton(
-                    icon: Icon(
-                        Icons.arrow_forward_ios, size: 20, color: Colors.black),
-                    onPressed: currentPage < paginatedProblems.length - 1
+                    icon: Icon(Icons.arrow_forward_ios,
+                        size: 20, color: Colors.black),
+                    onPressed: currentPage <
+                        paginatedProblems.length - 1
                         ? () {
                       _pageController.nextPage(
                         duration: Duration(milliseconds: 300),
@@ -658,34 +856,4 @@ class _UserHomePageState extends State<UserHomePage> {
       ),
     );
   }
-  }
-
-  class ProblemTempPage extends StatelessWidget {
-  final dynamic problem;
-
-  ProblemTempPage({required this.problem});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Problem Details'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text('Problem ID: ${problem['id']}'),
-            Text('Room: ${problem['room']}'),
-            Text('Description: ${problem['problem']}'),
-          ],
-        ),
-      ),
-    );
-  }
 }
-
-
-
-
-
