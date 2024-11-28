@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problemy HelpDesk</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .problem {
+            background-color: #fff;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Lista Problemów</h1>
+    <div id="problems"></div>
+
+    <script>
+        // Function to fetch problems from the server and display them
+        async function fetchProblems() {
+            try {
+                const response = await fetch('/get_problems');
+                const problems = await response.json();
+
+                const problemsContainer = document.getElementById('problems');
+                problemsContainer.innerHTML = ''; // Clear existing problems
+
+                if (problems.length === 0) {
+                    problemsContainer.innerHTML = '<p>Brak zgłoszonych problemów.</p>';
+                } else {
+                    problems.forEach(problem => {
+                        const problemElement = document.createElement('div');
+                        problemElement.classList.add('problem');
+                        problemElement.innerHTML = `
+                            <strong>Użytkownik:</strong> ${problem.username}<br>
+                            <strong>Pokój:</strong> ${problem.room}<br>
+                            <strong>Opis problemu:</strong> ${problem.problem}<br>
+                            <strong>Data:</strong> ${new Date(problem.timestamp).toLocaleString()}
+                        `;
+                        problemsContainer.appendChild(problemElement);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching problems:', error);
+            }
+        }
+
+        // Fetch problems when the page loads
+        window.onload = fetchProblems;
+    </script>
+
+</body>
+</html>
