@@ -254,6 +254,13 @@ class _UserHomePageState extends State<UserHomePage> {
           ),
         )
             : null,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            tooltip: '',
+          ),
+        ),
       ),
       body: currentView == CurrentView.home
           ? _buildHomeView()
