@@ -1,10 +1,12 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class ProblemTempPage extends StatelessWidget {
   final Map<String, dynamic> problem;
 
-  ProblemTempPage({required this.problem});
+  const ProblemTempPage({super.key, required this.problem});
 
   Future<void> _deleteProblem(BuildContext context, String problemId) async {
     final url = Uri.parse('http://192.168.10.188:8080/delete_problem/$problemId');
@@ -127,32 +129,32 @@ class ProblemTempPage extends StatelessWidget {
                             _deleteProblem(context, problem['id'].toString());
                           },
                           style: ButtonStyle(
-                            side: MaterialStateProperty.all(BorderSide(color: Colors.red, width: 2)),
-                            foregroundColor: MaterialStateProperty.resolveWith<Color>(
-                                  (Set<MaterialState> states) {
-                                if (states.contains(MaterialState.hovered)) {
+                            side: WidgetStateProperty.all(BorderSide(color: Colors.red, width: 2)),
+                            foregroundColor: WidgetStateProperty.resolveWith<Color>(
+                                  (Set<WidgetState> states) {
+                                if (states.contains(WidgetState.hovered)) {
                                   return Colors.white; // Biały tekst przy hover
                                 }
                                 return Colors.black; // Czarny tekst domyślnie
                               },
                             ),
-                            backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                                  (Set<MaterialState> states) {
-                                if (states.contains(MaterialState.hovered)) {
+                            backgroundColor: WidgetStateProperty.resolveWith<Color>(
+                                  (Set<WidgetState> states) {
+                                if (states.contains(WidgetState.hovered)) {
                                   return Colors.red; // Czerwone tło przy hover
                                 }
                                 return Colors.white; // Białe tło domyślnie
                               },
                             ),
                             animationDuration: Duration.zero,
-                            padding: MaterialStateProperty.all(EdgeInsets.symmetric(horizontal: 40.0, vertical: 12.0)),
-                            shape: MaterialStateProperty.all(
+                            padding: WidgetStateProperty.all(EdgeInsets.symmetric(horizontal: 40.0, vertical: 12.0)),
+                            shape: WidgetStateProperty.all(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30.0),
                               ),
                             ),
-                            elevation: MaterialStateProperty.all(8.0),
-                            shadowColor: MaterialStateProperty.all(Colors.black),
+                            elevation: WidgetStateProperty.all(8.0),
+                            shadowColor: WidgetStateProperty.all(Colors.black),
                           ),
                           child: Text(
                             'Usuń',

@@ -1,8 +1,12 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'login.dart'; // Import the login page
 
 
 class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
@@ -69,10 +73,6 @@ class _SettingsPageState extends State<SettingsPage> {
                         height: 60, // Maintain the height
                         child: ElevatedButton(
                           onPressed: _logOut,
-                          child: Text(
-                            'Wyloguj się',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white, // White background
                             shape: RoundedRectangleBorder(
@@ -80,6 +80,10 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             foregroundColor: Colors.black, // Black text
                             elevation: 2.0, // Subtle shadow
+                          ),
+                          child: Text(
+                            'Wyloguj się',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -149,7 +153,7 @@ class _SettingsPageState extends State<SettingsPage> {
             'Zmiana hasła',
             style: TextStyle(color: Colors.black),
           ),
-          content: Container(
+          content: SizedBox(
             width: 500, // Set a smaller width for the dialog
             child: Column(
               mainAxisSize: MainAxisSize.min, // Minimize height
@@ -170,7 +174,6 @@ class _SettingsPageState extends State<SettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.black, // Text color
                 backgroundColor: Colors.white, // Button background color
@@ -178,6 +181,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   borderRadius: BorderRadius.circular(16.0), // Rounded corners
                 ),
               ),
+              child: Text('OK'),
             ),
           ],
         );
@@ -198,7 +202,7 @@ class _SettingsPageState extends State<SettingsPage> {
             'Licencja aplikacji',
             style: TextStyle(color: Colors.black),
           ),
-          content: Container(
+          content: SizedBox(
             width: 500, // Set a smaller width for the dialog
             child: SingleChildScrollView(
               child: Text(
@@ -221,7 +225,6 @@ Konto Github: https://github.com/wermisek
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.black, // Text color
                 backgroundColor: Colors.white, // Button background color
@@ -229,6 +232,7 @@ Konto Github: https://github.com/wermisek
                   borderRadius: BorderRadius.circular(16.0), // Rounded corners
                 ),
               ),
+              child: Text('OK'),
             ),
           ],
         );
@@ -248,7 +252,7 @@ Konto Github: https://github.com/wermisek
             'Informacje o aplikacji',
             style: TextStyle(color: Colors.black),
           ),
-          content: Container(
+          content: SizedBox(
             width: 500, // Set a smaller width for the dialog
             child: SingleChildScrollView(
               child: Text(
@@ -267,7 +271,6 @@ https://github.com/wermisek/HelpDeskFlutter
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.black, // Text color
                 backgroundColor: Colors.white, // Button background color
@@ -275,6 +278,7 @@ https://github.com/wermisek/HelpDeskFlutter
                   borderRadius: BorderRadius.circular(16.0), // Rounded corners
                 ),
               ),
+              child: Text('OK'),
             ),
           ],
         );

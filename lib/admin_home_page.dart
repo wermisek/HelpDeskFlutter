@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously, avoid_print
+
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
@@ -30,6 +32,8 @@ class MyApp extends StatelessWidget {
 }
 
 class AdminHomePage extends StatefulWidget {
+  const AdminHomePage({super.key});
+
   @override
   _AdminHomePageState createState() => _AdminHomePageState();
 }
@@ -40,7 +44,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Timer? _refreshTimer;
   bool showUsers = false;
   bool showProblems = true;
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
   int currentPage = 0;
   final int itemsPerPage = 12;
 
@@ -747,42 +751,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  void _showPopup(BuildContext context, dynamic problem) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFFFFFFFF),
-        contentPadding: EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Zgłoszenie od: ${problem['username'] ?? 'Nieznany'}',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              SizedBox(height: 10),
-              Text('Treść: ${problem['problem'] ?? 'Brak opisu'}'),
-              SizedBox(height: 10),
-              Text('Sala: ${problem['room'] ?? 'Brak informacji'}'),
-              SizedBox(height: 10),
-            ],
-          ),
-        ),
-        actions: <Widget>[
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('Zamknij'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   void initState() {
