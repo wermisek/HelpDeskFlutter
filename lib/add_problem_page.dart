@@ -36,8 +36,7 @@ class UserHomePage extends StatefulWidget {
 enum CurrentView { home, myProblems }
 
 class _UserHomePageState extends State<UserHomePage> {
-  final _teacherController = TextEditingController(
-      text: 'Wypełnione automatycznie');
+  final _teacherController = TextEditingController();
   final _roomController = TextEditingController();
   final _problemController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -53,6 +52,7 @@ class _UserHomePageState extends State<UserHomePage> {
   void initState() {
     super.initState();
     _fetchUserProblems();
+    _teacherController.text = widget.username;
   }
 
   Future<void> _fetchUserProblems() async {
@@ -248,7 +248,7 @@ class _UserHomePageState extends State<UserHomePage> {
             ? PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Divider(
-            color: Color(0xFF8A8A8A),
+            color: Color(0xFFF49402),
             thickness: 1.0,
             height: 1.0,
           ),
@@ -289,7 +289,7 @@ class _UserHomePageState extends State<UserHomePage> {
                       ),
                       SizedBox(height: 6.0),
                       Divider(
-                        color: Color(0xFF8A8A8A),
+                        color: Color(0xFFF49402),
                         thickness: 1.0,
                       ),
                     ],
@@ -338,7 +338,7 @@ class _UserHomePageState extends State<UserHomePage> {
     return Column(
       children: [
         Divider(
-          color: Color(0xFF8A8A8A),
+          color: Color(0xFFF49402),
           thickness: 1.0,
           height: 1.0,
         ),
@@ -353,11 +353,21 @@ class _UserHomePageState extends State<UserHomePage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // Stylizacja napisu "Zgłoś problem" na taki sam jak "Zgłoszenia"
                       Text(
                         'Zgłoś problem',
-                        style: TextStyle(fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black),
+                        style: TextStyle(
+                          fontSize: 20.0,  // Taki sam rozmiar czcionki jak "Zgłoszenia"
+                          fontWeight: FontWeight.bold,  // Taki sam styl pogrubienia
+                          color: Colors.black,  // Taki sam kolor tekstu
+                          shadows: [
+                            Shadow(
+                              offset: Offset(0, 2),
+                              blurRadius: 4.0,
+                              color: Colors.grey.withOpacity(0.5),
+                            ),
+                          ],
+                        ),
                       ),
                       SizedBox(height: 16.0),
                       Row(
@@ -772,7 +782,7 @@ class _UserHomePageState extends State<UserHomePage> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.arrow_back_ios,
-                        size: 20, color: Colors.black),
+                        size: 20, color: Color(0xFFF49402)),
                     onPressed: currentPage > 0
                         ? () {
                       _pageController.previousPage(
@@ -788,7 +798,7 @@ class _UserHomePageState extends State<UserHomePage> {
                   ),
                   IconButton(
                     icon: Icon(Icons.arrow_forward_ios,
-                        size: 20, color: Colors.black),
+                        size: 20, color: Color(0xFFF49402)),
                     onPressed: currentPage <
                         paginatedProblems.length - 1
                         ? () {
