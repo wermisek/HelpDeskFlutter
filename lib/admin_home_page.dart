@@ -40,7 +40,7 @@ class AdminHomePage extends StatefulWidget {
 
 class _AdminHomePageState extends State<AdminHomePage> {
   List<dynamic> problems = [];
-  List<dynamic> users = []; // New list for users
+  List<dynamic> users = [];  // New list for users
   Timer? _refreshTimer;
   bool showUsers = false;
   bool showProblems = true;
@@ -51,32 +51,28 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Future<void> getProblems() async {
     try {
       var response =
-      await HttpClient().getUrl(
-          Uri.parse('http://192.168.10.188:8080/get_problems'));
+      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
       setState(() {
         problems = jsonDecode(content);
       });
     } catch (e) {
-      _showErrorDialog(
-          context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
+      _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
     }
   }
 
   Future<void> getUsers() async {
     try {
       var response =
-      await HttpClient().getUrl(
-          Uri.parse('http://192.168.10.188:8080/get_users'));
+      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_users'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
       setState(() {
         users = jsonDecode(content);
       });
     } catch (e) {
-      _showErrorDialog(context, 'Błąd połączenia',
-          'Nie udało się pobrać danych użytkowników.');
+      _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych użytkowników.');
     }
   }
 
@@ -84,8 +80,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     List<List<dynamic>> paginatedProblems = [];
     for (int i = 0; i < problems.length; i += itemsPerPage) {
       paginatedProblems.add(problems.sublist(i,
-          i + itemsPerPage > problems.length ? problems.length : i +
-              itemsPerPage));
+          i + itemsPerPage > problems.length ? problems.length : i + itemsPerPage));
     }
 
     return Expanded(
@@ -163,8 +158,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                               ),
                             ],
                           ),
-                          margin: EdgeInsets.symmetric(
-                              vertical: 5.0, horizontal: 10.0),
+                          margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
@@ -179,15 +173,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  'Nauczyciel: ${problem['username'] ??
-                                      'Nieznany'}',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 14),
+                                  'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
+                                  style: TextStyle(color: Colors.black, fontSize: 14),
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  'Treść: ${problem['problem'] ??
-                                      'Brak opisu'}',
+                                  'Treść: ${problem['problem'] ?? 'Brak opisu'}',
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 14,
@@ -202,8 +193,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                       onPressed: () async {
                                         // Wywołanie endpointu do oznaczenia zgłoszenia jako przeczytane
                                         final response = await http.put(
-                                          Uri.parse(
-                                              'http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
+                                          Uri.parse('http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
                                         );
 
                                         if (response.statusCode == 200) {
@@ -211,21 +201,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ProblemTempPage(
-                                                      problem: problem),
+                                              builder: (context) => ProblemTempPage(problem: problem),
                                             ),
                                           );
                                         } else {
                                           // Obsługa błędów
-                                          print(
-                                              'Błąd oznaczania zgłoszenia jako przeczytane: ${response
-                                                  .body}');
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
+                                          print('Błąd oznaczania zgłoszenia jako przeczytane: ${response.body}');
+                                          ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
-                                              content: Text(
-                                                  'Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
+                                              content: Text('Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
                                             ),
                                           );
                                         }
@@ -234,14 +218,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                         backgroundColor: Colors.white,
                                         foregroundColor: Colors.black,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              20),
-                                          side: BorderSide(
-                                              color: Colors.black, width: 1),
+                                          borderRadius: BorderRadius.circular(20),
+                                          side: BorderSide(color: Colors.black, width: 1),
                                         ),
                                         minimumSize: Size(120, 36),
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 20.0),
+                                        padding: EdgeInsets.symmetric(horizontal: 20.0),
                                       ),
                                       child: Text(
                                         'Rozwiń',
@@ -270,8 +251,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.arrow_back_ios, size: 20,
-                        color: Color(0xFFF49402)),
+                    icon: Icon(Icons.arrow_back_ios, size: 20, color: Color(0xFFF49402)),
                     onPressed: currentPage > 0
                         ? () {
                       _pageController.previousPage(
@@ -286,8 +266,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     style: TextStyle(fontSize: 14.0, color: Colors.black),
                   ),
                   IconButton(
-                    icon: Icon(Icons.arrow_forward_ios, size: 20,
-                        color: Color(0xFFF49402)),
+                    icon: Icon(Icons.arrow_forward_ios, size: 20, color: Color(0xFFF49402)),
                     onPressed: currentPage < paginatedProblems.length - 1
                         ? () {
                       _pageController.nextPage(
@@ -307,11 +286,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
 
+
+
   Widget _buildUserList() {
     List<List<dynamic>> paginatedUsers = [];
     for (int i = 0; i < users.length; i += 12) {
-      paginatedUsers.add(
-          users.sublist(i, i + 12 > users.length ? users.length : i + 12));
+      paginatedUsers.add(users.sublist(i, i + 12 > users.length ? users.length : i + 12));
     }
 
     return Expanded(
@@ -352,13 +332,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   ),
                   child: ElevatedButton(
                     onPressed: () {
-                      _showAddUserDialog(
-                          context); // Wywołanie funkcji do wyświetlenia popupu
+                      _showAddUserDialog(context); // Wywołanie funkcji do wyświetlenia popupu
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 10.0),
+                      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
                       shadowColor: Colors.transparent,
                     ),
                     child: Text(
@@ -398,8 +376,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       itemBuilder: (context, pageIndex) {
                         var pageUsers = paginatedUsers[pageIndex];
                         return GridView.builder(
-                          padding: EdgeInsets.symmetric(
-                              vertical: 3.0, horizontal: 8.0),
+                          padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 4,
                             crossAxisSpacing: 8.0,
@@ -419,39 +396,31 @@ class _AdminHomePageState extends State<AdminHomePage> {
                               child: Column(
                                 children: [
                                   ListTile(
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 15.0, vertical: 10.0),
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
                                     title: Column(
-                                      crossAxisAlignment: CrossAxisAlignment
-                                          .start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Użytkownik: ${user['username'] ??
-                                              'Nieznany użytkownik'}',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.w600),
+                                          'Użytkownik: ${user['username'] ?? 'Nieznany użytkownik'}',
+                                          style: TextStyle(fontWeight: FontWeight.w600),
                                         ),
                                         SizedBox(height: 4),
                                         Text(
-                                          'Rola: ${user['role'] ??
-                                              'Brak roli'}',
+                                          'Rola: ${user['role'] ?? 'Brak roli'}',
                                           style: TextStyle(color: Colors.grey),
                                         ),
                                       ],
                                     ),
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 8.0),
+                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment
-                                          .spaceEvenly,
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                       children: [
                                         Tooltip(
                                           message: 'Zmień login',
                                           child: IconButton(
-                                            icon: Icon(Icons.edit,
-                                                color: Colors.black),
+                                            icon: Icon(Icons.edit, color: Colors.black),
                                             onPressed: () {
                                               _changeUsername(user);
                                             },
@@ -460,8 +429,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                         Tooltip(
                                           message: 'Zmień hasło',
                                           child: IconButton(
-                                            icon: Icon(Icons.lock,
-                                                color: Colors.black),
+                                            icon: Icon(Icons.lock, color: Colors.black),
                                             onPressed: () {
                                               _changePassword(user);
                                             },
@@ -470,8 +438,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                         Tooltip(
                                           message: 'Usuń użytkownika',
                                           child: IconButton(
-                                            icon: Icon(Icons.delete,
-                                                color: Colors.black),
+                                            icon: Icon(Icons.delete, color: Colors.black),
                                             onPressed: () {
                                               _deleteUser(user);
                                             },
@@ -494,8 +461,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.arrow_back_ios, size: 20,
-                              color: Color(0xFFF49402)),
+                          icon: Icon(Icons.arrow_back_ios, size: 20, color: Color(0xFFF49402)),
                           onPressed: currentPage > 0
                               ? () {
                             _pageController.previousPage(
@@ -510,8 +476,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           style: TextStyle(fontSize: 14.0, color: Colors.black),
                         ),
                         IconButton(
-                          icon: Icon(Icons.arrow_forward_ios, size: 20,
-                              color: Color(0xFFF49402)),
+                          icon: Icon(Icons.arrow_forward_ios, size: 20, color: Color(0xFFF49402)),
                           onPressed: currentPage < paginatedUsers.length - 1
                               ? () {
                             _pageController.nextPage(
@@ -543,8 +508,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0), // Zaokrąglone rogi
           ),
-          backgroundColor: Colors.white,
-          // Tło dopasowane do motywu
+          backgroundColor: Colors.white, // Tło dopasowane do motywu
           title: Text(
             'Zmień login',
             style: TextStyle(color: Colors.black), // Kolor tekstu nagłówka
@@ -556,8 +520,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               labelText: 'Nowy login',
               labelStyle: TextStyle(color: Colors.black), // Kolor etykiety
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(
-                    0xFFF49402)), // Kolor obramowania po zaznaczeniu
+                borderSide: BorderSide(color: Color(0xFFF49402)), // Kolor obramowania po zaznaczeniu
               ),
             ),
           ),
@@ -570,8 +533,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white, // Kolor tła przycisku "Anuluj"
                 foregroundColor: Colors.black, // Kolor tekstu przycisku
-                padding: EdgeInsets.symmetric(
-                    vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
               ),
               child: Text('Anuluj'),
             ),
@@ -583,10 +545,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   var response = await http.put(
                     Uri.parse('http://192.168.10.188:8080/change_username'),
                     body: json.encode({
-                      'oldUsername': user['username'],
-                      // Stary login użytkownika
-                      'newUsername': newUsername,
-                      // Nowy login
+                      'oldUsername': user['username'], // Stary login użytkownika
+                      'newUsername': newUsername, // Nowy login
                     }),
                     headers: {
                       'Content-Type': 'application/json',
@@ -606,8 +566,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white, // Kolor tła przycisku "Zapisz"
                 foregroundColor: Colors.black, // Kolor tekstu przycisku
-                padding: EdgeInsets.symmetric(
-                    vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
               ),
               child: Text('Zapisz'),
             ),
@@ -616,6 +575,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
       },
     );
   }
+
+
+
 
 
   void _changePassword(dynamic user) {
@@ -627,8 +589,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0), // Zaokrąglone rogi
           ),
-          backgroundColor: Colors.white,
-          // Tło dopasowane do motywu
+          backgroundColor: Colors.white, // Tło dopasowane do motywu
           title: Text(
             'Zmień hasło',
             style: TextStyle(color: Colors.black), // Kolor tekstu nagłówka
@@ -641,8 +602,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               labelText: 'Nowe hasło',
               labelStyle: TextStyle(color: Colors.black), // Kolor etykiety
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(
-                    0xFFF49402)), // Kolor obramowania po zaznaczeniu
+                borderSide: BorderSide(color: Color(0xFFF49402)), // Kolor obramowania po zaznaczeniu
               ),
             ),
           ),
@@ -655,8 +615,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white, // Kolor tła przycisku "Anuluj"
                 foregroundColor: Colors.black, // Kolor tekstu przycisku
-                padding: EdgeInsets.symmetric(
-                    vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
               ),
               child: Text('Anuluj'),
             ),
@@ -689,8 +648,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white, // Kolor tła przycisku "Zapisz"
                 foregroundColor: Colors.black, // Kolor tekstu przycisku
-                padding: EdgeInsets.symmetric(
-                    vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
               ),
               child: Text('Zapisz'),
             ),
@@ -708,11 +666,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-                16.0), // Zaokrąglone rogi dla dialogu
+            borderRadius: BorderRadius.circular(16.0), // Zaokrąglone rogi dla dialogu
           ),
-          backgroundColor: Colors.white,
-          // Tło okna dialogowego dopasowane do ciemnego motywu
+          backgroundColor: Colors.white, // Tło okna dialogowego dopasowane do ciemnego motywu
           title: Text(
             'Potwierdź usunięcie',
             style: TextStyle(color: Colors.black), // Kolor tekstu nagłówka
@@ -730,8 +686,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white, // Kolor tła przycisku "Anuluj"
                 foregroundColor: Colors.black, // Kolor tekstu przycisku
-                padding: EdgeInsets.symmetric(vertical: 12,
-                    horizontal: 24), // Wewnętrzne odstępy przycisku
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy przycisku
               ),
               child: Text('Anuluj'),
             ),
@@ -744,8 +699,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     'role': 'admin', // Nagłówek z rolą admina
                   },
                   body: json.encode({
-                    'username': user['username'],
-                    // Nazwa użytkownika do usunięcia
+                    'username': user['username'], // Nazwa użytkownika do usunięcia
                   }),
                 );
 
@@ -760,8 +714,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white, // Kolor tła przycisku "Tak"
                 foregroundColor: Colors.black, // Kolor tekstu przycisku
-                padding: EdgeInsets.symmetric(vertical: 12,
-                    horizontal: 24), // Wewnętrzne odstępy przycisku
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy przycisku
               ),
               child: Text('Usun'),
             ),
@@ -774,22 +727,27 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
 
+
+
+
+
+
+
   void _showErrorDialog(BuildContext context, String title, String message) {
     showDialog(
       context: context,
-      builder: (context) =>
-          AlertDialog(
-            title: Text(title),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('OK'),
           ),
+        ],
+      ),
     );
   }
 
@@ -798,10 +756,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void initState() {
     super.initState();
     getProblems();
-    getUsers(); // Fetch users
+    getUsers();  // Fetch users
     _refreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       getProblems();
-      getUsers(); // Refresh users every second
+      getUsers();  // Refresh users every second
     });
   }
 
@@ -826,12 +784,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
         backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,
         leading: Builder(
-          builder: (context) =>
-              IconButton(
-                icon: Icon(Icons.menu),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                // tooltip: '', // Usunięcie tooltipa, bo nie jest to wspierane
-              ),
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            // tooltip: '', // Usunięcie tooltipa, bo nie jest to wspierane
+          ),
         ),
       ),
       drawer: Drawer(
@@ -845,10 +802,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 child: Container(
                   color: Colors.white,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    // Wyśrodkowanie pionowe
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    // Wyśrodkowanie poziome
+                    mainAxisAlignment: MainAxisAlignment.center, // Wyśrodkowanie pionowe
+                    crossAxisAlignment: CrossAxisAlignment.center, // Wyśrodkowanie poziome
                     children: [
                       Text(
                         'Helpdesk Admin',
@@ -858,8 +813,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 6.0),
-                      // Przestrzeń między tekstem a linią
+                      SizedBox(height: 6.0), // Przestrzeń między tekstem a linią
                       Divider( // Linia pod napisem
                         color: Color(0xFFF49402),
                         thickness: 1.0, // Grubość linii
@@ -872,8 +826,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               ListTile(
                 leading: Icon(Icons.report_problem, color: Colors.black),
-                title: Text(
-                    'Zgłoszenia', style: TextStyle(color: Colors.black)),
+                title: Text('Zgłoszenia', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   setState(() {
                     showProblems = true;
@@ -884,8 +837,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               ListTile(
                 leading: Icon(Icons.group, color: Colors.black),
-                title: Text(
-                    'Użytkownicy', style: TextStyle(color: Colors.black)),
+                title: Text('Użytkownicy', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   setState(() {
                     showProblems = false;
@@ -896,8 +848,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               ListTile(
                 leading: Icon(Icons.settings, color: Colors.black),
-                title: Text(
-                    'Ustawienia', style: TextStyle(color: Colors.black)),
+                title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -933,130 +884,126 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   void _showAddUserDialog(BuildContext context) {
-    final TextEditingController usernameController = TextEditingController(); //push
-    final TextEditingController passwordController = TextEditingController();
-    final TextEditingController roleController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();//push
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController roleController = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          // Ciemne tło (dopasowane do reszty)
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0), // Zaokrąglone rogi
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.white,  // Ciemne tło (dopasowane do reszty)
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),  // Zaokrąglone rogi
+        ),
+        title: Text(
+          'Dodaj użytkownika',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+            fontSize: 18.0,
           ),
-          title: Text(
-            'Dodaj użytkownika',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.w600,
-              fontSize: 18.0,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: usernameController,
-                style: TextStyle(color: Colors.black),
-                decoration: InputDecoration(
-                  labelText: 'Login',
-                  labelStyle: TextStyle(color: Colors.black),
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF49402)),
-                  ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: usernameController,
+              style: TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                labelText: 'Login',
+                labelStyle: TextStyle(color: Colors.black),
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFFF49402)),
                 ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                style: TextStyle(color: Colors.black),
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Hasło',
-                  labelStyle: TextStyle(color: Colors.black),
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF49402)),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: roleController,
-                style: TextStyle(color: Colors.black),
-                decoration: InputDecoration(
-                  labelText: 'Rola',
-                  labelStyle: TextStyle(color: Colors.black),
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF49402)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Zamknij popup
-              },
-              child: Text(
-                'Anuluj',
-                style: TextStyle(color: Colors.black),
               ),
             ),
-            TextButton(
-              onPressed: () {
-                final username = usernameController.text;
-                final password = passwordController.text;
-                final role = roleController.text;
-
-                // Tutaj wywołaj funkcję do utworzenia użytkownika
-                _createUser(username, password, role);
-                Navigator.of(context)
-                    .pop(); // Zamknij popup po stworzeniu użytkownika
-              },
-              child: Text(
-                'Stwórz',
-                style: TextStyle(color: Colors.black),
+            SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              style: TextStyle(color: Colors.black),
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Hasło',
+                labelStyle: TextStyle(color: Colors.black),
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFFF49402)),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: roleController,
+              style: TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                labelText: 'Rola',
+                labelStyle: TextStyle(color: Colors.black),
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFFF49402)),
+                ),
               ),
             ),
           ],
-        );
-      },
-    );
-  }
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();  // Zamknij popup
+            },
+            child: Text(
+              'Anuluj',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              final username = usernameController.text;
+              final password = passwordController.text;
+              final role = roleController.text;
 
-  void _createUser(String username, String password, String role) async {
-    var newUser = {
-      "username": username,
-      "password": password,
-      "role": role,
-    };
-
-    try {
-      final response = await http.post(
-        Uri.parse('http://192.168.10.188:8080/register'),
-        // Upewnij się, że adres jest poprawny
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(newUser),
+              // Tutaj wywołaj funkcję do utworzenia użytkownika
+              _createUser(username, password, role);
+              Navigator.of(context).pop();  // Zamknij popup po stworzeniu użytkownika
+            },
+            child: Text(
+              'Stwórz',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+        ],
       );
+    },
+  );
+}
+void _createUser(String username, String password, String role) async {
+  var newUser = {
+    "username": username,
+    "password": password,
+    "role": role,
+  };
 
-      if (response.statusCode == 201) {
-        // Jeśli użytkownik został pomyślnie utworzony
-        print("Użytkownik stworzony: ${response.body}");
-      } else {
-        // Jeśli wystąpił błąd przy tworzeniu użytkownika
-        final responseBody = json.decode(response.body);
-        print("Błąd tworzenia użytkownika: ${responseBody['message']}");
-      }
-    } catch (e) {
-      print("Błąd podczas wysyłania zapytania: $e");
+  try {
+    final response = await http.post(
+      Uri.parse('http://192.168.10.188:8080/register'),  // Upewnij się, że adres jest poprawny
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(newUser),
+    );
+
+    if (response.statusCode == 201) {
+      // Jeśli użytkownik został pomyślnie utworzony
+      print("Użytkownik stworzony: ${response.body}");
+    } else {
+      // Jeśli wystąpił błąd przy tworzeniu użytkownika
+      final responseBody = json.decode(response.body);
+      print("Błąd tworzenia użytkownika: ${responseBody['message']}");
     }
+  } catch (e) {
+    print("Błąd podczas wysyłania zapytania: $e");
   }
+}
 }
