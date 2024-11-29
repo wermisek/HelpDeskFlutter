@@ -686,6 +686,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                                           }
                                                         },
                                                         style: ButtonStyle(
+                                                          animationDuration: Duration.zero,
                                                           side: WidgetStateProperty.all(BorderSide(color: Colors.red)),
                                                           foregroundColor: WidgetStateProperty.resolveWith<Color>(
                                                                 (Set<WidgetState> states) {

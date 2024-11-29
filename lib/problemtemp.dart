@@ -122,25 +122,43 @@ class ProblemTempPage extends StatelessWidget {
                             ),
                           ),
                         ),
-                        ElevatedButton(
+                        TextButton(
                           onPressed: () {
                             _deleteProblem(context, problem['id'].toString());
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 12.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30.0),
+                          style: ButtonStyle(
+                            side: MaterialStateProperty.all(BorderSide(color: Colors.red, width: 2)),
+                            foregroundColor: MaterialStateProperty.resolveWith<Color>(
+                                  (Set<MaterialState> states) {
+                                if (states.contains(MaterialState.hovered)) {
+                                  return Colors.white; // Biały tekst przy hover
+                                }
+                                return Colors.black; // Czarny tekst domyślnie
+                              },
                             ),
-                            elevation: 8.0, // Dodanie cienia dla "Usuń"
-                            shadowColor: Colors.black,
+                            backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                                  (Set<MaterialState> states) {
+                                if (states.contains(MaterialState.hovered)) {
+                                  return Colors.red; // Czerwone tło przy hover
+                                }
+                                return Colors.white; // Białe tło domyślnie
+                              },
+                            ),
+                            animationDuration: Duration.zero,
+                            padding: MaterialStateProperty.all(EdgeInsets.symmetric(horizontal: 40.0, vertical: 12.0)),
+                            shape: MaterialStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                            ),
+                            elevation: MaterialStateProperty.all(8.0),
+                            shadowColor: MaterialStateProperty.all(Colors.black),
                           ),
                           child: Text(
                             'Usuń',
                             style: TextStyle(
                               fontSize: 16.0,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
                             ),
                           ),
                         ),
