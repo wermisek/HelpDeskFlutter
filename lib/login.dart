@@ -207,7 +207,19 @@ class LoginPageState extends State<LoginPage> {
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
+                      Text(
+                        'Zaloguj się',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      SizedBox(height: 60), // Zmniejszony odstęp między napisem a polami
+
+                      // Pierwsze pole tekstowe
                       _buildTextField(
                         controller: _usernameController,
                         label: 'Nazwa użytkownika',
@@ -215,6 +227,8 @@ class LoginPageState extends State<LoginPage> {
                         errorText: _usernameError,
                       ),
                       SizedBox(height: 20),
+
+                      // Drugie pole tekstowe
                       _buildTextField(
                         controller: _passwordController,
                         label: 'Hasło',
@@ -224,6 +238,8 @@ class LoginPageState extends State<LoginPage> {
                         errorText: _passwordError,
                       ),
                       SizedBox(height: 40),
+
+                      // Przycisk logowania lub animacja ładowania
                       isLoading
                           ? CircularProgressIndicator() // Animacja ładowania
                           : _buildLoginButton(context),
