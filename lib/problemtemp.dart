@@ -1,12 +1,17 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class ProblemTempPage extends StatelessWidget {
+class ProblemTempPage extends StatefulWidget {
   final Map<String, dynamic> problem;
 
   const ProblemTempPage({super.key, required this.problem});
+
+  @override
+  _ProblemTempPageState createState() => _ProblemTempPageState();
+}
+
+class _ProblemTempPageState extends State<ProblemTempPage> {
+  bool _isHovered = false; // To track hover state of the 'Usuń' button
 
   Future<void> _deleteProblem(BuildContext context, String problemId) async {
     final url = Uri.parse('http://192.168.10.188:8080/delete_problem/$problemId');
@@ -31,7 +36,7 @@ class ProblemTempPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    DateTime timestamp = DateTime.parse(problem['timestamp'] ?? DateTime.now().toString());
+    DateTime timestamp = DateTime.parse(widget.problem['timestamp'] ?? DateTime.now().toString());
     String formattedTimestamp = "${timestamp.day}-${timestamp.month}-${timestamp.year} ${timestamp.hour}:${timestamp.minute}";
 
     return Scaffold(
@@ -61,25 +66,27 @@ class ProblemTempPage extends StatelessWidget {
             colors: [Color(0xFFF5F5F5), Color(0xFFF5F5F5)],
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
+        child: Column(
+          children: [
+            SizedBox(height: 100), // Adjust this height to move content higher/lower
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 60.0), // Padding outside the container (32px on both sides)
+              child: Container(
+                height: 360.0,
                 padding: EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(15.0),
+                  borderRadius: BorderRadius.circular(24.0),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
                       blurRadius: 8.0,
                       offset: Offset(0, 4),
                     ),
-                  ],
+                  ], // Shadow kept for the container
                 ),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start, // Push content to the top
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -91,13 +98,36 @@ class ProblemTempPage extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 20.0),
-                    _buildDetailRow('Sala', problem['room'] ?? 'Nieznana'),
+                    _buildDetailRow('Sala', widget.problem['room'] ?? 'Nieznana'),
                     SizedBox(height: 15.0),
-                    _buildDetailRow('Nauczyciel', problem['username'] ?? 'Nieznany'),
+                    _buildDetailRow('Nauczyciel', widget.problem['username'] ?? 'Nieznany'),
                     SizedBox(height: 15.0),
-                    _buildDetailRow('Treść', problem['problem'] ?? 'Brak opisu'),
+                    // For "Treść", wrap it in a SingleChildScrollView to allow scrolling if the text is long
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      child: Text(
+                        'Treść: ',
+                        style: TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: 100.0,  // Adjust this height according to your layout
+                      padding: EdgeInsets.symmetric(horizontal: 10.0),
+                      child: SingleChildScrollView(
+                        child: Text(
+                          widget.problem['problem'] ?? 'Brak opisu',
+                          style: TextStyle(fontSize: 16.0, color: Colors.black),
+                          softWrap: true,
+                        ),
+                      ),
+                    ),
                     SizedBox(height: 15.0),
                     _buildDetailRow('Czas zgłoszenia', formattedTimestamp),
+                    Spacer(), // This pushes the buttons to the bottom of the container
                     SizedBox(height: 20.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -110,57 +140,51 @@ class ProblemTempPage extends StatelessWidget {
                             backgroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 12.0),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30.0),
+                              borderRadius: BorderRadius.circular(16.0),
                             ),
-                            elevation: 8.0, // Dodanie cienia dla "Powrót"
-                            shadowColor: Colors.grey,
+                            elevation: 0.0,  // Removed shadow from the button
+                            side: BorderSide(color: Colors.black), // Small black border around Zamknij button
                           ),
                           child: Text(
-                            'Powrót',
+                            'Zamknij',
                             style: TextStyle(
                               fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w400,
                               color: Colors.black,
                             ),
                           ),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            _deleteProblem(context, problem['id'].toString());
+                        MouseRegion(
+                          onEnter: (_) {
+                            setState(() {
+                              _isHovered = true; // Update state when hovering
+                            });
                           },
-                          style: ButtonStyle(
-                            side: WidgetStateProperty.all(BorderSide(color: Colors.red, width: 2)),
-                            foregroundColor: WidgetStateProperty.resolveWith<Color>(
-                                  (Set<WidgetState> states) {
-                                if (states.contains(WidgetState.hovered)) {
-                                  return Colors.white; // Biały tekst przy hover
-                                }
-                                return Colors.black; // Czarny tekst domyślnie
-                              },
-                            ),
-                            backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                                  (Set<WidgetState> states) {
-                                if (states.contains(WidgetState.hovered)) {
-                                  return Colors.red; // Czerwone tło przy hover
-                                }
-                                return Colors.white; // Białe tło domyślnie
-                              },
-                            ),
-                            animationDuration: Duration.zero,
-                            padding: WidgetStateProperty.all(EdgeInsets.symmetric(horizontal: 40.0, vertical: 12.0)),
-                            shape: WidgetStateProperty.all(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30.0),
+                          onExit: (_) {
+                            setState(() {
+                              _isHovered = false; // Revert state when mouse exits
+                            });
+                          },
+                          child: TextButton(
+                            onPressed: () {
+                              _deleteProblem(context, widget.problem['id'].toString());
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 12.0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16.0),
                               ),
+                              side: BorderSide(color: Colors.red, width: 1),  // Border still there
+                              foregroundColor: _isHovered ? Colors.white : Colors.black, // Text color white on hover
+                              backgroundColor: _isHovered ? Colors.red : Colors.white, // Button background red on hover
+                              elevation: 0.0, // Removed shadow from the button
                             ),
-                            elevation: WidgetStateProperty.all(8.0),
-                            shadowColor: WidgetStateProperty.all(Colors.black),
-                          ),
-                          child: Text(
-                            'Usuń',
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
+                            child: Text(
+                              'Usuń',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
                         ),
@@ -169,8 +193,8 @@ class ProblemTempPage extends StatelessWidget {
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
