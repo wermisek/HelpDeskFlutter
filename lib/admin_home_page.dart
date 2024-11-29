@@ -783,7 +783,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
         ),
         backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,
-      ),//komentarz
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            // tooltip: '', // Usunięcie tooltipa, bo nie jest to wspierane
+          ),
+        ),
+      ),
       drawer: Drawer(
         child: Container(
           color: Colors.white,
@@ -802,12 +809,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         'Helpdesk Admin',
                         style: TextStyle(
                           color: Colors.black,
-                          fontSize: 19.0,  // Ustalony rozmiar czcionki
+                          fontSize: 19.0, // Ustalony rozmiar czcionki
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: 6.0), // Przestrzeń między tekstem a linią
-                      Divider(  // Linia pod napisem
+                      Divider( // Linia pod napisem
                         color: Color(0xFFF49402),
                         thickness: 1.0, // Grubość linii
                         indent: 0, // Brak wcięcia po lewej stronie
@@ -875,8 +882,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
     );
   }
-}
-void _showAddUserDialog(BuildContext context) {
+
+  void _showAddUserDialog(BuildContext context) {
   final TextEditingController usernameController = TextEditingController();//push
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController roleController = TextEditingController();
@@ -998,4 +1005,5 @@ void _createUser(String username, String password, String role) async {
   } catch (e) {
     print("Błąd podczas wysyłania zapytania: $e");
   }
+}
 }
