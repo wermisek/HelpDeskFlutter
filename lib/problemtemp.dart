@@ -102,29 +102,7 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
                     SizedBox(height: 15.0),
                     _buildDetailRow('Nauczyciel', widget.problem['username'] ?? 'Nieznany'),
                     SizedBox(height: 15.0),
-                    // For "Treść", wrap it in a SingleChildScrollView to allow scrolling if the text is long
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: Text(
-                        'Treść: ',
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      height: 100.0,  // Adjust this height according to your layout
-                      padding: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: SingleChildScrollView(
-                        child: Text(
-                          widget.problem['problem'] ?? 'Brak opisu',
-                          style: TextStyle(fontSize: 16.0, color: Colors.black),
-                          softWrap: true,
-                        ),
-                      ),
-                    ),
+                    _buildDetailRow('Treść', widget.problem['problem'] ?? 'Brak opisu'),
                     SizedBox(height: 15.0),
                     _buildDetailRow('Czas zgłoszenia', formattedTimestamp),
                     Spacer(), // This pushes the buttons to the bottom of the container
@@ -200,13 +178,15 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
     );
   }
 
+  // Modified _buildDetailRow to fit content
   Widget _buildDetailRow(String label, String value) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start, // Aligns the text to the top
       children: [
         Text(
           '$label: ',
           style: TextStyle(
-            fontSize: 18.0,
+            fontSize: 16.0,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
@@ -218,7 +198,8 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
               fontSize: 16.0,
               color: Colors.black,
             ),
-            overflow: TextOverflow.ellipsis,
+            overflow: TextOverflow.ellipsis, // Truncates text if it's too long
+            maxLines: 3, // Limit the number of lines to 3 (optional)
           ),
         ),
       ],
