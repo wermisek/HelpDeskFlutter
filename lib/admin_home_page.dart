@@ -79,8 +79,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Widget _buildProblemList() {
     List<List<dynamic>> paginatedProblems = [];
     for (int i = 0; i < problems.length; i += itemsPerPage) {
-      paginatedProblems.add(problems.sublist(i,
-          i + itemsPerPage > problems.length ? problems.length : i + itemsPerPage));
+      paginatedProblems.add(problems.sublist(
+        i,
+        i + itemsPerPage > problems.length ? problems.length : i + itemsPerPage,
+      ));
     }
 
     return Expanded(
@@ -128,116 +130,100 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 itemBuilder: (context, pageIndex) {
                   var pageProblems = paginatedProblems[pageIndex];
                   return GridView.builder(
-                    padding: EdgeInsets.symmetric(vertical: 3.0),
+                    padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 8.0,
-                      mainAxisSpacing: 8.0,
-                      childAspectRatio: 1.9,
+                      crossAxisCount: 4, // Liczba kafelków w jednym rzędzie
+                      crossAxisSpacing: 8.0, // Odstęp między kafelkami w poziomie
+                      mainAxisSpacing: 8.0, // Odstęp między kafelkami w pionie
+                      childAspectRatio: 1.87, // Proporcje kafelka
                     ),
                     itemCount: pageProblems.length,
                     itemBuilder: (context, index) {
                       var problem = pageProblems[index];
-                      return IntrinsicHeight(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Color(0xFFFFFFFF),
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                spreadRadius: 0,
-                                offset: Offset(-3, 0),
-                              ),
-                              BoxShadow(
-                                color: Color(0xFF000000).withOpacity(0.2),
-                                blurRadius: 10.0,
-                                spreadRadius: 0,
-                                offset: Offset(3, 0),
-                              ),
-                            ],
-                          ),
-                          margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Sala: ${problem['room'] ?? 'Nieznana'}',
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
-                                  style: TextStyle(color: Colors.black, fontSize: 14),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Treść: ${problem['problem'] ?? 'Brak opisu'}',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
-                                    overflow: TextOverflow.ellipsis,
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 5.0),
+                        elevation: 10,
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              contentPadding:
+                              EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Sala: ${problem['room'] ?? 'Nieznana'}',
+                                    style: TextStyle(fontWeight: FontWeight.w600),
                                   ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                              subtitle: Text(
+                                'Treść: ${problem['problem'] ?? 'Brak opisu'}',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                SizedBox(height: 10),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 15.0),
-                                  child: Center(
-                                    child: ElevatedButton(
-                                      onPressed: () async {
-                                        // Wywołanie endpointu do oznaczenia zgłoszenia jako przeczytane
-                                        final response = await http.put(
-                                          Uri.parse('http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
-                                        );
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      final response = await http.put(
+                                        Uri.parse(
+                                            'http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
+                                      );
 
-                                        if (response.statusCode == 200) {
-                                          // Przejdź na nową stronę, gdy status zmieniony pomyślnie
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => ProblemTempPage(problem: problem),
-                                            ),
-                                          );
-                                        } else {
-                                          // Obsługa błędów
-                                          print('Błąd oznaczania zgłoszenia jako przeczytane: ${response.body}');
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: Colors.black,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(20),
-                                          side: BorderSide(color: Colors.black, width: 1),
-                                        ),
-                                        minimumSize: Size(120, 36),
-                                        padding: EdgeInsets.symmetric(horizontal: 20.0),
+                                      if (response.statusCode == 200) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ProblemTempPage(problem: problem),
+                                          ),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                'Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Colors.black,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        side: BorderSide(color: Colors.black, width: 1),
                                       ),
-                                      child: Text(
-                                        'Rozwiń',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                      minimumSize: Size(120, 36),
+                                      padding: EdgeInsets.symmetric(horizontal: 5.0),
+                                    ),
+                                    child: Text(
+                                      'Rozwiń',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ),
-                                ),
-
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       );
                     },
@@ -284,6 +270,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
     );
   }
+
 
 
 
