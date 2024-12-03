@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'problemtemp.dart';
 
 
+
 void main() {
   runApp(MyApp());
 }
@@ -39,7 +40,9 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
+  String searchQuery = '';
   List<dynamic> problems = [];
+  List<dynamic> filteredProblems = [];
   List<dynamic> users = [];  // New list for users
   Timer? _refreshTimer;
   bool showUsers = false;
@@ -47,6 +50,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   final PageController _pageController = PageController();
   int currentPage = 0;
   final int itemsPerPage = 12;
+  DateTime? selectedDate;  // Variable to hold the selected date for filtering
 
   Future<void> getProblems() async {
     try {
@@ -62,6 +66,28 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    getProblems().then((_) {
+      _resetFilter(); // Wywołanie resetowania filtra, gdy dane są już załadowane
+    });
+    getUsers();  // Pobierz użytkowników
+    _refreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      getProblems();
+      getUsers();  // Odświeżaj użytkowników co sekundę
+    });
+  }
+
+
+  void _resetFilter() {
+    setState(() {
+      filteredProblems = problems;  // Reset do wszystkich zgłoszeń
+    });
+  }
+
+
+
   Future<void> getUsers() async {
     try {
       var response =
@@ -76,30 +102,47 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
   }
 
+  // Metoda do załadowania zgłoszeń (przykładowo)
+  Future<void> _loadProblems() async {
+    // Załóżmy, że zgłoszenia są ładowane z serwera lub innego źródła.
+    // Poniżej jest przykład z przypisaniem listy przykładowych danych.
+    // W rzeczywistości powinno to być pobieranie danych z API.
+    final response = await http.get(Uri.parse('http://twoje-api.com/problems'));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        // Załóżmy, że odpowiedź to lista JSON z problemami
+        problems = List.from(json.decode(response.body));
+        filteredProblems = List.from(problems); // Na początek filtrujemy wszystkie zgłoszenia
+      });
+    } else {
+      // Jeśli nie udało się załadować danych, ustaw pustą listę
+      setState(() {
+        problems = [];
+        filteredProblems = [];
+      });
+    }
+  }
+
   Widget _buildProblemList() {
     List<List<dynamic>> paginatedProblems = [];
-    for (int i = 0; i < problems.length; i += itemsPerPage) {
-      paginatedProblems.add(problems.sublist(
+    for (int i = 0; i < filteredProblems.length; i += itemsPerPage) {
+      paginatedProblems.add(filteredProblems.sublist(
         i,
-        i + itemsPerPage > problems.length ? problems.length : i + itemsPerPage,
+        i + itemsPerPage > filteredProblems.length
+            ? filteredProblems.length
+            : i + itemsPerPage,
       ));
     }
 
     return Expanded(
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
-        child: paginatedProblems.isEmpty
-            ? Center(
-          child: Text(
-            'Brak zgłoszeń.',
-            style: TextStyle(fontSize: 16.0, color: Colors.black),
-          ),
-        )
-            : Column(
+        child: Column(
           children: [
-            // Row z napisem "Zgłoszenia" i paskiem wyszukiwania obok, przesunięte minimalnie do góry
+            // Pasek wyszukiwania i przycisk kalendarza
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Ustawienie elementów na końcach
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Zgłoszenia',
@@ -116,33 +159,91 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ],
                   ),
                 ),
-                // Pasek wyszukiwania po prawej stronie
-                SizedBox(
-                  width: 200, // Szerokość paska wyszukiwania
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 6.0), // Dodanie marginesu z prawej strony
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Wyszukaj...',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        prefixIcon: Icon(Icons.search, color: Colors.black),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                          borderSide: BorderSide(color: Colors.grey),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                          borderSide: BorderSide(color: Color(0xFFF49402)),
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 200,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 6.0),
+                        child: TextField(
+                          style: TextStyle(color: Colors.black), // Ustawienie koloru tekstu na czarny
+                          decoration: InputDecoration(
+                            hintText: 'Wyszukaj...',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            prefixIcon: Icon(Icons.search, color: Colors.black),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(color: Colors.grey),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(color: Color(0xFFF49402)),
+                            ),
+                          ),
+                          onChanged: _filterProblems,
                         ),
                       ),
                     ),
-                  ),
+                    IconButton(
+                      icon: Icon(Icons.calendar_today, color: Colors.black),
+                      onPressed: () async {
+                        // Otwórz DatePicker
+                        DateTime? selectedDateTemp = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now(),
+                          builder: (BuildContext context, Widget? child) {
+                            return Theme(
+                              data: ThemeData.light().copyWith(
+                                primaryColor: Colors.black,
+                                colorScheme: ColorScheme.light(primary: Colors.black),
+                                dialogBackgroundColor: Colors.white,
+                              ),
+                              child: Column(
+                                children: [
+                                  // Dodajemy przycisk czyszczenia daty w formularzu
+                                  Expanded(child: child!),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                        if (selectedDateTemp != null) {
+                          setState(() {
+                            selectedDate = selectedDateTemp;
+                          });
+                          _filterByDate(selectedDate!); // Filtrujemy według daty
+                        }
+                      },
+                    ),
+                    // Przycisk "X" do usuwania filtra daty
+                    if (selectedDate != null)
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.black),
+                        onPressed: () {
+                          setState(() {
+                            selectedDate = null;
+                            filteredProblems = problems;  // Reset to original list
+                          });
+                        },
+                      ),
+                  ],
                 ),
               ],
             ),
-
-            SizedBox(height: 3.0), // Minimalny odstęp przed listą zgłoszeń
-            Expanded(
+            SizedBox(height: 3.0),
+            // Sprawdzenie, czy są zgłoszenia
+            filteredProblems.isEmpty
+                ? Expanded(
+              child: Center(
+                child: Text(
+                  'Brak zgłoszeń pasujących do wyszukiwania.',
+                  style: TextStyle(fontSize: 16.0, color: Colors.black),
+                ),
+              ),
+            )
+                : Expanded(
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: paginatedProblems.length,
@@ -156,10 +257,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   return GridView.builder(
                     padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4, // Liczba kafelków w jednym rzędzie
-                      crossAxisSpacing: 8.0, // Odstęp między kafelkami w poziomie
-                      mainAxisSpacing: 8.0, // Odstęp między kafelkami w pionie
-                      childAspectRatio: 1.87, // Proporcje kafelka
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 8.0,
+                      mainAxisSpacing: 8.0,
+                      childAspectRatio: 1.87,
                     ),
                     itemCount: pageProblems.length,
                     itemBuilder: (context, index) {
@@ -174,8 +275,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         child: Column(
                           children: [
                             ListTile(
-                              contentPadding:
-                              EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 15.0, vertical: 10.0),
                               title: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -214,16 +315,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => ProblemTempPage(problem: problem),
+                                            builder: (context) =>
+                                                ProblemTempPage(problem: problem),
                                           ),
                                         );
                                       } else {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
-                                          ),
-                                        );
+                                        _showErrorDialog(context, 'Błąd', 'Nie udało się oznaczyć zgłoszenia jako przeczytane.');
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
@@ -255,45 +352,90 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios, size: 20, color: Color(0xFFF49402)),
-                    onPressed: currentPage > 0
-                        ? () {
-                      _pageController.previousPage(
-                        duration: Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                        : null,
-                  ),
-                  Text(
-                    '${currentPage + 1} / ${paginatedProblems.length}',
-                    style: TextStyle(fontSize: 14.0, color: Colors.black),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.arrow_forward_ios, size: 20, color: Color(0xFFF49402)),
-                    onPressed: currentPage < paginatedProblems.length - 1
-                        ? () {
-                      _pageController.nextPage(
-                        duration: Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                        : null,
-                  ),
-                ],
+            if (filteredProblems.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(5.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios,
+                          size: 20, color: Color(0xFFF49402)),
+                      onPressed: currentPage > 0
+                          ? () {
+                        _pageController.previousPage(
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                          : null,
+                    ),
+                    Text(
+                      '${currentPage + 1} / ${paginatedProblems.length}',
+                      style: TextStyle(fontSize: 14.0, color: Colors.black),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.arrow_forward_ios,
+                          size: 20, color: Color(0xFFF49402)),
+                      onPressed: currentPage < paginatedProblems.length - 1
+                          ? () {
+                        _pageController.nextPage(
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                          : null,
+                    ),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
     );
   }
+
+  // Funkcja do filtrowania zgłoszeń po dacie
+  void _filterByDate(DateTime selectedDate) {
+    setState(() {
+      filteredProblems = problems.where((problem) {
+        if (problem['timestamp'] != null) {
+          DateTime problemDate = DateTime.parse(problem['timestamp']);
+          return problemDate.year == selectedDate.year &&
+              problemDate.month == selectedDate.month &&
+              problemDate.day == selectedDate.day;
+        }
+        return false;
+      }).toList();
+    });
+  }
+
+  // Funkcja filtrowania zgłoszeń
+  void _filterProblems(String query) {
+    setState(() {
+      searchQuery = query;
+      if (query.isEmpty) {
+        filteredProblems = problems;
+      } else if (int.tryParse(query) != null) {
+        filteredProblems = problems
+            .where((problem) => problem['room']
+            .toString()
+            .toLowerCase()
+            .contains(query.toLowerCase()))
+            .toList();
+      } else {
+        filteredProblems = problems
+            .where((problem) => problem['username']
+            .toString()
+            .toLowerCase()
+            .contains(query.toLowerCase()))
+            .toList();
+      }
+    });
+  }
+
+
+
 
 
 
@@ -763,16 +905,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
 
-  @override
-  void initState() {
-    super.initState();
-    getProblems();
-    getUsers();  // Fetch users
-    _refreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      getProblems();
-      getUsers();  // Refresh users every second
-    });
-  }
+
 
   @override
   void dispose() {
