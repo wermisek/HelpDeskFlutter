@@ -103,26 +103,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   // Metoda do załadowania zgłoszeń (przykładowo)
-  Future<void> _loadProblems() async {
-    // Załóżmy, że zgłoszenia są ładowane z serwera lub innego źródła.
-    // Poniżej jest przykład z przypisaniem listy przykładowych danych.
-    // W rzeczywistości powinno to być pobieranie danych z API.
-    final response = await http.get(Uri.parse('http://twoje-api.com/problems'));
-
-    if (response.statusCode == 200) {
-      setState(() {
-        // Załóżmy, że odpowiedź to lista JSON z problemami
-        problems = List.from(json.decode(response.body));
-        filteredProblems = List.from(problems); // Na początek filtrujemy wszystkie zgłoszenia
-      });
-    } else {
-      // Jeśli nie udało się załadować danych, ustaw pustą listę
-      setState(() {
-        problems = [];
-        filteredProblems = [];
-      });
-    }
-  }
 
   Widget _buildProblemList() {
     List<List<dynamic>> paginatedProblems = [];
