@@ -421,6 +421,7 @@ class _UserHomePageState extends State<UserHomePage> {
                             controller: _problemController,
                             labelText: 'Opis problemu',
                             maxLines: 5,
+                            maxLength: 275, // Added maxLength here to limit input to 200 characters
                             validator: (value) {
                               if (value?.isEmpty ?? true) {
                                 return 'Wprowadź opis problemu';
