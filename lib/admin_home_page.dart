@@ -97,9 +97,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
         )
             : Column(
           children: [
-            // Row z napisem "Zgłoszenia" i paskiem wyszukiwania obok, przesunięte minimalnie do góry
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Ustawienie elementów na końcach
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Zgłoszenia',
@@ -116,32 +115,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ],
                   ),
                 ),
-                // Pasek wyszukiwania po prawej stronie
-                SizedBox(
-                  width: 200, // Szerokość paska wyszukiwania
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 6.0), // Dodanie marginesu z prawej strony
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Wyszukaj...',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        prefixIcon: Icon(Icons.search, color: Colors.black),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                          borderSide: BorderSide(color: Colors.grey),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                          borderSide: BorderSide(color: Color(0xFFF49402)),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
-
-            SizedBox(height: 3.0), // Minimalny odstęp przed listą zgłoszeń
+            SizedBox(height: 10.0),
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -895,126 +871,126 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   void _showAddUserDialog(BuildContext context) {
-  final TextEditingController usernameController = TextEditingController();//push
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController roleController = TextEditingController();
+    final TextEditingController usernameController = TextEditingController();//push
+    final TextEditingController passwordController = TextEditingController();
+    final TextEditingController roleController = TextEditingController();
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        backgroundColor: Colors.white,  // Ciemne tło (dopasowane do reszty)
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),  // Zaokrąglone rogi
-        ),
-        title: Text(
-          'Dodaj użytkownika',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
-            fontSize: 18.0,
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,  // Ciemne tło (dopasowane do reszty)
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),  // Zaokrąglone rogi
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: usernameController,
-              style: TextStyle(color: Colors.black),
-              decoration: InputDecoration(
-                labelText: 'Login',
-                labelStyle: TextStyle(color: Colors.black),
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFF49402)),
+          title: Text(
+            'Dodaj użytkownika',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+              fontSize: 18.0,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: usernameController,
+                style: TextStyle(color: Colors.black),
+                decoration: InputDecoration(
+                  labelText: 'Login',
+                  labelStyle: TextStyle(color: Colors.black),
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFF49402)),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: passwordController,
-              style: TextStyle(color: Colors.black),
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Hasło',
-                labelStyle: TextStyle(color: Colors.black),
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFF49402)),
+              SizedBox(height: 16),
+              TextField(
+                controller: passwordController,
+                style: TextStyle(color: Colors.black),
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Hasło',
+                  labelStyle: TextStyle(color: Colors.black),
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFF49402)),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: roleController,
-              style: TextStyle(color: Colors.black),
-              decoration: InputDecoration(
-                labelText: 'Rola',
-                labelStyle: TextStyle(color: Colors.black),
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFF49402)),
+              SizedBox(height: 16),
+              TextField(
+                controller: roleController,
+                style: TextStyle(color: Colors.black),
+                decoration: InputDecoration(
+                  labelText: 'Rola',
+                  labelStyle: TextStyle(color: Colors.black),
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFF49402)),
+                  ),
                 ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();  // Zamknij popup
+              },
+              child: Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final username = usernameController.text;
+                final password = passwordController.text;
+                final role = roleController.text;
+
+                // Tutaj wywołaj funkcję do utworzenia użytkownika
+                _createUser(username, password, role);
+                Navigator.of(context).pop();  // Zamknij popup po stworzeniu użytkownika
+              },
+              child: Text(
+                'Stwórz',
+                style: TextStyle(color: Colors.black),
               ),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();  // Zamknij popup
-            },
-            child: Text(
-              'Anuluj',
-              style: TextStyle(color: Colors.black),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              final username = usernameController.text;
-              final password = passwordController.text;
-              final role = roleController.text;
-
-              // Tutaj wywołaj funkcję do utworzenia użytkownika
-              _createUser(username, password, role);
-              Navigator.of(context).pop();  // Zamknij popup po stworzeniu użytkownika
-            },
-            child: Text(
-              'Stwórz',
-              style: TextStyle(color: Colors.black),
-            ),
-          ),
-        ],
-      );
-    },
-  );
-}
-void _createUser(String username, String password, String role) async {
-  var newUser = {
-    "username": username,
-    "password": password,
-    "role": role,
-  };
-
-  try {
-    final response = await http.post(
-      Uri.parse('http://192.168.10.188:8080/register'),  // Upewnij się, że adres jest poprawny
-      headers: {
-        'Content-Type': 'application/json',
+        );
       },
-      body: json.encode(newUser),
     );
-
-    if (response.statusCode == 201) {
-      // Jeśli użytkownik został pomyślnie utworzony
-      print("Użytkownik stworzony: ${response.body}");
-    } else {
-      // Jeśli wystąpił błąd przy tworzeniu użytkownika
-      final responseBody = json.decode(response.body);
-      print("Błąd tworzenia użytkownika: ${responseBody['message']}");
-    }
-  } catch (e) {
-    print("Błąd podczas wysyłania zapytania: $e");
   }
-}
+  void _createUser(String username, String password, String role) async {
+    var newUser = {
+      "username": username,
+      "password": password,
+      "role": role,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.10.188:8080/register'),  // Upewnij się, że adres jest poprawny
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(newUser),
+      );
+
+      if (response.statusCode == 201) {
+        // Jeśli użytkownik został pomyślnie utworzony
+        print("Użytkownik stworzony: ${response.body}");
+      } else {
+        // Jeśli wystąpił błąd przy tworzeniu użytkownika
+        final responseBody = json.decode(response.body);
+        print("Błąd tworzenia użytkownika: ${responseBody['message']}");
+      }
+    } catch (e) {
+      print("Błąd podczas wysyłania zapytania: $e");
+    }
+  }
 }
