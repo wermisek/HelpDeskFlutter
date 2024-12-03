@@ -13,7 +13,6 @@ class ProblemTempPage extends StatefulWidget {
 }
 
 class _ProblemTempPageState extends State<ProblemTempPage> {
-  bool _isHoveredDelete = false;
   String? _comment; // Przechowywanie dodanego komentarza
 
   Future<void> _deleteProblem(BuildContext context, String problemId) async {
