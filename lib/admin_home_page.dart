@@ -97,8 +97,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
         )
             : Column(
           children: [
+            // Row z napisem "Zgłoszenia" i paskiem wyszukiwania obok, przesunięte minimalnie do góry
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Ustawienie elementów na końcach
               children: [
                 Text(
                   'Zgłoszenia',
@@ -115,9 +116,32 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ],
                   ),
                 ),
+                // Pasek wyszukiwania po prawej stronie
+                SizedBox(
+                  width: 200, // Szerokość paska wyszukiwania
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 6.0), // Dodanie marginesu z prawej strony
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Wyszukaj...',
+                        hintStyle: TextStyle(color: Colors.grey),
+                        prefixIcon: Icon(Icons.search, color: Colors.black),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          borderSide: BorderSide(color: Colors.grey),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          borderSide: BorderSide(color: Color(0xFFF49402)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
-            SizedBox(height: 10.0),
+
+            SizedBox(height: 3.0), // Minimalny odstęp przed listą zgłoszeń
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
