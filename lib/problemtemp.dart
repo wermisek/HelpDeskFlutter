@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -13,8 +15,7 @@ class ProblemTempPage extends StatefulWidget {
 }
 
 class _ProblemTempPageState extends State<ProblemTempPage> {
-  bool _isHoveredDelete = false;
-  String? _comment; // Przechowywanie dodanego komentarza
+  String? _comment;
 
   Future<void> _deleteProblem(BuildContext context, String problemId) async {
     final url = Uri.parse('http://192.168.10.188:8080/delete_problem/$problemId');
@@ -24,7 +25,7 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Zgłoszenie zostało usunięte')),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Nie udało się usunąć zgłoszenia')),
@@ -129,7 +130,7 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
                           );
                           if (response.statusCode == 200) {
                             setState(() {
-                              _comment = commentController.text; // Zapisz dodany komentarz
+                              _comment = commentController.text;
                             });
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Komentarz został dodany')),
@@ -162,8 +163,8 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
     DateTime timestamp = DateTime.parse(widget.problem['timestamp'] ?? DateTime.now().toString());
     String formattedTimestamp = "${timestamp.day}-${timestamp.month}-${timestamp.year} ${timestamp.hour}:${timestamp.minute}";
 
-    // Sprawdzamy, czy problem ma komentarz, jeśli nie ustawiamy komunikat
-    String commentText = _comment ?? widget.problem['comment'] ?? 'Nie dodales jeszcze komentarza'; // Dodajemy komentarz z ciała problemu, jeśli istnieje
+
+    String commentText = _comment ?? widget.problem['comment'] ?? 'Nie dodales jeszcze komentarza';
 
     return Scaffold(
       appBar: AppBar(
@@ -218,9 +219,8 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
                     _buildDetailRow('Treść', widget.problem['problem'] ?? 'Brak opisu'),
                     SizedBox(height: 15.0),
                     _buildDetailRow('Czas zgłoszenia', formattedTimestamp),
-                    // Dodajemy pole "Komentarz" z ciała problemu
                     SizedBox(height: 15.0),
-                    _buildDetailRow('Komentarz', commentText), // Wyświetlenie komentarza lub komunikatu o braku komentarza
+                    _buildDetailRow('Komentarz', commentText),
                     Spacer(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -295,8 +295,8 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor,  // Use backgroundColor instead of primary
-        foregroundColor: textColor,         // Use foregroundColor instead of onPrimary
+        backgroundColor: backgroundColor,
+        foregroundColor: textColor,
         side: BorderSide(color: borderColor, width: 1.5),
         padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0),
         shape: RoundedRectangleBorder(
