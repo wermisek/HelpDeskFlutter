@@ -8,6 +8,7 @@ environment:
   sdk: ^3.5.4
 
 dependencies:
+  url_launcher: ^6.0.9
   window_manager: ^0.4.3
   shelf: ^1.2.0
   shelf_router: ^1.0.0
@@ -15,6 +16,7 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   http: any
+
   flutter_localizations:
     sdk: flutter
 
