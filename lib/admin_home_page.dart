@@ -44,6 +44,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   List<dynamic> problems = [];
   List<dynamic> filteredProblems = [];
   List<dynamic> users = [];
+  List<dynamic> filteredUsers = [];
   Timer? _refreshTimer;
   bool showUsers = false;
   bool showProblems = true;
@@ -56,14 +57,16 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Future<void> getProblems() async {
     try {
       var response =
-      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
+      await HttpClient().getUrl(
+          Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
       setState(() {
         problems = jsonDecode(content);
       });
     } catch (e) {
-      _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
+      _showErrorDialog(
+          context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
     }
   }
 
@@ -83,8 +86,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   void _initializeProblems() {
     setState(() {
-      problems.sort((a, b) => DateTime.parse(b['timestamp'])
-          .compareTo(DateTime.parse(a['timestamp'])));
+      problems.sort((a, b) =>
+          DateTime.parse(b['timestamp'])
+              .compareTo(DateTime.parse(a['timestamp'])));
       filteredProblems = List.from(problems);
     });
   }
@@ -97,26 +101,27 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
 
-
   Future<void> getUsers() async {
     try {
       var response =
-      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_users'));
+      await HttpClient().getUrl(
+          Uri.parse('http://192.168.10.188:8080/get_users'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
       setState(() {
         users = jsonDecode(content);
       });
     } catch (e) {
-      _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych użytkowników.');
+      _showErrorDialog(context, 'Błąd połączenia',
+          'Nie udało się pobrać danych użytkowników.');
     }
   }
 
 
-
   Widget _buildProblemList() {
-    filteredProblems.sort((a, b) => DateTime.parse(b['timestamp'])
-        .compareTo(DateTime.parse(a['timestamp'])));
+    filteredProblems.sort((a, b) =>
+        DateTime.parse(b['timestamp'])
+            .compareTo(DateTime.parse(a['timestamp'])));
 
     List<List<dynamic>> paginatedProblems = [];
     for (int i = 0; i < filteredProblems.length; i += itemsPerPage) {
@@ -179,21 +184,26 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                   contentPadding: EdgeInsets.symmetric(
                                       horizontal: 15.0, vertical: 10.0),
                                   title: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start,
                                     children: [
                                       Text(
-                                        'Sala: ${problem['room'] ?? 'Nieznana'}',
-                                        style: TextStyle(fontWeight: FontWeight.w600),
+                                        'Sala: ${problem['room'] ??
+                                            'Nieznana'}',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w600),
                                       ),
                                       SizedBox(height: 4),
                                       Text(
-                                        'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
+                                        'Nauczyciel: ${problem['username'] ??
+                                            'Nieznany'}',
                                         style: TextStyle(color: Colors.grey),
                                       ),
                                     ],
                                   ),
                                   subtitle: Text(
-                                    'Treść: ${problem['problem'] ?? 'Brak opisu'}',
+                                    'Treść: ${problem['problem'] ??
+                                        'Brak opisu'}',
                                     style: TextStyle(
                                       color: Colors.black,
                                       overflow: TextOverflow.ellipsis,
@@ -201,21 +211,28 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 2.0),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 2.0),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    mainAxisAlignment: MainAxisAlignment
+                                        .spaceEvenly,
                                     children: [
                                       ElevatedButton(
                                         onPressed: () async {
                                           final result = await Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => ProblemTempPage(problem: problem),
+                                              builder: (context) =>
+                                                  ProblemTempPage(
+                                                      problem: problem),
                                             ),
                                           );
                                           if (result == true) {
                                             setState(() {
-                                              filteredProblems = filteredProblems.where((p) => p['id'] != problem['id']).toList();
+                                              filteredProblems =
+                                                  filteredProblems.where((p) =>
+                                                  p['id'] != problem['id'])
+                                                      .toList();
                                             });
                                           }
                                         },
@@ -223,11 +240,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                           backgroundColor: Colors.white,
                                           foregroundColor: Colors.black,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                            side: BorderSide(color: Colors.black, width: 1),
+                                            borderRadius: BorderRadius.circular(
+                                                20),
+                                            side: BorderSide(
+                                                color: Colors.black, width: 1),
                                           ),
                                           minimumSize: Size(120, 36),
-                                          padding: EdgeInsets.symmetric(horizontal: 5.0),
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 5.0),
                                         ),
                                         child: Text(
                                           'Rozwiń',
@@ -316,7 +336,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     IconButton(
                       icon: Icon(Icons.calendar_today, color: Colors.black),
                       onPressed: () async {
-
                         Set<DateTime> availableDates = _getAvailableDates();
 
                         DateTime initialDate = selectedDate ?? DateTime.now();
@@ -342,7 +361,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                             return Theme(
                               data: ThemeData.light().copyWith(
                                 primaryColor: Colors.black,
-                                colorScheme: ColorScheme.light(primary: Colors.black),
+                                colorScheme: ColorScheme.light(
+                                    primary: Colors.black),
                                 dialogBackgroundColor: Colors.white,
                               ),
                               child: Column(
@@ -373,12 +393,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0), // Wyrównanie z kafelkami
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 25.0, vertical: 10.0), // Wyrównanie z kafelkami
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back_ios, size: 20, color: Color(0xFFF49402)),
+                      icon: Icon(Icons.arrow_back_ios, size: 20,
+                          color: Color(0xFFF49402)),
                       onPressed: currentPage > 0
                           ? () {
                         _pageController.previousPage(
@@ -393,7 +415,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       style: TextStyle(fontSize: 14.0, color: Colors.black),
                     ),
                     IconButton(
-                      icon: Icon(Icons.arrow_forward_ios, size: 20, color: Color(0xFFF49402)),
+                      icon: Icon(Icons.arrow_forward_ios, size: 20,
+                          color: Color(0xFFF49402)),
                       onPressed: currentPage < paginatedProblems.length - 1
                           ? () {
                         _pageController.nextPage(
@@ -424,8 +447,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
         return false;
       }).toList();
 
-      filteredProblems.sort((a, b) => DateTime.parse(b['timestamp'])
-          .compareTo(DateTime.parse(a['timestamp'])));
+      filteredProblems.sort((a, b) =>
+          DateTime.parse(b['timestamp'])
+              .compareTo(DateTime.parse(a['timestamp'])));
     });
   }
 
@@ -436,22 +460,25 @@ class _AdminHomePageState extends State<AdminHomePage> {
         filteredProblems = problems;
       } else if (int.tryParse(query) != null) {
         filteredProblems = problems
-            .where((problem) => problem['room']
-            .toString()
-            .toLowerCase()
-            .contains(query.toLowerCase()))
+            .where((problem) =>
+            problem['room']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()))
             .toList();
       } else {
         filteredProblems = problems
-            .where((problem) => problem['username']
-            .toString()
-            .toLowerCase()
-            .contains(query.toLowerCase()))
+            .where((problem) =>
+            problem['username']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()))
             .toList();
       }
 
-      filteredProblems.sort((a, b) => DateTime.parse(b['timestamp'])
-          .compareTo(DateTime.parse(a['timestamp'])));
+      filteredProblems.sort((a, b) =>
+          DateTime.parse(b['timestamp'])
+              .compareTo(DateTime.parse(a['timestamp'])));
     });
   }
 
@@ -461,7 +488,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
     for (var problem in problems) {
       if (problem['timestamp'] != null) {
         DateTime problemDate = DateTime.parse(problem['timestamp']);
-        availableDates.add(DateTime(problemDate.year, problemDate.month, problemDate.day));
+        availableDates.add(
+            DateTime(problemDate.year, problemDate.month, problemDate.day));
       }
     }
 
@@ -469,217 +497,269 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
 
-
-
-
+  void _filterUsersByQuery(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        // Jeśli pole jest puste, pokazujemy wszystkich użytkowników
+        filteredUsers = users;
+      } else {
+        // Filtrowanie użytkowników na podstawie nazwy użytkownika lub roli
+        filteredUsers = users.where((user) {
+          final username = user['username']?.toLowerCase() ?? '';
+          final role = user['role']?.toLowerCase() ?? '';
+          final searchQuery = query.toLowerCase();
+          return username.contains(searchQuery) || role.contains(searchQuery);
+        }).toList();
+      }
+    });
+  }
 
 
   Widget _buildUserList() {
     List<List<dynamic>> paginatedUsers = [];
-    for (int i = 0; i < users.length; i += 12) {
-      paginatedUsers.add(users.sublist(i, i + 12 > users.length ? users.length : i + 12));
+    for (int i = 0; i < filteredUsers.length; i += itemsPerPage) {
+      paginatedUsers.add(filteredUsers.sublist(
+        i,
+        i + itemsPerPage > filteredUsers.length
+            ? filteredUsers.length
+            : i + itemsPerPage,
+      ));
     }
 
     return Expanded(
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Stack(
+        children: [
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+            child: Column(
               children: [
-                Text(
-                  'Zarządzanie użytkownikami',
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(0, 2),
-                        blurRadius: 4.0,
-                        color: Colors.grey.withOpacity(0.5),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Color(0xFFFFFFFF),
-                    borderRadius: BorderRadius.circular(8.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0xFF000000).withOpacity(0.3),
-                        blurRadius: 10.0,
-                        spreadRadius: 0,
-                        offset: Offset(0, 0),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _showAddUserDialog(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                      shadowColor: Colors.transparent,
-                    ),
+                filteredUsers.isEmpty
+                    ? Expanded(
+                  child: Center(
                     child: Text(
-                      'Dodaj użytkownika',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      'Brak użytkowników.',
+                      style: TextStyle(fontSize: 16.0, color: Colors.black),
                     ),
                   ),
+                )
+                    : Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: paginatedUsers.length,
+                    onPageChanged: (pageIndex) {
+                      setState(() {
+                        currentPage = pageIndex;
+                      });
+                    },
+                    itemBuilder: (context, pageIndex) {
+                      var pageUsers = paginatedUsers[pageIndex];
+                      return GridView.builder(
+                        padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
+                        // Podniesienie kafelków
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 8.0,
+                          mainAxisSpacing: 8.0,
+                          childAspectRatio: 1.87,
+                        ),
+                        itemCount: pageUsers.length,
+                        itemBuilder: (context, index) {
+                          var user = pageUsers[index];
+                          return Card(
+                            margin: EdgeInsets.symmetric(vertical: 5.0),
+                            elevation: 10,
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 15.0, vertical: 10.0),
+                                  title: Column(
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start,
+                                    children: [
+                                      Text(
+                                        'Użytkownik: ${user['username'] ??
+                                            'Nieznany użytkownik'}',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w600),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        'Rola: ${user['role'] ?? 'Brak roli'}',
+                                        style: TextStyle(color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment
+                                        .spaceEvenly,
+                                    children: [
+                                      Tooltip(
+                                        message: 'Zmień login',
+                                        child: IconButton(
+                                          icon: Icon(
+                                              Icons.edit, color: Colors.black),
+                                          onPressed: () {
+                                            _changeUsername(user);
+                                          },
+                                        ),
+                                      ),
+                                      Tooltip(
+                                        message: 'Zmień hasło',
+                                        child: IconButton(
+                                          icon: Icon(
+                                              Icons.lock, color: Colors.black),
+                                          onPressed: () {
+                                            _changePassword(user);
+                                          },
+                                        ),
+                                      ),
+                                      Tooltip(
+                                        message: 'Usuń użytkownika',
+                                        child: IconButton(
+                                          icon: Icon(Icons.delete,
+                                              color: Colors.black),
+                                          onPressed: () {
+                                            _deleteUser(user);
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
-
               ],
             ),
+          ),
 
-            SizedBox(height: 10.0),
-            Expanded(
-              child: paginatedUsers.isEmpty
-                  ? Center(
-                child: Text(
-                  'Brak użytkowników.',
-                  style: TextStyle(fontSize: 16.0, color: Colors.black),
-                ),
-              )
-                  : Column(
-                children: [
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: paginatedUsers.length,
-                      onPageChanged: (pageIndex) {
-                        setState(() {
-                          currentPage = pageIndex;
-                        });
-                      },
-                      itemBuilder: (context, pageIndex) {
-                        var pageUsers = paginatedUsers[pageIndex];
-                        return GridView.builder(
-                          padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 8.0,
-                            mainAxisSpacing: 8.0,
-                            childAspectRatio: 1.87,
+          // Górny pasek z wyszukiwaniem i przyciskiem
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 60.0,
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 37.0),
+                child: Row(
+                  children: [
+                    Text(
+                      'Zarządzanie użytkownikami',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(0, 2),
+                            blurRadius: 4.0,
+                            color: Colors.grey.withOpacity(0.5),
                           ),
-                          itemCount: pageUsers.length,
-                          itemBuilder: (context, index) {
-                            var user = pageUsers[index];
-                            return Card(
-                              margin: EdgeInsets.symmetric(vertical: 5.0),
-                              elevation: 10,
-                              color: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                              child: Column(
-                                children: [
-                                  ListTile(
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-                                    title: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Użytkownik: ${user['username'] ?? 'Nieznany użytkownik'}',
-                                          style: TextStyle(fontWeight: FontWeight.w600),
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          'Rola: ${user['role'] ?? 'Brak roli'}',
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Tooltip(
-                                          message: 'Zmień login',
-                                          child: IconButton(
-                                            icon: Icon(Icons.edit, color: Colors.black),
-                                            onPressed: () {
-                                              _changeUsername(user);
-                                            },
-                                          ),
-                                        ),
-                                        Tooltip(
-                                          message: 'Zmień hasło',
-                                          child: IconButton(
-                                            icon: Icon(Icons.lock, color: Colors.black),
-                                            onPressed: () {
-                                              _changePassword(user);
-                                            },
-                                          ),
-                                        ),
-                                        Tooltip(
-                                          message: 'Usuń użytkownika',
-                                          child: IconButton(
-                                            icon: Icon(Icons.delete, color: Colors.black),
-                                            onPressed: () {
-                                              _deleteUser(user);
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      },
+                        ],
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.arrow_back_ios, size: 20, color: Color(0xFFF49402)),
-                          onPressed: currentPage > 0
-                              ? () {
-                            _pageController.previousPage(
-                              duration: Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          }
-                              : null,
+                    Spacer(),
+                    SizedBox(
+                      width: 200.0,
+                      child: TextField(
+                        style: TextStyle(color: Colors.black),
+                        decoration: InputDecoration(
+                          hintText: 'Wyszukaj...',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          prefixIcon: Icon(Icons.search, color: Colors.black),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                            borderSide: BorderSide(color: Colors.grey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                            borderSide: BorderSide(color: Color(0xFFF49402)),
+                          ),
                         ),
-                        Text(
-                          '${currentPage + 1} / ${paginatedUsers.length}',
-                          style: TextStyle(fontSize: 14.0, color: Colors.black),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.arrow_forward_ios, size: 20, color: Color(0xFFF49402)),
-                          onPressed: currentPage < paginatedUsers.length - 1
-                              ? () {
-                            _pageController.nextPage(
-                              duration: Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          }
-                              : null,
-                        ),
-                      ],
+                        onChanged: _filterUsersByQuery,
+                      ),
                     ),
-                  ),
-                ],
+                    SizedBox(width: 10.0),
+                    Tooltip(
+                      message: 'Dodaj użytkownika', // Tooltip z napisem
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _showAddUserDialog(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                          shape: CircleBorder(),
+                          padding: EdgeInsets.all(10.0),
+                        ),
+                        child: Icon(Icons.add, size: 20.0),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+
+          // Paginacja
+          if (filteredUsers.isNotEmpty)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 25.0, vertical: 10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios, size: 20,
+                          color: Color(0xFFF49402)),
+                      onPressed: currentPage > 0
+                          ? () {
+                        _pageController.previousPage(
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                          : null,
+                    ),
+                    Text(
+                      '${currentPage + 1} / ${paginatedUsers.length}',
+                      style: TextStyle(fontSize: 14.0, color: Colors.black),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.arrow_forward_ios, size: 20,
+                          color: Color(0xFFF49402)),
+                      onPressed: currentPage < paginatedUsers.length - 1
+                          ? () {
+                        _pageController.nextPage(
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -730,8 +810,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   var response = await http.put(
                     Uri.parse('http://192.168.10.188:8080/change_username'),
                     body: json.encode({
-                      'oldUsername': user['username'], // Stary login użytkownika
-                      'newUsername': newUsername, // Nowy login
+                      'oldUsername': user['username'],
+                      // Stary login użytkownika
+                      'newUsername': newUsername,
+                      // Nowy login
                     }),
                     headers: {
                       'Content-Type': 'application/json',
@@ -751,7 +833,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+                padding: EdgeInsets.symmetric(
+                    vertical: 12, horizontal: 24), // Wewnętrzne odstępy
               ),
               child: Text('Zapisz'),
             ),
@@ -760,9 +843,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
       },
     );
   }
-
-
-
 
 
   void _changePassword(dynamic user) {
@@ -833,7 +913,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+                padding: EdgeInsets.symmetric(
+                    vertical: 12, horizontal: 24), // Wewnętrzne odstępy
               ),
               child: Text('Zapisz'),
             ),
@@ -883,7 +964,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     'role': 'admin', // Nagłówek z rolą admina
                   },
                   body: json.encode({
-                    'username': user['username'], // Nazwa użytkownika do usunięcia
+                    'username': user['username'],
+                    // Nazwa użytkownika do usunięcia
                   }),
                 );
 
@@ -911,37 +993,33 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
 
-
-
-
-
-
-
   void _showErrorDialog(BuildContext context, String title, String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('OK'),
+      builder: (context) =>
+          AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
-
+  final TextEditingController _searchController = TextEditingController();
 
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
     _pageController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -959,11 +1037,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
         backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,
         leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            // tooltip: '',
-          ),
+          builder: (context) =>
+              IconButton(
+                icon: Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                // tooltip: '',
+              ),
         ),
       ),
       drawer: Drawer(
@@ -1001,7 +1080,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               ListTile(
                 leading: Icon(Icons.report_problem, color: Colors.black),
-                title: Text('Zgłoszenia', style: TextStyle(color: Colors.black)),
+                title: Text(
+                    'Zgłoszenia', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   setState(() {
                     showProblems = true;
@@ -1014,7 +1094,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               ListTile(
                 leading: Icon(Icons.group, color: Colors.black),
-                title: Text('Użytkownicy', style: TextStyle(color: Colors.black)),
+                title: Text(
+                    'Użytkownicy', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   setState(() {
                     showProblems = false;
@@ -1027,7 +1108,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               ListTile(
                 leading: Icon(Icons.settings, color: Colors.black),
-                title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
+                title: Text(
+                    'Ustawienia', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -1063,9 +1145,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   void _showAddUserDialog(BuildContext context) {
-    final TextEditingController usernameController = TextEditingController();//push
+    final TextEditingController usernameController = TextEditingController();
     final TextEditingController passwordController = TextEditingController();
-    final TextEditingController roleController = TextEditingController();
+    String selectedRole = 'user'; // Domyślnie ustawiamy rolę na 'user'
 
     showDialog(
       context: context,
@@ -1086,6 +1168,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Pole na login
               TextField(
                 controller: usernameController,
                 style: TextStyle(color: Colors.black),
@@ -1099,6 +1182,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ),
               ),
               SizedBox(height: 16),
+              // Pole na hasło
               TextField(
                 controller: passwordController,
                 style: TextStyle(color: Colors.black),
@@ -1113,9 +1197,24 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ),
               ),
               SizedBox(height: 16),
-              TextField(
-                controller: roleController,
-                style: TextStyle(color: Colors.black),
+              // Dropdown dla roli
+              DropdownButtonFormField<String>(
+                value: selectedRole,
+                items: [
+                  DropdownMenuItem(
+                    value: 'user',
+                    child: Text('User'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'admin',
+                    child: Text('Admin'),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedRole = value!;
+                  });
+                },
                 decoration: InputDecoration(
                   labelText: 'Rola',
                   labelStyle: TextStyle(color: Colors.black),
@@ -1128,6 +1227,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
             ],
           ),
           actions: [
+            // Przycisk anulowania
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -1137,13 +1237,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 style: TextStyle(color: Colors.black),
               ),
             ),
+            // Przycisk tworzenia użytkownika
             TextButton(
               onPressed: () {
                 final username = usernameController.text;
                 final password = passwordController.text;
-                final role = roleController.text;
 
-                _createUser(username, password, role);
+                // Wywołanie funkcji do tworzenia użytkownika
+                _createUser(username, password, selectedRole);
                 Navigator.of(context).pop();
               },
               child: Text(
@@ -1156,6 +1257,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       },
     );
   }
+
   void _createUser(String username, String password, String role) async {
     var newUser = {
       "username": username,
