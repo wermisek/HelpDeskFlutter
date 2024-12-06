@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:math';
@@ -9,6 +11,8 @@ void main() {
 }
 
 class TicTacToeApp extends StatelessWidget {
+  const TicTacToeApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -19,6 +23,8 @@ class TicTacToeApp extends StatelessWidget {
 }
 
 class TicTacToeGame extends StatefulWidget {
+  const TicTacToeGame({super.key});
+
   @override
   _TicTacToeGameState createState() => _TicTacToeGameState();
 }
@@ -216,8 +222,11 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
       for (int j = 0; j < 3; j++) {
         if (board[i][j] == '') {
           if (isWinningMove(i, j, 'O')) return [i, j];
-          if (isWinningMove(i, j, 'X')) moves.insert(0, [i, j]);
-          else moves.add([i, j]);
+          if (isWinningMove(i, j, 'X')) {
+            moves.insert(0, [i, j]);
+          } else {
+            moves.add([i, j]);
+          }
         }
       }
     }
@@ -266,7 +275,7 @@ class CellWidget extends StatelessWidget {
   final Uint8List aiImage;
   final VoidCallback onTap;
 
-  const CellWidget({
+  const CellWidget({super.key,
     required this.value,
     required this.playerImage,
     required this.aiImage,
