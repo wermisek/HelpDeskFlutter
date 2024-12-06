@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'settings.dart';
 import 'package:http/http.dart' as http;
 import 'problemtemp.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
+
 
 
 
@@ -73,11 +75,21 @@ class _AdminHomePageState extends State<AdminHomePage> {
   @override
   void initState() {
     super.initState();
+
+    filteredProblems = List.from(problems);
+    filteredUsers = List.from(users);
+
     getProblems().then((_) {
       _resetFilter();
     });
-    getUsers();
+    getUsers().then((_) {
+      setState(() {
+        filteredUsers = List.from(users);
+      });
+    });
+
     _initializeProblems();
+
     _refreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       getProblems();
       getUsers();
@@ -500,8 +512,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void _filterUsersByQuery(String query) {
     setState(() {
       if (query.isEmpty) {
-        // Jeśli pole jest puste, pokazujemy wszystkich użytkowników
-        filteredUsers = users;
+        // Przy pustym polu wyszukiwania pokaż pełną listę
+        filteredUsers = List.from(users);
       } else {
         // Filtrowanie użytkowników na podstawie nazwy użytkownika lub roli
         filteredUsers = users.where((user) {
@@ -513,6 +525,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       }
     });
   }
+
 
 
   Widget _buildUserList() {
@@ -811,18 +824,26 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     Uri.parse('http://192.168.10.188:8080/change_username'),
                     body: json.encode({
                       'oldUsername': user['username'],
-                      // Stary login użytkownika
                       'newUsername': newUsername,
-                      // Nowy login
                     }),
                     headers: {
                       'Content-Type': 'application/json',
-                      'role': 'admin', // Nagłówek potwierdzający rolę admina
+                      'role': 'admin',
                     },
                   );
 
                   if (response.statusCode == 200) {
                     print('Login został zmieniony');
+                    // Po zmianie loginu, zaktualizuj listę użytkowników
+                    setState(() {
+                      // Tutaj powinno być odświeżenie listy użytkowników
+                      filteredUsers = filteredUsers.map((u) {
+                        if (u['username'] == user['username']) {
+                          u['username'] = newUsername; // Aktualizowanie loginu
+                        }
+                        return u;
+                      }).toList();
+                    });
                     Navigator.of(context).pop(); // Zamknięcie okna dialogowego
                   } else {
                     print('Błąd zmiany loginu: ${response.body}');
@@ -830,12 +851,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   }
                 }
               },
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(
-                    vertical: 12, horizontal: 24), // Wewnętrzne odstępy
-              ),
               child: Text('Zapisz'),
             ),
           ],
@@ -892,21 +907,25 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   var response = await http.put(
                     Uri.parse('http://192.168.10.188:8080/change_password'),
                     body: json.encode({
-                      'username': user['username'], // Nazwa użytkownika
-                      'newPassword': newPassword, // Nowe hasło
+                      'username': user['username'],
+                      'newPassword': newPassword,
                     }),
                     headers: {
                       'Content-Type': 'application/json',
-                      'role': 'admin', // Nagłówek potwierdzający rolę admina
+                      'role': 'admin',
                     },
                   );
 
                   if (response.statusCode == 200) {
                     print('Hasło zostało zmienione');
-                    Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                    // Zaktualizuj listę po zmianie hasła (jeśli np. chcesz to odświeżyć)
+                    setState(() {
+                      // Możesz dodać logikę, jeśli chcesz zmieniać hasło w liście
+                    });
+                    Navigator.of(context).pop();
                   } else {
                     print('Błąd zmiany hasła: ${response.body}');
-                    Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                    Navigator.of(context).pop();
                   }
                 }
               },
@@ -961,16 +980,21 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   Uri.parse('http://192.168.10.188:8080/delete_user'),
                   headers: {
                     'Content-Type': 'application/json',
-                    'role': 'admin', // Nagłówek z rolą admina
+                    'role': 'admin',
                   },
                   body: json.encode({
                     'username': user['username'],
-                    // Nazwa użytkownika do usunięcia
                   }),
                 );
 
                 if (response.statusCode == 200) {
                   print('Użytkownik został usunięty');
+                  setState(() {
+                    // Usuwanie użytkownika z listy
+                    filteredUsers = filteredUsers.where((u) =>
+                    u['username'] !=
+                        user['username']).toList();
+                  });
                   Navigator.of(context).pop(); // Zamknięcie okna dialogowego
                 } else {
                   print('Błąd usuwania użytkownika: ${response.body}');
@@ -1198,32 +1222,63 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               SizedBox(height: 16),
               // Dropdown dla roli
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField2<String>(
                 value: selectedRole,
                 items: [
                   DropdownMenuItem(
                     value: 'user',
-                    child: Text('User'),
+                    child: Text(
+                      'User',
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ),
                   DropdownMenuItem(
                     value: 'admin',
-                    child: Text('Admin'),
+                    child: Text(
+                      'Admin',
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ),
                 ],
                 onChanged: (value) {
-                  setState(() {
-                    selectedRole = value!;
-                  });
+                  selectedRole = value!;
                 },
                 decoration: InputDecoration(
                   labelText: 'Rola',
                   labelStyle: TextStyle(color: Colors.black),
                   border: OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFF49402)),
                   ),
                 ),
-              ),
+                buttonStyleData: ButtonStyleData(
+                  height: 25, // Wysokość przycisku
+                  decoration: BoxDecoration(
+                    color: Colors.white, // Kolor tła przycisku
+                    borderRadius: BorderRadius.circular(
+                        5.0), // Zaokrąglone rogi
+                  ),
+                  overlayColor: WidgetStateProperty.all(
+                      Colors.transparent), // Usuń efekt hover
+                ),
+                dropdownStyleData: DropdownStyleData(
+                  maxHeight: 150,
+                  offset: Offset(0, 0), // Wymusza rozwijanie w dół
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                ),
+                iconStyleData: IconStyleData(
+                  icon: Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.black,
+                  ),
+                ),
+              )
             ],
           ),
           actions: [
@@ -1276,6 +1331,17 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
       if (response.statusCode == 201) {
         print("Użytkownik stworzony: ${response.body}");
+
+        // Dodaj nowego użytkownika do listy users
+        setState(() {
+          users.add(newUser); // Dodaj użytkownika do pełnej listy
+          filteredUsers.add(newUser); // Dodaj użytkownika do przefiltrowanej listy
+        });
+
+        if (searchQuery.isNotEmpty) {
+          _filterUsersByQuery(searchQuery);
+        }
+
       } else {
         final responseBody = json.decode(response.body);
         print("Błąd tworzenia użytkownika: ${responseBody['message']}");
@@ -1285,3 +1351,4 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
   }
 }
+
