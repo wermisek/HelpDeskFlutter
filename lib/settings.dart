@@ -1,8 +1,9 @@
-// Ignorowanie niektórych ostrzeżeń, które mogą wystąpić przy korzystaniu z prywatnych typów w publicznych API
 // ignore_for_file: library_private_types_in_public_api
 
 import 'package:flutter/material.dart';
 import 'login.dart'; // Importujemy stronę logowania
+import 'ea.dart'; // Import the ea.dart file
+
 
 // Klasa ustawień - strona ustawień użytkownika
 class SettingsPage extends StatefulWidget {
@@ -23,83 +24,101 @@ class _SettingsPageState extends State<SettingsPage> {
       appBar: AppBar(
         title: Text('Ustawienia'),
         backgroundColor: Color(0xFFF5F5F5),
-        foregroundColor: Colors.black, // Kolor tekstu na czarno w pasku
-        elevation: 0, // Usuwamy cień z paska
+        foregroundColor: Colors.black,
+        elevation: 0,
       ),
-      backgroundColor: Color(0xFFF5F5F5), // Ustawiamy tło strony na jasny kolor
-      body: Column(
+      backgroundColor: Color(0xFFF5F5F5),
+      body: Stack(
         children: [
-          Divider(
-            color: Color(0xFFF49402), // Kolor podziału
-            thickness: 1, // Grubość linii
-            height: 1, // Wysokość podziału
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 36.0, // Margines po bokach
-                vertical: 36.0, // Margines od góry i dołu
+          Column(
+            children: [
+              Divider(
+                color: Color(0xFFF49402),
+                thickness: 1,
+                height: 1,
               ),
-              child: Column(
-                children: [
-                  // Pierwszy przycisk: Zmień hasło
-                  _buildSettingsTile(
-                    context,
-                    index: 1, // Indeks przycisku
-                    icon: Icons.lock, // Ikona kłódki
-                    text: 'Zmień hasło', // Tekst na przycisku
-                    onTap: () => _showPasswordChangeMessage(context), // Akcja po kliknięciu
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 36.0,
+                    vertical: 36.0,
                   ),
-                  SizedBox(height: 16.0), // Odstęp między przyciskami
-                  // Drugi przycisk: Licencja aplikacji
-                  _buildSettingsTile(
-                    context,
-                    index: 2,
-                    icon: Icons.gavel,
-                    text: 'Licencja aplikacji',
-                    onTap: () => _showAboutUsDialog(context),
-                  ),
-                  SizedBox(height: 16.0), // Odstęp między przyciskami
-                  // Trzeci przycisk: Informacje o aplikacji
-                  _buildSettingsTile(
-                    context,
-                    index: 3,
-                    icon: Icons.apps,
-                    text: 'Informacje o aplikacji',
-                    onTap: () => _showAppInfoDialog(context),
-                  ),
-                  Spacer(), // Przycisk wylogowania pcha resztę na dół
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Column(
                     children: [
-                      SizedBox(
-                        width: 310, // Szerokość przycisku
-                        height: 60, // Wysokość przycisku
-                        child: ElevatedButton(
-                          onPressed: _logOut, // Akcja wylogowania
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white, // Kolor tła przycisku
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30), // Zaokrąglone rogi
+                      _buildSettingsTile(
+                        context,
+                        index: 1,
+                        icon: Icons.lock,
+                        text: 'Zmień hasło',
+                        onTap: () => _showPasswordChangeMessage(context),
+                      ),
+                      SizedBox(height: 16.0),
+                      _buildSettingsTile(
+                        context,
+                        index: 2,
+                        icon: Icons.gavel,
+                        text: 'Licencja aplikacji',
+                        onTap: () => _showAboutUsDialog(context),
+                      ),
+                      SizedBox(height: 16.0),
+                      _buildSettingsTile(
+                        context,
+                        index: 3,
+                        icon: Icons.apps,
+                        text: 'Informacje o aplikacji',
+                        onTap: () => _showAppInfoDialog(context),
+                      ),
+                      Spacer(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 310,
+                            height: 60,
+                            child: ElevatedButton(
+                              onPressed: _logOut,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                foregroundColor: Colors.black,
+                                elevation: 2.0,
+                              ),
+                              child: Text(
+                                'Wyloguj się',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
-                            foregroundColor: Colors.black, // Kolor tekstu na czarno
-                            elevation: 2.0, // Subtelny cień
                           ),
-                          child: Text(
-                            'Wyloguj się',
-                            style: TextStyle(
-                              fontSize: 16, // Rozmiar czcionki
-                              fontWeight: FontWeight.w600, // Grubość czcionki
-                            ),
-                          ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
+            ],
+          ),
+          // Floating Action Button in the bottom-right corner
+          // Floating Action Button in the bottom-right corner
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => TicTacToeApp()), // Navigate to EaPage
+                );
+              },
+              backgroundColor: Color(0xFFF5F5F5),
+              elevation: 0,
             ),
           ),
+
         ],
       ),
     );
@@ -108,90 +127,89 @@ class _SettingsPageState extends State<SettingsPage> {
   // Pomocnicza funkcja do budowania przycisków w ustawieniach
   Widget _buildSettingsTile(
       BuildContext context, {
-        required int index, // Indeks przycisku
-        required IconData icon, // Ikona przycisku
-        required String text, // Tekst przycisku
-        required Function() onTap, // Akcja po kliknięciu
+        required int index,
+        required IconData icon,
+        required String text,
+        required Function() onTap,
       }) {
     return MouseRegion(
-      onEnter: (_) => setState(() => hoverStates[index] = true), // Zmieniamy stan przy najechaniu
-      onExit: (_) => setState(() => hoverStates[index] = false), // Zmieniamy stan przy wyjściu
+      onEnter: (_) => setState(() => hoverStates[index] = true),
+      onExit: (_) => setState(() => hoverStates[index] = false),
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 200), // Czas trwania animacji
-        height: 60, // Wysokość przycisku
+        duration: Duration(milliseconds: 200),
+        height: 60,
         decoration: BoxDecoration(
           color: hoverStates[index] == true
-              ? Colors.grey[300] // Kolor przycisku po najechaniu
-              : Colors.white, // Kolor normalny
-          borderRadius: BorderRadius.circular(30), // Zaokrąglone rogi
+              ? Colors.grey[300]
+              : Colors.white,
+          borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
               color: hoverStates[index] == true
-                  ? Colors.black.withOpacity(0.2) // Cień po najechaniu
-                  : Colors.black.withOpacity(0.1), // Normalny cień
-              blurRadius: 8.0, // Rozmycie cienia
-              offset: Offset(0, 2), // Pozycja cienia
-              spreadRadius: 2.0, // Rozprzestrzenianie się cienia
+                  ? Colors.black.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.1),
+              blurRadius: 8.0,
+              offset: Offset(0, 2),
+              spreadRadius: 2.0,
             ),
           ],
         ),
         child: InkWell(
-          onTap: onTap, // Akcja po kliknięciu
-          borderRadius: BorderRadius.circular(30), // Zaokrąglone rogi przycisku
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(30),
           child: ListTile(
-            leading: Icon(icon, color: Colors.black), // Ikona po lewej stronie
+            leading: Icon(icon, color: Colors.black),
             title: Text(
-              text, // Tekst przycisku
-              style: TextStyle(fontSize: 18.0, color: Colors.black), // Styl tekstu
+              text,
+              style: TextStyle(fontSize: 18.0, color: Colors.black),
             ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.0), // Padding wewnętrzny
-            visualDensity: VisualDensity.standard, // Gęstość wizualna
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
+            visualDensity: VisualDensity.standard,
           ),
         ),
       ),
     );
   }
 
-  // Funkcja wyświetlająca okno zmiany hasła
   void _showPasswordChangeMessage(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white, // Tło okna
+          backgroundColor: Colors.white,
           title: Text(
             'Zmiana hasła',
-            style: TextStyle(color: Colors.black), // Kolor tytułu
+            style: TextStyle(color: Colors.black),
           ),
           content: SizedBox(
-            width: 500, // Szerokość okna
+            width: 500,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Jeżeli chciałbyś zmienić hasło do swojego konta musisz wysłać zgłoszenie do administratora.',
-                  style: TextStyle(color: Colors.black), // Tekst w oknie
+                  style: TextStyle(color: Colors.black),
                 ),
-                SizedBox(height: 16), // Odstęp między tekstami
+                SizedBox(height: 16),
                 Text(
                   'Wyslij zgłoszenie i wpisz:\nSala: "Zmiana hasła"\nOpis: Login: "Twoj login", Nowe hasło: "Twoje nowe wymyslone haslo"',
-                  style: TextStyle(color: Colors.black), // Kolejny tekst
+                  style: TextStyle(color: Colors.black),
                 ),
               ],
             ),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(), // Zamknięcie okna
+              onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
-                foregroundColor: Colors.black, // Kolor przycisku
+                foregroundColor: Colors.black,
                 backgroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0), // Zaokrąglone rogi
+                  borderRadius: BorderRadius.circular(16.0),
                 ),
               ),
-              child: Text('OK'), // Tekst przycisku
+              child: Text('OK'),
             ),
           ],
         );
@@ -199,7 +217,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // Funkcja pokazująca licencję aplikacji
   void _showAboutUsDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -228,7 +245,7 @@ Niniejsze oprogramowanie jest licencjonowane wyłącznie dla upoważnionych inst
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(), // Zamknięcie okna
+              onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.black,
                 backgroundColor: Colors.white,
@@ -244,7 +261,6 @@ Niniejsze oprogramowanie jest licencjonowane wyłącznie dla upoważnionych inst
     );
   }
 
-  // Funkcja pokazująca informacje o aplikacji
   void _showAppInfoDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -289,11 +305,10 @@ Wszelkie prawa zastrzeżone.
     );
   }
 
-  // Funkcja wylogowująca użytkownika
   void _logOut() {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
-    ); // Przechodzimy do strony logowania
+    );
   }
 }

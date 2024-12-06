@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'login.dart';
 
 void main() {
   runApp(TicTacToeApp());
@@ -38,54 +39,93 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Kolko i Krzyzyk wersja KOTKI!!')),
+      appBar: AppBar(
+        title: Text('Kolko i Krzyzyk wersja KOTKI!!'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back), // Back arrow icon
+          onPressed: () {
+            // Navigate to LoginPage when back arrow is pressed
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => LoginPage()), // Navigate to LoginPage
+            );
+          },
+        ),
+      ),
       body: Stack(
         children: [
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildPlayerSection('Ty', playerImage),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (int row = 0; row < 3; row++)
-                      Row(
+          Column(
+            children: [
+              // Add the divider here to match your original style
+              Divider(
+                color: Color(0xFFF49402), // Divider color
+                thickness: 1, // Divider thickness
+                height: 1, // Divider height
+              ),
+              Expanded(
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildPlayerSection('Ty', playerImage),
+                      Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          for (int col = 0; col < 3; col++)
-                            CellWidget(
-                              value: board[row][col],
-                              playerImage: playerImage,
-                              aiImage: aiImage,
-                              onTap: () {
-                                if (!gameOver && board[row][col] == '' && currentPlayer == 'X') {
-                                  setState(() {
-                                    board[row][col] = 'X';
-                                    currentPlayer = 'O';
-                                  });
-                                  makeAiMove();
-                                }
-                              },
+                          for (int row = 0; row < 3; row++)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                for (int col = 0; col < 3; col++)
+                                  CellWidget(
+                                    value: board[row][col],
+                                    playerImage: playerImage,
+                                    aiImage: aiImage,
+                                    onTap: () {
+                                      if (!gameOver && board[row][col] == '' && currentPlayer == 'X') {
+                                        setState(() {
+                                          board[row][col] = 'X';
+                                          currentPlayer = 'O';
+                                        });
+                                        makeAiMove();
+                                      }
+                                    },
+                                  ),
+                              ],
                             ),
+                          SizedBox(height: 20),
+                          GestureDetector(
+                            onTap: resetGame,
+                            child: AnimatedScale(
+                              duration: Duration(milliseconds: 100),
+                              scale: _isButtonPressed ? 0.95 : 1.0,
+                              child: Container(
+                                width: 250,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFF49402), // Orange color
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Zresetuj gre',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: resetGame,
-                      child: Text('Zresetuj gre'),
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white, backgroundColor: Colors.black,
-                        elevation: 5,
-                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                        textStyle: TextStyle(fontSize: 18),
-                      ),
-                    ),
-                  ],
+                      _buildPlayerSection('Twój Wróg', aiImage),
+                    ],
+                  ),
                 ),
-                _buildPlayerSection('Twój Wróg', aiImage),
-              ],
-            ),
+              ),
+            ],
           ),
           if (gameOver)
             Center(
@@ -122,12 +162,22 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
     );
   }
 
+  bool _isButtonPressed = false; // To track if the button is pressed
+
   void resetGame() {
     setState(() {
+      _isButtonPressed = true;
       board = List.generate(3, (_) => List.filled(3, ''));
       currentPlayer = 'X';
       gameOver = false;
       resultMessage = '';
+    });
+
+    // Delay the reset of the button pressed state to allow for the animation to finish
+    Future.delayed(Duration(milliseconds: 150), () {
+      setState(() {
+        _isButtonPressed = false;
+      });
     });
   }
 
@@ -207,6 +257,7 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
     return [0, 1, 2].every((i) => board[i][i] == player) ||
         [0, 1, 2].every((i) => board[i][2 - i] == player);
   }
+
 }
 
 class CellWidget extends StatelessWidget {
@@ -231,8 +282,8 @@ class CellWidget extends StatelessWidget {
         height: 100,
         margin: EdgeInsets.all(5),
         decoration: BoxDecoration(
-          color: Colors.blue[100],
-          border: Border.all(color: Colors.black, width: 2),
+          color: Colors.grey[80],
+          border: Border.all(color: Color(0xFFF49402), width: 2),
         ),
         child: Center(
           child: value == 'X'
