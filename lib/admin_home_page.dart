@@ -79,6 +79,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     filteredProblems = List.from(problems);
     filteredUsers = List.from(users);
 
+    // Załaduj dane po inicjalizacji
     getProblems().then((_) {
       _resetFilter();
     });
@@ -95,6 +96,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       getUsers();
     });
   }
+
 
   void _initializeProblems() {
     setState(() {
@@ -523,8 +525,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
           return username.contains(searchQuery) || role.contains(searchQuery);
         }).toList();
       }
+
+      // Resetowanie strony po wyszukiwaniu
+      currentPage = 0; // Zawsze ustawiamy na pierwszą stronę
+      _pageController.jumpToPage(currentPage); // Wymusza przejście na pierwszą stronę
     });
   }
+
+
 
 
 
@@ -568,7 +576,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       var pageUsers = paginatedUsers[pageIndex];
                       return GridView.builder(
                         padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
-                        // Podniesienie kafelków
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4,
                           crossAxisSpacing: 8.0,
@@ -591,14 +598,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                   contentPadding: EdgeInsets.symmetric(
                                       horizontal: 15.0, vertical: 10.0),
                                   title: Column(
-                                    crossAxisAlignment: CrossAxisAlignment
-                                        .start,
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Użytkownik: ${user['username'] ??
-                                            'Nieznany użytkownik'}',
+                                        'Użytkownik: ${user['username'] ?? 'Nieznany użytkownik'}',
                                         style: TextStyle(
                                             fontWeight: FontWeight.w600),
+                                        overflow: TextOverflow.ellipsis, // Skrócenie tekstu
+                                        maxLines: 1, // Ograniczenie do jednej linii
                                       ),
                                       SizedBox(height: 4),
                                       Text(
@@ -612,14 +620,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 8.0),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment
-                                        .spaceEvenly,
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                     children: [
                                       Tooltip(
                                         message: 'Zmień login',
                                         child: IconButton(
                                           icon: Icon(
-                                              Icons.edit, color: Colors.black),
+                                              Icons.edit,
+                                              color: Colors.black),
                                           onPressed: () {
                                             _changeUsername(user);
                                           },
@@ -629,7 +638,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                         message: 'Zmień hasło',
                                         child: IconButton(
                                           icon: Icon(
-                                              Icons.lock, color: Colors.black),
+                                              Icons.lock,
+                                              color: Colors.black),
                                           onPressed: () {
                                             _changePassword(user);
                                           },
@@ -660,7 +670,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
             ),
           ),
 
-          // Górny pasek z wyszukiwaniem i przyciskiem
           Positioned(
             top: 0,
             left: 0,
@@ -776,6 +785,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
     );
   }
+
 
 
   void _changeUsername(dynamic user) {
@@ -1061,12 +1071,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
         backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,
         leading: Builder(
-          builder: (context) =>
-              IconButton(
-                icon: Icon(Icons.menu),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                // tooltip: '',
-              ),
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
       ),
       drawer: Drawer(
@@ -1095,8 +1103,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       Divider(
                         color: Color(0xFFF49402),
                         thickness: 1.0,
-                        indent: 0,
-                        endIndent: 0,
                       ),
                     ],
                   ),
@@ -1104,36 +1110,41 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               ListTile(
                 leading: Icon(Icons.report_problem, color: Colors.black),
-                title: Text(
-                    'Zgłoszenia', style: TextStyle(color: Colors.black)),
+                title: Text('Zgłoszenia', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   setState(() {
                     showProblems = true;
                     showUsers = false;
-                    currentPage = 0;
-                    _pageController.jumpToPage(0);
+                    currentPage = 0; // Zresetuj stronę
+                    _pageController.jumpToPage(0); // Wymusza przejście na pierwszą stronę
+                    searchQuery = ''; // Resetujemy wyszukiwanie
+                    filteredProblems = problems; // Zresetuj filtr dla zgłoszeń
                   });
-                  Navigator.pop(context);
+
+                  Navigator.pop(context); // Zamknij Drawer
                 },
               ),
               ListTile(
                 leading: Icon(Icons.group, color: Colors.black),
-                title: Text(
-                    'Użytkownicy', style: TextStyle(color: Colors.black)),
+                title: Text('Użytkownicy', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   setState(() {
                     showProblems = false;
                     showUsers = true;
-                    currentPage = 0;
-                    _pageController.jumpToPage(0);
+                    currentPage = 0; // Zresetuj stronę
+                    _pageController.jumpToPage(0); // Wymusza przejście na pierwszą stronę
+                    searchQuery = ''; // Resetujemy wyszukiwanie
+                    filteredUsers = List.from(users); // Pokazujemy wszystkich użytkowników
                   });
-                  Navigator.pop(context);
+
+                  // Dodaj zamknięcie Drawer
+                  Navigator.pop(context); // To spowoduje zamknięcie Drawer
+
                 },
               ),
               ListTile(
                 leading: Icon(Icons.settings, color: Colors.black),
-                title: Text(
-                    'Ustawienia', style: TextStyle(color: Colors.black)),
+                title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -1168,10 +1179,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
+
   void _showAddUserDialog(BuildContext context) {
     final TextEditingController usernameController = TextEditingController();
     final TextEditingController passwordController = TextEditingController();
-    String selectedRole = 'user'; // Domyślnie ustawiamy rolę na 'user'
+    String selectedRole = 'user';
 
     showDialog(
       context: context,
