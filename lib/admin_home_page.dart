@@ -9,9 +9,6 @@ import 'package:http/http.dart' as http;
 import 'problemtemp.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 
-
-
-
 void main() {
   runApp(MyApp());
 }
@@ -58,14 +55,19 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   Future<void> getProblems() async {
     try {
-      var response =
-      await HttpClient().getUrl(
+      var response = await HttpClient().getUrl(
           Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
-      setState(() {
-        problems = jsonDecode(content);
-      });
+      List<dynamic> newProblems = jsonDecode(content);
+
+      // Check if new data is different and update the state if needed
+      if (newProblems != problems) {
+        setState(() {
+          problems = newProblems;
+          filteredProblems = List.from(problems); // reset filter
+        });
+      }
     } catch (e) {
       _showErrorDialog(
           context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
@@ -76,20 +78,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void initState() {
     super.initState();
 
-    filteredProblems = List.from(problems);
-    filteredUsers = List.from(users);
-
-    // Załaduj dane po inicjalizacji
+    // Initial data load
     getProblems().then((_) {
       _resetFilter();
     });
-    getUsers().then((_) {
-      setState(() {
-        filteredUsers = List.from(users);
-      });
-    });
-
-    _initializeProblems();
 
     _refreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       getProblems();
@@ -97,20 +89,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
     });
   }
 
-
-  void _initializeProblems() {
-    setState(() {
-      problems.sort((a, b) =>
-          DateTime.parse(b['timestamp'])
-              .compareTo(DateTime.parse(a['timestamp'])));
-      filteredProblems = List.from(problems);
-    });
-  }
-
-
   void _resetFilter() {
     setState(() {
-      filteredProblems = problems;
+      filteredProblems = List.from(problems);
     });
   }
 
@@ -150,6 +131,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     return Expanded(
       child: Stack(
         children: [
+          // Lista problemów w dolnej części
           Container(
             margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
             child: Column(
@@ -195,58 +177,45 @@ class _AdminHomePageState extends State<AdminHomePage> {
                             child: Column(
                               children: [
                                 ListTile(
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 15.0, vertical: 10.0),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
                                   title: Column(
-                                    crossAxisAlignment: CrossAxisAlignment
-                                        .start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Sala: ${problem['room'] ??
-                                            'Nieznana'}',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w600),
+                                        'Sala: ${problem['room'] ?? 'Nieznana'}',
+                                        style: TextStyle(fontWeight: FontWeight.w600),
                                       ),
                                       SizedBox(height: 4),
                                       Text(
-                                        'Nauczyciel: ${problem['username'] ??
-                                            'Nieznany'}',
+                                        'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
                                         style: TextStyle(color: Colors.grey),
                                       ),
                                     ],
                                   ),
                                   subtitle: Text(
-                                    'Treść: ${problem['problem'] ??
-                                        'Brak opisu'}',
+                                    'Treść: ${_removeEmptyLines(problem['problem'] ?? 'Brak opisu')}',
                                     style: TextStyle(
                                       color: Colors.black,
-                                      overflow: TextOverflow.ellipsis,
+                                      overflow: TextOverflow.ellipsis,  // Dodanie "trzech kropek" w przypadku przepełnienia
                                     ),
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 2.0),
+                                  padding: const EdgeInsets.symmetric(vertical: 2.0),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment
-                                        .spaceEvenly,
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                     children: [
                                       ElevatedButton(
                                         onPressed: () async {
                                           final result = await Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ProblemTempPage(
-                                                      problem: problem),
+                                              builder: (context) => ProblemTempPage(problem: problem),
                                             ),
                                           );
                                           if (result == true) {
                                             setState(() {
-                                              filteredProblems =
-                                                  filteredProblems.where((p) =>
-                                                  p['id'] != problem['id'])
-                                                      .toList();
+                                              filteredProblems = filteredProblems.where((p) => p['id'] != problem['id']).toList();
                                             });
                                           }
                                         },
@@ -254,21 +223,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                           backgroundColor: Colors.white,
                                           foregroundColor: Colors.black,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                20),
-                                            side: BorderSide(
-                                                color: Colors.black, width: 1),
+                                            borderRadius: BorderRadius.circular(20),
+                                            side: BorderSide(color: Colors.black, width: 1),
                                           ),
                                           minimumSize: Size(120, 36),
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 5.0),
+                                          padding: EdgeInsets.symmetric(horizontal: 5.0),
                                         ),
                                         child: Text(
                                           'Rozwiń',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                                         ),
                                       ),
                                     ],
@@ -286,12 +249,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
             ),
           ),
 
+          // Górne napisy, wyszukiwarka i przyciski
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: Container(
-              height: 60,
+              height: 80, // Zwiększamy wysokość, aby mieć więcej przestrzeni
               color: Colors.white,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 37.0),
@@ -351,7 +315,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       icon: Icon(Icons.calendar_today, color: Colors.black),
                       onPressed: () async {
                         Set<DateTime> availableDates = _getAvailableDates();
-
                         DateTime initialDate = selectedDate ?? DateTime.now();
                         if (!availableDates.any((availableDate) =>
                         availableDate.year == initialDate.year &&
@@ -375,8 +338,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                             return Theme(
                               data: ThemeData.light().copyWith(
                                 primaryColor: Colors.black,
-                                colorScheme: ColorScheme.light(
-                                    primary: Colors.black),
+                                colorScheme: ColorScheme.light(primary: Colors.black),
                                 dialogBackgroundColor: Colors.white,
                               ),
                               child: Column(
@@ -407,14 +369,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 25.0, vertical: 10.0), // Wyrównanie z kafelkami
+                padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back_ios, size: 20,
-                          color: Color(0xFFF49402)),
+                      icon: Icon(Icons.arrow_back_ios, size: 20, color: Color(0xFFF49402)),
                       onPressed: currentPage > 0
                           ? () {
                         _pageController.previousPage(
@@ -429,8 +389,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       style: TextStyle(fontSize: 14.0, color: Colors.black),
                     ),
                     IconButton(
-                      icon: Icon(Icons.arrow_forward_ios, size: 20,
-                          color: Color(0xFFF49402)),
+                      icon: Icon(Icons.arrow_forward_ios, size: 20, color: Color(0xFFF49402)),
                       onPressed: currentPage < paginatedProblems.length - 1
                           ? () {
                         _pageController.nextPage(
@@ -448,6 +407,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
     );
   }
+
+// Funkcja do usuwania pustych linii
+  String _removeEmptyLines(String text) {
+    // Usuwamy puste linie z tekstu
+    return text.split('\n').where((line) => line.trim().isNotEmpty).join('\n');
+  }
+
 
   void _filterByDate(DateTime selectedDate) {
     setState(() {
