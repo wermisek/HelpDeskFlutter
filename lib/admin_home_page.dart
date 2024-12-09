@@ -55,18 +55,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   Future<void> getProblems() async {
     try {
-      var response = await HttpClient().getUrl(
+      var response =
+      await HttpClient().getUrl(
           Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
-      List<dynamic> newProblems = jsonDecode(content);
-
-      if (newProblems != problems) {
-        setState(() {
-          problems = newProblems;
-          filteredProblems = List.from(problems);
-        });
-      }
+      setState(() {
+        problems = jsonDecode(content);
+      });
     } catch (e) {
       _showErrorDialog(
           context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
@@ -77,9 +73,20 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void initState() {
     super.initState();
 
+    filteredProblems = List.from(problems);
+    filteredUsers = List.from(users);
+
+    // Załaduj dane po inicjalizacji
     getProblems().then((_) {
       _resetFilter();
     });
+    getUsers().then((_) {
+      setState(() {
+        filteredUsers = List.from(users);
+      });
+    });
+
+    _initializeProblems();
 
     _refreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       getProblems();
@@ -87,29 +94,38 @@ class _AdminHomePageState extends State<AdminHomePage> {
     });
   }
 
-  void _resetFilter() {
+  void _initializeProblems() {
     setState(() {
+      problems.sort((a, b) =>
+          DateTime.parse(b['timestamp'])
+              .compareTo(DateTime.parse(a['timestamp'])));
       filteredProblems = List.from(problems);
     });
   }
 
 
+  void _resetFilter() {
+    setState(() {
+      filteredProblems = problems;
+    });
+  }
+
+
+
   Future<void> getUsers() async {
     try {
       var response =
-      await HttpClient().getUrl(
-          Uri.parse('http://192.168.10.188:8080/get_users'));
+      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_users'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
       setState(() {
         users = jsonDecode(content);
       });
     } catch (e) {
-      _showErrorDialog(context, 'Błąd połączenia',
-          'Nie udało się pobrać danych użytkowników.');
+      _showErrorDialog(
+          context, 'Błąd połączenia', 'Nie udało się pobrać danych użytkowników.');
     }
   }
-
 
   Widget _buildProblemList() {
     filteredProblems.sort((a, b) =>
@@ -155,7 +171,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       var pageProblems = paginatedProblems[pageIndex];
                       return GridView.builder(
                         padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                        SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4,
                           crossAxisSpacing: 8.0,
                           mainAxisSpacing: 8.0,
@@ -360,7 +377,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
             ),
           ),
 
-          // Paginacja
           if (filteredProblems.isNotEmpty)
             Align(
               alignment: Alignment.bottomCenter,
@@ -403,6 +419,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
     );
   }
+
+
 
   String _removeEmptyLines(String text) {
     return text.split('\n').where((line) => line.trim().isNotEmpty).join('\n');
@@ -1021,7 +1039,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
   @override
   Widget build(BuildContext context) {
     String getBase64Image() {
-      // Replace this with your actual Base64 string
       const base64Image = 'data:image/png;base64,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';
       // Remove the metadata prefix if it exists
       if (base64Image.startsWith('data:image')) {
