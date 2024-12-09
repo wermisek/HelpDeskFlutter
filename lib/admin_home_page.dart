@@ -196,7 +196,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                     'Treść: ${_removeEmptyLines(problem['problem'] ?? 'Brak opisu')}',
                                     style: TextStyle(
                                       color: Colors.black,
-                                      overflow: TextOverflow.ellipsis,  // Dodanie "trzech kropek" w przypadku przepełnienia
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ),
@@ -249,13 +249,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
             ),
           ),
 
-          // Górne napisy, wyszukiwarka i przyciski
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: Container(
-              height: 80, // Zwiększamy wysokość, aby mieć więcej przestrzeni
+              height: 60,
               color: Colors.white,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 37.0),
