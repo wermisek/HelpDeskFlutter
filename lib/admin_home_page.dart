@@ -424,8 +424,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
       filteredProblems.sort((a, b) =>
           DateTime.parse(b['timestamp'])
               .compareTo(DateTime.parse(a['timestamp'])));
+
+      currentPage = 0;
+      _pageController.jumpToPage(0);
     });
   }
+
+
 
   void _filterProblems(String query) {
     setState(() {
@@ -453,8 +458,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
       filteredProblems.sort((a, b) =>
           DateTime.parse(b['timestamp'])
               .compareTo(DateTime.parse(a['timestamp'])));
+
+      currentPage = 0;
+      _pageController.jumpToPage(0);
     });
   }
+
+
 
   Set<DateTime> _getAvailableDates() {
     Set<DateTime> availableDates = <DateTime>{};
@@ -965,7 +975,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 foregroundColor: Colors.black,
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
               ),
-              child: Text('Usun'),
+              child: Text('Usuń'),
             ),
 
 
