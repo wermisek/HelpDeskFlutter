@@ -76,7 +76,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     filteredProblems = List.from(problems);
     filteredUsers = List.from(users);
 
-    // Załaduj dane po inicjalizacji
     getProblems().then((_) {
       _resetFilter();
     });
@@ -103,6 +102,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
     });
   }
 
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _pageController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void _resetFilter() {
     setState(() {
@@ -1003,7 +1009,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  //hej
 
 
   void _showErrorDialog(BuildContext context, String title, String message) {
@@ -1028,13 +1033,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   final TextEditingController _searchController = TextEditingController();
 
 
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    _pageController.dispose();
-    _searchController.dispose();
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
