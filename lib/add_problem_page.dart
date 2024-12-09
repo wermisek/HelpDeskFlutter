@@ -498,6 +498,7 @@ class _UserHomePageState extends State<UserHomePage> {
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+
         child: paginatedProblems.isEmpty
             ? Center(
           child: Text(
@@ -510,19 +511,22 @@ class _UserHomePageState extends State<UserHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Zgłoszenia',
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(0, 2),
-                        blurRadius: 4.0,
-                        color: Colors.grey.withOpacity(0.5),
-                      ),
-                    ],
+                Padding(
+                  padding: const EdgeInsets.only(left: 10.0),
+                  child: Text(
+                    'Zgłoszenia',
+                    style: TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(0, 2),
+                          blurRadius: 4.0,
+                          color: Colors.grey.withOpacity(0.5),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
