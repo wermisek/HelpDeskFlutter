@@ -618,12 +618,14 @@ class _UserHomePageState extends State<UserHomePage> {
                                       color: Colors.black, fontSize: 14),
                                 ),
                                 SizedBox(height: 4),
-                                Text(
-                                  'Treść: ${problem['problem'] ??
-                                      'Brak opisu'}',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
+                                Flexible(
+                                  child: Text(
+                                    'Treść: ${problem['problem'] ?? 'Brak opisu'}',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                    ),
+                                    maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
