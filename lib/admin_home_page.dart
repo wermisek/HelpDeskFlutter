@@ -61,11 +61,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
       String content = await data.transform(utf8.decoder).join();
       List<dynamic> newProblems = jsonDecode(content);
 
-      // Check if new data is different and update the state if needed
       if (newProblems != problems) {
         setState(() {
           problems = newProblems;
-          filteredProblems = List.from(problems); // reset filter
+          filteredProblems = List.from(problems);
         });
       }
     } catch (e) {
@@ -78,7 +77,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void initState() {
     super.initState();
 
-    // Initial data load
     getProblems().then((_) {
       _resetFilter();
     });
@@ -131,7 +129,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     return Expanded(
       child: Stack(
         children: [
-          // Lista problemów w dolnej części
           Container(
             margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
             child: Column(
@@ -407,9 +404,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-// Funkcja do usuwania pustych linii
   String _removeEmptyLines(String text) {
-    // Usuwamy puste linie z tekstu
     return text.split('\n').where((line) => line.trim().isNotEmpty).join('\n');
   }
 
@@ -479,10 +474,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void _filterUsersByQuery(String query) {
     setState(() {
       if (query.isEmpty) {
-        // Przy pustym polu wyszukiwania pokaż pełną listę
         filteredUsers = List.from(users);
       } else {
-        // Filtrowanie użytkowników na podstawie nazwy użytkownika lub roli
         filteredUsers = users.where((user) {
           final username = user['username']?.toLowerCase() ?? '';
           final role = user['role']?.toLowerCase() ?? '';
@@ -491,9 +484,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
         }).toList();
       }
 
-      // Resetowanie strony po wyszukiwaniu
-      currentPage = 0; // Zawsze ustawiamy na pierwszą stronę
-      _pageController.jumpToPage(currentPage); // Wymusza przejście na pierwszą stronę
+      currentPage = 0;
+      _pageController.jumpToPage(currentPage);
     });
   }
 
@@ -570,8 +562,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                         'Użytkownik: ${user['username'] ?? 'Nieznany użytkownik'}',
                                         style: TextStyle(
                                             fontWeight: FontWeight.w600),
-                                        overflow: TextOverflow.ellipsis, // Skrócenie tekstu
-                                        maxLines: 1, // Ograniczenie do jednej linii
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
                                       ),
                                       SizedBox(height: 4),
                                       Text(
@@ -684,7 +676,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ),
                     SizedBox(width: 10.0),
                     Tooltip(
-                      message: 'Dodaj użytkownika', // Tooltip z napisem
+                      message: 'Dodaj użytkownika',
                       child: ElevatedButton(
                         onPressed: () {
                           _showAddUserDialog(context);
@@ -790,7 +782,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               child: Text('Anuluj'),
             ),
-            // Przycisk "Zapisz"
             TextButton(
               onPressed: () async {
                 String newUsername = usernameController.text.trim();
@@ -809,20 +800,18 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
                   if (response.statusCode == 200) {
                     print('Login został zmieniony');
-                    // Po zmianie loginu, zaktualizuj listę użytkowników
                     setState(() {
-                      // Tutaj powinno być odświeżenie listy użytkowników
                       filteredUsers = filteredUsers.map((u) {
                         if (u['username'] == user['username']) {
-                          u['username'] = newUsername; // Aktualizowanie loginu
+                          u['username'] = newUsername;
                         }
                         return u;
                       }).toList();
                     });
-                    Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                    Navigator.of(context).pop();
                   } else {
                     print('Błąd zmiany loginu: ${response.body}');
-                    Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                    Navigator.of(context).pop();
                   }
                 }
               },
@@ -865,7 +854,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
             // Przycisk "Anuluj"
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Zamknięcie okna dialogowego
+                Navigator.of(context).pop();
               },
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -893,10 +882,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
                   if (response.statusCode == 200) {
                     print('Hasło zostało zmienione');
-                    // Zaktualizuj listę po zmianie hasła (jeśli np. chcesz to odświeżyć)
-                    setState(() {
-                      // Możesz dodać logikę, jeśli chcesz zmieniać hasło w liście
-                    });
                     Navigator.of(context).pop();
                   } else {
                     print('Błąd zmiany hasła: ${response.body}');
@@ -908,7 +893,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
                 padding: EdgeInsets.symmetric(
-                    vertical: 12, horizontal: 24), // Wewnętrzne odstępy
+                    vertical: 12, horizontal: 24),
               ),
               child: Text('Zapisz'),
             ),
@@ -920,7 +905,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
 
   void _deleteUser(dynamic user) {
-    // Wyświetlenie okna dialogowego potwierdzenia w stylu kafelków
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1080,10 +1064,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   setState(() {
                     showProblems = true;
                     showUsers = false;
-                    currentPage = 0; // Zresetuj stronę
-                    _pageController.jumpToPage(0); // Wymusza przejście na pierwszą stronę
-                    searchQuery = ''; // Resetujemy wyszukiwanie
-                    filteredProblems = problems; // Zresetuj filtr dla zgłoszeń
+                    currentPage = 0;
+                    _pageController.jumpToPage(0);
+                    searchQuery = '';
+                    filteredProblems = problems;
                   });
 
                   Navigator.pop(context); // Zamknij Drawer
@@ -1096,14 +1080,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   setState(() {
                     showProblems = false;
                     showUsers = true;
-                    currentPage = 0; // Zresetuj stronę
-                    _pageController.jumpToPage(0); // Wymusza przejście na pierwszą stronę
-                    searchQuery = ''; // Resetujemy wyszukiwanie
-                    filteredUsers = List.from(users); // Pokazujemy wszystkich użytkowników
+                    currentPage = 0;
+                    _pageController.jumpToPage(0);
+                    searchQuery = '';
+                    filteredUsers = List.from(users);
                   });
 
-                  // Dodaj zamknięcie Drawer
-                  Navigator.pop(context); // To spowoduje zamknięcie Drawer
+                  Navigator.pop(context);
 
                 },
               ),
@@ -1134,7 +1117,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               child: Column(
                 children: [
                   if (showProblems) _buildProblemList(),
-                  if (showUsers) _buildUserList(), // Show users
+                  if (showUsers) _buildUserList(),
                 ],
               ),
             ),
@@ -1232,18 +1215,18 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   ),
                 ),
                 buttonStyleData: ButtonStyleData(
-                  height: 25, // Wysokość przycisku
+                  height: 25,
                   decoration: BoxDecoration(
-                    color: Colors.white, // Kolor tła przycisku
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(
-                        5.0), // Zaokrąglone rogi
+                        5.0),
                   ),
                   overlayColor: WidgetStateProperty.all(
-                      Colors.transparent), // Usuń efekt hover
+                      Colors.transparent),
                 ),
                 dropdownStyleData: DropdownStyleData(
                   maxHeight: 150,
-                  offset: Offset(0, 0), // Wymusza rozwijanie w dół
+                  offset: Offset(0, 0),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(5.0),
@@ -1309,10 +1292,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
       if (response.statusCode == 201) {
         print("Użytkownik stworzony: ${response.body}");
 
-        // Dodaj nowego użytkownika do listy users
         setState(() {
-          users.add(newUser); // Dodaj użytkownika do pełnej listy
-          filteredUsers.add(newUser); // Dodaj użytkownika do przefiltrowanej listy
+          users.add(newUser);
+          filteredUsers.add(newUser);
         });
 
         if (searchQuery.isNotEmpty) {
