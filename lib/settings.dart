@@ -17,6 +17,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   String accountName = 'John Doe'; // Przykładowa nazwa konta
   Map<int, bool> hoverStates = {}; // Mapa do śledzenia stanu najechania na przyciski
+  bool isHovered = false;
 
   @override
   Widget build(BuildContext context) {
@@ -102,23 +103,52 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ],
           ),
-          // Floating Action Button in the bottom-right corner
-          // Floating Action Button in the bottom-right corner
           Positioned(
             bottom: 20,
             right: 20,
-            child: FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TicTacToeApp()), // Navigate to EaPage
-                );
-              },
-              backgroundColor: Color(0xFFF5F5F5),
-              elevation: 0,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => isHovered = true),
+              onExit: (_) => setState(() => isHovered = false),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                height: isHovered ? 65 : 56,
+                width: isHovered ? 65 : 56,
+                decoration: BoxDecoration(
+                  color: Color(0xFFF5F5F5),
+                  shape: BoxShape.circle,
+                  boxShadow: isHovered
+                      ? [BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  )]
+                      : [],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(30),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => TicTacToeApp()),
+                      );
+                    },
+                    child: AnimatedOpacity(
+                      duration: Duration(milliseconds: 200),
+                      opacity: isHovered ? 1.0 : 0.0,
+                      child: Icon(
+                        Icons.pets, // Changed to cat-related icon
+                        color: Colors.black,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-
         ],
       ),
     );

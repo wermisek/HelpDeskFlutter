@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+// Klasa reprezentująca stronę ProblemTempPage
 class ProblemTempPage extends StatefulWidget {
   final Map<String, dynamic> problem;
 
@@ -14,9 +15,11 @@ class ProblemTempPage extends StatefulWidget {
   _ProblemTempPageState createState() => _ProblemTempPageState();
 }
 
+// Stan dla ProblemTempPage
 class _ProblemTempPageState extends State<ProblemTempPage> {
   String? _comment;
 
+  // Funkcja do usuwania problemu
   Future<void> _deleteProblem(BuildContext context, String problemId) async {
     final url = Uri.parse('http://192.168.10.188:8080/delete_problem/$problemId');
     try {
@@ -38,6 +41,7 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
     }
   }
 
+  // Funkcja do dodawania komentarza
   Future<void> _addComment(BuildContext context, String problemId) async {
     TextEditingController commentController = TextEditingController();
 
@@ -46,7 +50,7 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
       builder: (context) {
         return Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24.0),
+            borderRadius: BorderRadius.circular(24.0), // Zaokrąglenie krawędzi dialogu
           ),
           child: Container(
             width: MediaQuery.of(context).size.width * 0.8,
@@ -55,14 +59,14 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFF5F5F5), Color(0xFFEFEFEF)],
+                colors: [Color(0xFFF5F5F5), Color(0xFFEFEFEF)], // Gradient tła
               ),
-              borderRadius: BorderRadius.circular(24.0),
+              borderRadius: BorderRadius.circular(24.0), // Zaokrąglenie krawędzi kontenera
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8.0,
-                  offset: Offset(0, 4),
+                  blurRadius: 8.0, // Promień rozmycia cienia
+                  offset: Offset(0, 4), // Przesunięcie cienia
                 ),
               ],
             ),
@@ -87,15 +91,15 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
                     fillColor: Colors.white,
                     contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0),
+                      borderRadius: BorderRadius.circular(16.0), // Zaokrąglenie krawędzi pola tekstowego
                       borderSide: BorderSide(color: Colors.grey.shade400),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0),
+                      borderRadius: BorderRadius.circular(16.0), // Zaokrąglenie krawędzi pola tekstowego
                       borderSide: BorderSide(color: Colors.grey.shade400),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0),
+                      borderRadius: BorderRadius.circular(16.0), // Zaokrąglenie krawędzi pola tekstowego
                       borderSide: BorderSide(color: Color(0xFF1976D2), width: 2.0),
                     ),
                   ),
@@ -163,7 +167,6 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
     DateTime timestamp = DateTime.parse(widget.problem['timestamp'] ?? DateTime.now().toString());
     String formattedTimestamp = "${timestamp.day}-${timestamp.month}-${timestamp.year} ${timestamp.hour}:${timestamp.minute}";
 
-
     String commentText = _comment ?? widget.problem['comment'] ?? 'Nie dodales jeszcze komentarza';
 
     return Scaffold(
@@ -171,13 +174,14 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
         title: Text('Szczegóły Zgłoszenia'),
         backgroundColor: Color(0xFFF5F5F5),
         elevation: 0,
+        shape: Border(bottom: BorderSide(color: Color(0xFFF49402), width: 1)),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFF5F5F5), Color(0xFFF5F5F5)],
+            colors: [Color(0xFFF5F5F5), Color(0xFFF5F5F5)], // Gradient tła
           ),
         ),
         child: Column(
@@ -190,12 +194,12 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
                 padding: EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(24.0),
+                  borderRadius: BorderRadius.circular(24.0), // Zaokrąglenie krawędzi kontenera
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8.0,
-                      offset: Offset(0, 4),
+                      blurRadius: 8.0, // Promień rozmycia cienia
+                      offset: Offset(0, 4), // Przesunięcie cienia
                     ),
                   ],
                 ),
@@ -258,6 +262,7 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
     );
   }
 
+  // Funkcja do budowania wiersza szczegółów
   Widget _buildDetailRow(String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,6 +290,7 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
     );
   }
 
+  // Funkcja do budowania przycisku
   Widget _buildButton({
     required String label,
     required Color backgroundColor,
@@ -300,7 +306,7 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
         side: BorderSide(color: borderColor, width: 1.5),
         padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(25.0),
+          borderRadius: BorderRadius.circular(25.0), // Zaokrąglenie krawędzi przycisku
         ),
       ),
       child: Text(
@@ -309,4 +315,4 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
       ),
     );
   }
-  }
+}

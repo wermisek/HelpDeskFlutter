@@ -217,27 +217,59 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
   }
 
   List<int> findBestMove() {
-    List<List<int>> moves = [];
+    // First check for immediate winning moves
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; j++) {
         if (board[i][j] == '') {
-          if (isWinningMove(i, j, 'O')) return [i, j];
-          if (isWinningMove(i, j, 'X')) {
-            moves.insert(0, [i, j]);
-          } else {
-            moves.add([i, j]);
+          if (isWinningMove(i, j, 'O')) {
+            return [i, j];
           }
         }
       }
     }
 
-    if (moves.isNotEmpty) {
-      if (Random().nextBool()) {
-        return moves[Random().nextInt(moves.length)];
-      } else {
-        return moves.first;
+    // Then check for blocking opponent's winning moves
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        if (board[i][j] == '') {
+          if (isWinningMove(i, j, 'X')) {
+            return [i, j];
+          }
+        }
       }
     }
+
+    // If center is empty, take it with 70% probability
+    if (board[1][1] == '' && Random().nextDouble() < 0.7) {
+      return [1, 1];
+    }
+
+    // Get all empty corners
+    List<List<int>> corners = [];
+    if (board[0][0] == '') corners.add([0, 0]);
+    if (board[0][2] == '') corners.add([0, 2]);
+    if (board[2][0] == '') corners.add([2, 0]);
+    if (board[2][2] == '') corners.add([2, 2]);
+
+    // Take a random corner with 60% probability if available
+    if (corners.isNotEmpty && Random().nextDouble() < 0.6) {
+      return corners[Random().nextInt(corners.length)];
+    }
+
+    // Otherwise, make a random move
+    List<List<int>> availableMoves = [];
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        if (board[i][j] == '') {
+          availableMoves.add([i, j]);
+        }
+      }
+    }
+
+    if (availableMoves.isNotEmpty) {
+      return availableMoves[Random().nextInt(availableMoves.length)];
+    }
+
     return [0, 0];
   }
 
