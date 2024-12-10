@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'settings.dart';
 import 'package:http/http.dart' as http;
 import 'usertempp.dart';
+import 'dart:async';
 
 
 void main() {
@@ -47,6 +48,7 @@ class _UserHomePageState extends State<UserHomePage> {
   int currentPage = 0;
   List<dynamic> problems = [];
   bool isLoading = false;
+  Timer? _timer;
 
 
   @override
@@ -54,21 +56,36 @@ class _UserHomePageState extends State<UserHomePage> {
     super.initState();
     _fetchUserProblems();
     _teacherController.text = widget.username;
+
+    // Ustaw timer, który będzie odświeżał dane co 30 sekund
+    _timer = Timer.periodic(Duration(seconds: 30), (timer) {
+      if (mounted) {
+        _fetchUserProblems();
+      }
+    });
   }
 
+  // Odświeżenie danych
   Future<void> _fetchUserProblems() async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      final response =
-      await http.get(Uri.parse('http://192.168.10.188:8080/get_problems'));
+      final response = await http.get(Uri.parse('http://192.168.10.188:8080/get_problems'));
 
       if (response.statusCode == 200) {
         List<dynamic> fetchedProblems = List<dynamic>.from(json.decode(response.body));
 
+        // Filtruj zgłoszenia tylko dla zalogowanego użytkownika
         List<dynamic> userProblems = fetchedProblems.where((problem) => problem['username'] == widget.username).toList();
+
+        // Sortowanie zgłoszeń po dacie
+        userProblems.sort((a, b) {
+          DateTime dateA = DateTime.parse(a['timestamp']);
+          DateTime dateB = DateTime.parse(b['timestamp']);
+          return dateB.compareTo(dateA); // Od najnowszych do najstarszych
+        });
 
         setState(() {
           problems = userProblems;
@@ -92,6 +109,14 @@ class _UserHomePageState extends State<UserHomePage> {
     }
   }
 
+
+
+  @override
+  void dispose() {
+    // Zatrzymaj Timer, aby uniknąć wycieków pamięci
+    _timer?.cancel();
+    super.dispose();
+  }
 
   void _switchView(CurrentView view) {
     setState(() {
@@ -359,13 +384,12 @@ class _UserHomePageState extends State<UserHomePage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Stylizacja napisu "Zgłoś problem" na taki sam jak "Zgłoszenia"
                       Text(
                         'Zgłoś problem',
                         style: TextStyle(
-                          fontSize: 20.0,  // Taki sam rozmiar czcionki jak "Zgłoszenia"
-                          fontWeight: FontWeight.bold,  // Taki sam styl pogrubienia
-                          color: Colors.black,  // Taki sam kolor tekstu
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                           shadows: [
                             Shadow(
                               offset: Offset(0, 2),
@@ -477,16 +501,6 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-  String _formatTimestamp(String timestamp) {
-    try {
-      DateTime parsedTimestamp = DateTime.parse(timestamp);
-      return '${parsedTimestamp.day}-${parsedTimestamp.month}-${parsedTimestamp
-          .year} ${parsedTimestamp.hour}:${parsedTimestamp
-          .minute}:${parsedTimestamp.second}';
-    } catch (e) {
-      return 'Nieprawidłowy format daty';
-    }
-  }
 
   Widget _buildMyProblemsView() {
     List<List<dynamic>> paginatedProblems = [];
