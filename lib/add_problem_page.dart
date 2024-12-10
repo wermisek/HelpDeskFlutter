@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'settings.dart';
 import 'package:http/http.dart' as http;
+import 'usertempp.dart';
 
 
 void main() {
@@ -641,117 +642,25 @@ class _UserHomePageState extends State<UserHomePage> {
                                   child: Center(
                                     child: ElevatedButton(
                                       onPressed: () async {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ProblemTempPage(problem: problem),
+                                          ),
+                                        ).then((deleted) {
+                                          if (deleted == true) {
+                                            _fetchUserProblems();
+                                          }
+                                        });
+
                                         final response = await http.put(
                                           Uri.parse(
                                               'http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
                                         );
-                                        if (response.statusCode == 200) {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return AlertDialog(
-                                                backgroundColor: Colors.white,
-                                                title: Text(
-                                                  'Szczegóły zgłoszenia',
-                                                  style: TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 16.0,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                content: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    SizedBox(height: 8),
-                                                    Text('Sala: ${problem['room'] ?? 'Nieznana'}'),
-                                                    SizedBox(height: 8),
-                                                    Text('Nauczyciel: ${problem['username'] ?? 'Nieznany'}'),
-                                                    SizedBox(height: 8),
-                                                    Text('Treść: ${problem['problem'] ?? 'Brak opisu'}'),
-                                                    SizedBox(height: 8),
-                                                    Text('Czas zgłoszenia: ${_formatTimestamp(problem['timestamp'])}'),
-                                                  ],
-                                                ),
-                                                actions: [
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    children: [
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.of(context).pop();
-                                                        },
-                                                        child: Text(
-                                                          'Zamknij',
-                                                          style: TextStyle(
-                                                            color: Colors.black,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      TextButton(
-                                                        onPressed: () async {
-                                                          final response = await http.delete(
-                                                            Uri.parse(
-                                                                'http://192.168.10.188:8080/delete_problem/${problem['id']}'),
-                                                          );
-
-                                                          if (response.statusCode == 200) {
-                                                            ScaffoldMessenger.of(context).showSnackBar(
-                                                              SnackBar(
-                                                                content: Text('Zgłoszenie zostało usunięte.'),
-                                                              ),
-                                                            );
-                                                            Navigator.of(context).pop();
-                                                            setState(() {
-                                                              problems.removeWhere(
-                                                                      (item) => item['id'] == problem['id']);
-                                                            });
-                                                          } else {
-                                                            ScaffoldMessenger.of(context).showSnackBar(
-                                                              SnackBar(
-                                                                content: Text('Nie udało się usunąć zgłoszenia.'),
-                                                              ),
-                                                            );
-                                                          }
-                                                        },
-                                                        style: ButtonStyle(
-                                                          animationDuration: Duration.zero,
-                                                          side: WidgetStateProperty.all(BorderSide(color: Colors.red)),
-                                                          foregroundColor: WidgetStateProperty.resolveWith<Color>(
-                                                                (Set<WidgetState> states) {
-                                                              if (states.contains(WidgetState.hovered)) {
-                                                                return Colors.white;
-                                                              }
-                                                              return Colors.black;
-                                                            },
-                                                          ),
-                                                          backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                                                                (Set<WidgetState> states) {
-                                                              if (states.contains(WidgetState.hovered)) {
-                                                                return Colors.red;
-                                                              }
-                                                              return Colors.white;
-                                                            },
-                                                          ),
-                                                        ),
-                                                        child: Text(
-                                                          'Usuń',
-                                                          style: TextStyle(fontSize: 14),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              );
-                                            },
+                                        if (response.statusCode != 200) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Nie udało się oznaczyć zgłoszenia jako przeczytane.')),
                                           );
-
-                                        } else {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(SnackBar(
-                                            content: Text(
-                                                'Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
-                                          ));
                                         }
                                       },
                                       style: ElevatedButton.styleFrom(
