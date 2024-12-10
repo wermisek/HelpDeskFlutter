@@ -58,18 +58,21 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Future<void> getProblems() async {
     try {
       var response =
-      await HttpClient().getUrl(
-          Uri.parse('http://192.168.10.188:8080/get_problems'));
+      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
-      setState(() {
-        problems = jsonDecode(content);
-      });
+      var newProblems = jsonDecode(content);
+      if (newProblems.toString() != problems.toString()) {
+        setState(() {
+          problems = newProblems;
+        });
+      }
     } catch (e) {
-      _showErrorDialog(
-          context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
+      _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
     }
   }
+
+
 
   @override
   void initState() {
@@ -93,8 +96,16 @@ class _AdminHomePageState extends State<AdminHomePage> {
     _initializeProblems();
 
     _refreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      getProblems();
-      getUsers();
+      getProblems().then((_) {
+        setState(() {
+          filteredProblems = List.from(problems); // Ensure this is updated
+        });
+      });
+      getUsers().then((_) {
+        setState(() {
+          filteredUsers = List.from(users); // Ensure this is updated
+        });
+      });
     });
   }
 
@@ -232,7 +243,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                     children: [
                                       ElevatedButton(
                                         onPressed: () async {
-                                          // Wywołanie endpointu do oznaczenia zgłoszenia jako przeczytane
                                           final response = await http.put(
                                             Uri.parse('http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
                                           );
@@ -244,13 +254,21 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                               MaterialPageRoute(
                                                 builder: (context) => ProblemTempPage(problem: problem),
                                               ),
-                                            );
+                                            ).then((shouldDelete) {
+                                              if (shouldDelete == true) {
+                                                // Zaktualizuj listę zgłoszeń, aby usunąć ten kafelek
+                                                setState(() {
+                                                  // Usuń problem z listy zgłoszeń
+                                                  problems.remove(problem);
+                                                });
+                                              }
+                                            });
                                           } else {
                                             // Obsługa błędów
-                                            print('Błąd oznaczania zgłoszenia jako przeczytane: ${response.body}');
+                                            print('Błąd odczytania wiadomości: ${response.body}');
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
-                                                content: Text('Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
+                                                content: Text('Nie udało się odczytać wiadomości.'),
                                               ),
                                             );
                                           }
