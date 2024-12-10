@@ -42,6 +42,10 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
   Uint8List get playerImage => base64Decode(playerImageBase64);
   Uint8List get aiImage => base64Decode(aiImageBase64);
 
+  bool _isButtonPressed = false;
+  bool _isButtonHovered = false;
+  List<List<bool>> cellAnimations = List.generate(3, (_) => List.filled(3, false));
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,11 +93,20 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
                                     value: board[row][col],
                                     playerImage: playerImage,
                                     aiImage: aiImage,
+                                    isAnimating: cellAnimations[row][col],
                                     onTap: () {
                                       if (!gameOver && board[row][col] == '' && currentPlayer == 'X') {
                                         setState(() {
                                           board[row][col] = 'X';
                                           currentPlayer = 'O';
+                                          cellAnimations[row][col] = true;
+                                          Future.delayed(Duration(milliseconds: 500), () {
+                                            if (mounted) {
+                                              setState(() {
+                                                cellAnimations[row][col] = false;
+                                              });
+                                            }
+                                          });
                                         });
                                         makeAiMove();
                                       }
@@ -102,25 +115,37 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
                               ],
                             ),
                           SizedBox(height: 20),
-                          GestureDetector(
-                            onTap: resetGame,
-                            child: AnimatedScale(
-                              duration: Duration(milliseconds: 100),
-                              scale: _isButtonPressed ? 0.95 : 1.0,
-                              child: Container(
-                                width: 250,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFF49402), // Orange color
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Zresetuj gre',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
+                          MouseRegion(
+                            onEnter: (_) => setState(() => _isButtonHovered = true),
+                            onExit: (_) => setState(() => _isButtonHovered = false),
+                            child: GestureDetector(
+                              onTap: resetGame,
+                              child: AnimatedContainer(
+                                duration: Duration(milliseconds: 200),
+                                transform: Matrix4.identity()..scale(_isButtonPressed ? 0.95 : 1.0),
+                                child: Container(
+                                  width: 250,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: _isButtonHovered ? Color(0xFFF49402).withOpacity(0.8) : Color(0xFFF49402),
+                                    borderRadius: BorderRadius.circular(30),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Color(0xFFF49402).withOpacity(0.3),
+                                        blurRadius: _isButtonHovered ? 12 : _isButtonPressed ? 4 : 8,
+                                        spreadRadius: _isButtonHovered ? 3 : _isButtonPressed ? 1 : 2,
+                                        offset: Offset(0, _isButtonPressed ? 2 : 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'Zresetuj gre',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -171,22 +196,22 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
     );
   }
 
-  bool _isButtonPressed = false; // To track if the button is pressed
-
   void resetGame() {
     setState(() {
       _isButtonPressed = true;
       board = List.generate(3, (_) => List.filled(3, ''));
+      cellAnimations = List.generate(3, (_) => List.filled(3, false));
       currentPlayer = 'X';
       gameOver = false;
       resultMessage = '';
     });
 
-    // Delay the reset of the button pressed state to allow for the animation to finish
     Future.delayed(Duration(milliseconds: 150), () {
-      setState(() {
-        _isButtonPressed = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isButtonPressed = false;
+        });
+      }
     });
   }
 
@@ -197,6 +222,14 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
         setState(() {
           board[bestMove[0]][bestMove[1]] = 'O';
           currentPlayer = 'X';
+          cellAnimations[bestMove[0]][bestMove[1]] = true;
+          Future.delayed(Duration(milliseconds: 500), () {
+            if (mounted) {
+              setState(() {
+                cellAnimations[bestMove[0]][bestMove[1]] = false;
+              });
+            }
+          });
         });
       }
 
@@ -304,37 +337,95 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
 
 }
 
-class CellWidget extends StatelessWidget {
+class CellWidget extends StatefulWidget {
   final String value;
   final Uint8List playerImage;
   final Uint8List aiImage;
   final VoidCallback onTap;
+  final bool isAnimating;
 
-  const CellWidget({super.key,
+  const CellWidget({
+    super.key,
     required this.value,
     required this.playerImage,
     required this.aiImage,
     required this.onTap,
+    required this.isAnimating,
   });
+
+  @override
+  State<CellWidget> createState() => _CellWidgetState();
+}
+
+class _CellWidgetState extends State<CellWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+    if (widget.value.isNotEmpty) {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(CellWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value.isNotEmpty && oldWidget.value.isEmpty) {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: value == '' ? onTap : null,
-      child: Container(
+      onTap: widget.value == '' ? widget.onTap : null,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
         width: 100,
         height: 100,
         margin: EdgeInsets.all(5),
         decoration: BoxDecoration(
           color: Colors.grey[80],
-          border: Border.all(color: Color(0xFFF49402), width: 2),
+          border: Border.all(
+            color: widget.isAnimating 
+                ? Color(0xFFF49402).withOpacity(0.8) 
+                : Color(0xFFF49402),
+            width: widget.isAnimating ? 3 : 2,
+          ),
+          boxShadow: widget.isAnimating
+              ? [
+                  BoxShadow(
+                    color: Color(0xFFF49402).withOpacity(0.3),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  )
+                ]
+              : null,
         ),
         child: Center(
-          child: value == 'X'
-              ? Image.memory(playerImage)
-              : value == 'O'
-              ? Image.memory(aiImage)
-              : null,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: widget.value == 'X'
+                ? Image.memory(widget.playerImage)
+                : widget.value == 'O'
+                    ? Image.memory(widget.aiImage)
+                    : null,
+          ),
         ),
       ),
     );
