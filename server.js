@@ -11,8 +11,19 @@ const db = new sqlite3.Database('./users.db', (err) => {
   if (err) {
     console.error('Error opening database:', err.message);
     process.exit(1);
-  } else {
-    console.log('Database connected');
+  }
+});
+
+// Middleware to parse JSON bodies
+app.use(bodyParser.json());
+
+// Serve index.html on the root URL
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Serve static files from the "public" directory
+app.use(express.static(path.join(__dirname, 'public')));
 
     // Add 'read' column to problems table if it doesn't exist
     db.run(`PRAGMA foreign_keys=off;`, (err) => {
@@ -20,19 +31,17 @@ const db = new sqlite3.Database('./users.db', (err) => {
         console.error('Error disabling foreign keys:', err.message);
       } else {
         db.run(
-          `ALTER TABLE problems ADD COLUMN read INTEGER DEFAULT 0;`,
+          `ALTER TABLE problems ADD COLUMN comment TEXT DEFAULT NULL`,
           (err) => {
-            if (err && err.message.includes("duplicate column name: read")) {
-              console.log('Column "read" already exists in "problems" table.');
+            if (err && err.message.includes("duplicate column name: comment")) {
+              console.log('Column "comment" already exists in "problems" table.');
             } else if (err) {
-              console.error('Error adding read column:', err.message);
+              console.error('Error adding comment column:', err.message);
             } else {
-              console.log('Column "read" added to "problems" table.');
+              console.log('Column "comment" added to "problems" table.');
             }
           }
         );
-      }
-    });
     db.run(`PRAGMA foreign_keys=on;`);
 
     // Create users table if it doesn't exist
@@ -72,9 +81,6 @@ const db = new sqlite3.Database('./users.db', (err) => {
     );
   }
 });
-
-// Middleware to parse JSON bodies
-app.use(bodyParser.json());
 
 // Endpoint to register a new user
 app.post('/register', (req, res) => {
@@ -244,7 +250,32 @@ app.get('/get_users', (req, res) => {
   });
 });
 
+// Endpoint to update comment
+app.put('/update_comment/:id', (req, res) => {
+  const problemId = parseInt(req.params.id);
+  const { comment } = req.body;
 
+  if (!problemId) {
+    return res.status(400).send({ message: 'Invalid problem ID' });
+  }
+
+  if (!comment) {
+    return res.status(400).send({ message: 'Comment is required' });
+  }
+
+  db.run(`UPDATE problems SET comment = ? WHERE id = ?`, [comment, problemId], function (err) {
+    if (err) {
+      console.error('Error updating comment:', err.message);
+      return res.status(500).send({ message: 'Error updating comment' });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).send({ message: 'Problem not found' });
+    }
+
+    res.status(200).send({ message: 'Comment updated successfully' });
+  });
+});
 
 // Endpoint to change username
 app.put('/change_username', (req, res) => {

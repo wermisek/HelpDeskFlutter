@@ -47,6 +47,8 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Kolko i Krzyzyk wersja KOTKI!!'),
+        backgroundColor: Colors.white, // Change the AppBar background color to white
+        foregroundColor: Colors.black,
         leading: IconButton(
           icon: Icon(Icons.arrow_back), // Back arrow icon
           onPressed: () {
@@ -58,6 +60,7 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
           },
         ),
       ),
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           Column(
