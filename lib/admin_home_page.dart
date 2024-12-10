@@ -232,16 +232,27 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                     children: [
                                       ElevatedButton(
                                         onPressed: () async {
-                                          final result = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => ProblemTempPage(problem: problem),
-                                            ),
+                                          // Wywołanie endpointu do oznaczenia zgłoszenia jako przeczytane
+                                          final response = await http.put(
+                                            Uri.parse('http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
                                           );
-                                          if (result == true) {
-                                            setState(() {
-                                              filteredProblems = filteredProblems.where((p) => p['id'] != problem['id']).toList();
-                                            });
+
+                                          if (response.statusCode == 200) {
+                                            // Przejdź na nową stronę, gdy status zmieniony pomyślnie
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => ProblemTempPage(problem: problem),
+                                              ),
+                                            );
+                                          } else {
+                                            // Obsługa błędów
+                                            print('Błąd oznaczania zgłoszenia jako przeczytane: ${response.body}');
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Nie udało się oznaczyć zgłoszenia jako przeczytane.'),
+                                              ),
+                                            );
                                           }
                                         },
                                         style: ElevatedButton.styleFrom(
