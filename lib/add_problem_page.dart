@@ -57,8 +57,7 @@ class _UserHomePageState extends State<UserHomePage> {
     _fetchUserProblems();
     _teacherController.text = widget.username;
 
-    // Ustaw timer, który będzie odświeżał dane co 30 sekund
-    _timer = Timer.periodic(Duration(seconds: 30), (timer) {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (mounted) {
         _fetchUserProblems();
       }
