@@ -3,64 +3,484 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Problemy HelpDesk</title>
+    <title>System HelpDesk</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+            --background-color: #f1f5f9;
+            --card-color: #ffffff;
+            --text-color: #1f2937;
+            --text-secondary: #6b7280;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
         }
-        h1 {
-            text-align: center;
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 20px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .controls {
+            background-color: var(--card-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .filter-select {
+            padding: 0.75rem 2rem 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            outline: none;
+            cursor: pointer;
+            background-color: white;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+            appearance: none;
+        }
+
         .problem {
-            background-color: #fff;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
+            background-color: var(--card-color);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .problem:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+
+        .problem-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .problem-info {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .value {
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .timestamp {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .problem-content {
+            margin-bottom: 1rem;
+        }
+
+        .comment-section {
+            background-color: #f8fafc;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .problem-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .delete-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #dc2626;
+        }
+
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            color: white;
+            box-shadow: var(--shadow);
+            display: none;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .status-message.success {
+            background-color: #10b981;
+        }
+
+        .status-message.error {
+            background-color: #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .problem-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .problem-info {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        .statistics-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .chart-card {
+            background: var(--card-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        @media (min-width: 1024px) {
+            .statistics-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
 <body>
+    <div id="statusMessage" class="status-message"></div>
 
-    <h1>Lista Problemów</h1>
-    <div id="problems"></div>
+    <header class="header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-headset"></i>
+                System HelpDesk
+            </h1>
+            <div class="header-actions">
+                <!-- Add any header actions here -->
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="dashboard">
+            <div class="stat-card">
+                <h3>Aktywne zgłoszenia</h3>
+                <div class="value" id="activeProblems">0</div>
+            </div>
+            <!-- Add more stat cards as needed -->
+        </div>
+
+        <div class="controls">
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-box" 
+                   placeholder="Wyszukaj zgłoszenia..."
+                   aria-label="Wyszukaj zgłoszenia">
+            
+            <select id="sortSelect" class="filter-select" aria-label="Sortuj zgłoszenia">
+                <option value="newest">Najnowsze</option>
+                <option value="oldest">Najstarsze</option>
+                <option value="room">Numer pokoju</option>
+                <option value="user">Użytkownik</option>
+            </select>
+        </div>
+
+        <div id="problems"></div>
+    </main>
 
     <script>
-        // Function to fetch problems from the server and display them
+        let allProblems = [];
+
+        function showStatusMessage(message, isError = false) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.style.display = 'block';
+            if (isError) {
+                statusElement.classList.add('error');
+            } else {
+                statusElement.classList.remove('error');
+            }
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 3000);
+        }
+
+        async function deleteProblem(id) {
+            if (!confirm('Czy na pewno chcesz usunąć to zgłoszenie?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/delete_problem/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showStatusMessage('Zgłoszenie zostało usunięte');
+                    fetchProblems(); // Refresh the list
+                } else {
+                    const data = await response.json();
+                    showStatusMessage(data.message || 'Błąd podczas usuwania zgłoszenia', true);
+                }
+            } catch (error) {
+                console.error('Error deleting problem:', error);
+                showStatusMessage('Błąd podczas usuwania zgłoszenia', true);
+            }
+        }
+
+        function displayProblems(problems) {
+            const problemsContainer = document.getElementById('problems');
+            document.getElementById('activeProblems').textContent = problems.length;
+            
+            problemsContainer.innerHTML = '';
+
+            if (problems.length === 0) {
+                problemsContainer.innerHTML = `
+                    <div class="problem">
+                        <div class="problem-content" style="text-align: center; color: var(--text-secondary);">
+                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                            <p>Brak zgłoszonych problemów</p>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            problems.forEach(problem => {
+                const problemElement = document.createElement('div');
+                problemElement.classList.add('problem');
+                problemElement.innerHTML = `
+                    <div class="problem-header">
+                        <div class="problem-info">
+                            <div class="info-item">
+                                <span class="label">Pokój</span>
+                                <span class="value">${problem.room}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Użytkownik</span>
+                                <span class="value">${problem.username}</span>
+                            </div>
+                        </div>
+                        <div class="timestamp">
+                            <i class="far fa-clock"></i>
+                            ${new Date(problem.timestamp).toLocaleString()}
+                        </div>
+                    </div>
+                    <div class="problem-content">
+                        <div class="info-item">
+                            <span class="label">Problem</span>
+                            <span class="value">${problem.problem}</span>
+                        </div>
+                        ${problem.comment ? `
+                            <div class="comment-section">
+                                <span class="label">Komentarz</span>
+                                <span class="value">${problem.comment}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="problem-actions">
+                        <button class="btn delete-btn" onclick="deleteProblem(${problem.id})">
+                            <i class="fas fa-trash-alt"></i>
+                            Usuń zgłoszenie
+                        </button>
+                    </div>
+                `;
+                problemsContainer.appendChild(problemElement);
+            });
+        }
+
         async function fetchProblems() {
             try {
                 const response = await fetch('/get_problems');
-                const problems = await response.json();
-
-                const problemsContainer = document.getElementById('problems');
-                problemsContainer.innerHTML = ''; // Clear existing problems
-
-                if (problems.length === 0) {
-                    problemsContainer.innerHTML = '<p>Brak zgłoszonych problemów.</p>';
-                } else {
-                    problems.forEach(problem => {
-                        const problemElement = document.createElement('div');
-                        problemElement.classList.add('problem');
-                        problemElement.innerHTML = `
-                            <strong>Użytkownik:</strong> ${problem.username}<br>
-                            <strong>Pokój:</strong> ${problem.room}<br>
-                            <strong>Opis problemu:</strong> ${problem.problem}<br>
-                            <strong>Data:</strong> ${new Date(problem.timestamp).toLocaleString()}
-                        `;
-                        problemsContainer.appendChild(problemElement);
-                    });
-                }
+                allProblems = await response.json();
+                filterAndSortProblems();
             } catch (error) {
                 console.error('Error fetching problems:', error);
             }
         }
 
-        // Fetch problems when the page loads
+        function filterAndSortProblems() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const sortBy = document.getElementById('sortSelect').value;
+
+            let filteredProblems = allProblems.filter(problem => {
+                return problem.username.toLowerCase().includes(searchTerm) ||
+                       problem.room.toLowerCase().includes(searchTerm) ||
+                       problem.problem.toLowerCase().includes(searchTerm) ||
+                       (problem.comment && problem.comment.toLowerCase().includes(searchTerm));
+            });
+
+            switch(sortBy) {
+                case 'newest':
+                    filteredProblems.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    break;
+                case 'oldest':
+                    filteredProblems.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    break;
+                case 'room':
+                    filteredProblems.sort((a, b) => a.room.localeCompare(b.room));
+                    break;
+                case 'user':
+                    filteredProblems.sort((a, b) => a.username.localeCompare(b.username));
+                    break;
+            }
+
+            displayProblems(filteredProblems);
+        }
+
+        document.getElementById('searchInput').addEventListener('input', filterAndSortProblems);
+        document.getElementById('sortSelect').addEventListener('change', filterAndSortProblems);
+
+        setInterval(fetchProblems, 10000);
         window.onload = fetchProblems;
     </script>
-
 </body>
 </html>
+
