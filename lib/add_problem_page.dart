@@ -65,8 +65,12 @@ class _UserHomePageState extends State<UserHomePage> {
       await http.get(Uri.parse('http://192.168.10.188:8080/get_problems'));
 
       if (response.statusCode == 200) {
+        List<dynamic> fetchedProblems = List<dynamic>.from(json.decode(response.body));
+
+        List<dynamic> userProblems = fetchedProblems.where((problem) => problem['username'] == widget.username).toList();
+
         setState(() {
-          problems = List<dynamic>.from(json.decode(response.body));
+          problems = userProblems;
           isLoading = false;
         });
       } else {
@@ -86,6 +90,7 @@ class _UserHomePageState extends State<UserHomePage> {
       );
     }
   }
+
 
   void _switchView(CurrentView view) {
     setState(() {
