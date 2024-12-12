@@ -230,10 +230,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                     ],
                                   ),
                                   subtitle: Text(
-                                    'Treść: ${_removeEmptyLines(problem['problem'] ?? 'Brak opisu')}',
+                                    'Treść: ${_removeNewlines(problem['problem'] ?? 'Brak opisu')}',
+                                    maxLines: 1, // Ograniczamy tekst do jednej linii
+                                    overflow: TextOverflow.ellipsis, // Dodajemy trzy kropki, jeśli tekst nie zmieści się w tej jednej linii
                                     style: TextStyle(
                                       color: Colors.black,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ),
@@ -461,11 +462,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-
-
-  String _removeEmptyLines(String text) {
-    return text.split('\n').where((line) => line.trim().isNotEmpty).join('\n');
+  String _removeNewlines(String text) {
+    return text.replaceAll(RegExp(r'(\r\n|\n|\r)'), ' '); // Usuwa nowe linie
   }
+
+
+
 
 
   void _filterByDate(DateTime selectedDate) {
@@ -1384,4 +1386,3 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
   }
 }
-
