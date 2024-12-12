@@ -170,25 +170,37 @@ class _UserHomePageState extends State<UserHomePage> {
   }
 
 
-  void _showDialog(BuildContext context,
-      {required String title, required String message}) {
+  void _showDialog(BuildContext context, {required String title, required String message}) {
     showDialog(
       context: context,
-      builder: (context) =>
-          AlertDialog(
-            title: Text(title, style: TextStyle(color: Colors.black)),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white, // Set the background color to white
+          title: Text(
+            title,
+            style: TextStyle(color: Colors.black), // Set title text color to black
           ),
+          content: Text(
+            message,
+            style: TextStyle(color: Colors.black), // Set content text color to black
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                'OK',
+                style: TextStyle(color: Colors.black), // Ensure button text is also black
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
+
+
 
   Widget _buildInputField({
     required TextEditingController controller,
