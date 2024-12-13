@@ -84,7 +84,7 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
                 SizedBox(height: 20.0),
                 TextField(
                   controller: commentController,
-                  maxLines: 5,
+                  maxLines: 3,
                   decoration: InputDecoration(
                     hintText: 'Wpisz komentarz...',
                     filled: true,
@@ -190,16 +190,16 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 60.0),
               child: Container(
-                height: 400.0,
+                height: 450.0,  // Increased from 400.0
                 padding: EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(24.0), // Zaokrąglenie krawędzi kontenera
+                  borderRadius: BorderRadius.circular(24.0),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8.0, // Promień rozmycia cienia
-                      offset: Offset(0, 4), // Przesunięcie cienia
+                      blurRadius: 8.0,
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
@@ -276,14 +276,17 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
           ),
         ),
         Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              fontSize: 16.0,
-              color: Colors.black,
+          child: Container(
+            constraints: BoxConstraints(maxHeight: 70), // Add this to control height
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 16.0,
+                color: Colors.black,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 3,
             ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 3,
           ),
         ),
       ],
