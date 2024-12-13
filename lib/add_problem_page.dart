@@ -66,37 +66,23 @@ class _UserHomePageState extends State<UserHomePage> {
 
   // Odświeżenie danych
   Future<void> _fetchUserProblems() async {
-    setState(() {
-      isLoading = true;
-    });
+    if (!mounted) return;
 
     try {
       final response = await http.get(Uri.parse('http://192.168.10.188:8080/get_problems'));
-
       if (response.statusCode == 200) {
         List<dynamic> fetchedProblems = List<dynamic>.from(json.decode(response.body));
+        List<dynamic> userProblems = fetchedProblems
+            .where((problem) => problem['username'] == widget.username)
+            .toList();
 
-        // Filtruj zgłoszenia tylko dla zalogowanego użytkownika
-        List<dynamic> userProblems = fetchedProblems.where((problem) => problem['username'] == widget.username).toList();
-
-        // Sortowanie zgłoszeń po dacie
-        userProblems.sort((a, b) {
-          DateTime dateA = DateTime.parse(a['timestamp']);
-          DateTime dateB = DateTime.parse(b['timestamp']);
-          return dateB.compareTo(dateA); // Od najnowszych do najstarszych
-        });
-
-        setState(() {
-          problems = userProblems;
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Nie udało się załadować zgłoszeń.')),
-        );
+        // Only update state if data has changed
+        if (userProblems.toString() != problems.toString()) {
+          setState(() {
+            problems = userProblems;
+            isLoading = false;
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -439,7 +425,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                 child: _buildInputField(
                                   controller: _roomController,
                                   labelText: 'Sala',
-                                  maxLines: 2,
+                                  maxLines: 1,
                                   validator: (value) {
                                     if (value?.isEmpty ?? true) {
                                       return 'Wprowadź nazwę Sali';
@@ -678,15 +664,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                           }
                                         });
 
-                                        final response = await http.put(
-                                          Uri.parse(
-                                              'http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
-                                        );
-                                        if (response.statusCode != 200) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Nie udało się oznaczyć zgłoszenia jako przeczytane.')),
-                                          );
-                                        }
+
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.white,
