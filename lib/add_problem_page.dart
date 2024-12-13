@@ -76,7 +76,11 @@ class _UserHomePageState extends State<UserHomePage> {
             .where((problem) => problem['username'] == widget.username)
             .toList();
 
-        // Only update state if data has changed
+        // Sort problems by timestamp, newest first
+        userProblems.sort((a, b) =>
+            DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp']))
+        );
+
         if (userProblems.toString() != problems.toString()) {
           setState(() {
             problems = userProblems;
@@ -93,6 +97,7 @@ class _UserHomePageState extends State<UserHomePage> {
       );
     }
   }
+
 
 
 
