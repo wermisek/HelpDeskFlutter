@@ -18,7 +18,7 @@ class ProblemTempPage extends StatefulWidget {
 class _ProblemTempPageState extends State<ProblemTempPage> {
   // Funkcja do usuwania problemu
   Future<void> _deleteProblem(BuildContext context, String problemId) async {
-    final url = Uri.parse('http://192.168.10.188:8080/delete_problem/$problemId');
+    final url = Uri.parse('http://localhost:8080/delete_problem/$problemId');
     try {
       final response = await http.delete(url);
       if (response.statusCode == 200) {

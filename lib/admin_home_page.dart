@@ -57,7 +57,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   Future<void> getProblems() async {
     try {
-      var response = await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_problems'));
+      var response = await HttpClient().getUrl(Uri.parse('http://localhost:8080/get_problems'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
       var newProblems = jsonDecode(content);
@@ -143,7 +143,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Future<void> getUsers() async {
     try {
       var response =
-      await HttpClient().getUrl(Uri.parse('http://192.168.10.188:8080/get_users'));
+      await HttpClient().getUrl(Uri.parse('http://localhost:8080/get_users'));
       var data = await response.close();
       String content = await data.transform(utf8.decoder).join();
       setState(() {
@@ -252,7 +252,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                       ElevatedButton(
                                         onPressed: () async {
                                           final response = await http.put(
-                                            Uri.parse('http://192.168.10.188:8080/mark_as_read/${problem['id']}'),
+                                            Uri.parse('http://localhost:8080/mark_as_read/${problem['id']}'),
                                           );
 
                                           if (response.statusCode == 200) {
@@ -764,7 +764,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           shape: CircleBorder(),
                           padding: EdgeInsets.all(10.0),
                         ),
-                        child: Icon(Icons.add, size: 20.0),
+                        child: Icon(Icons.add, size: 20.0, color: Color(0xFFF49402),),
                       ),
                     ),
                   ],
@@ -864,7 +864,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 String newUsername = usernameController.text.trim();
                 if (newUsername.isNotEmpty) {
                   var response = await http.put(
-                    Uri.parse('http://192.168.10.188:8080/change_username'),
+                    Uri.parse('http://localhost:8080/change_username'),
                     body: json.encode({
                       'oldUsername': user['username'],
                       'newUsername': newUsername,
@@ -946,7 +946,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 String newPassword = passwordController.text.trim();
                 if (newPassword.isNotEmpty) {
                   var response = await http.put(
-                    Uri.parse('http://192.168.10.188:8080/change_password'),
+                    Uri.parse('http://localhost:8080/change_password'),
                     body: json.encode({
                       'username': user['username'],
                       'newPassword': newPassword,
@@ -1013,7 +1013,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
             TextButton(
               onPressed: () async {
                 var response = await http.delete(
-                  Uri.parse('http://192.168.10.188:8080/delete_user'),
+                  Uri.parse('http://localhost:8080/delete_user'),
                   headers: {
                     'Content-Type': 'application/json',
                     'role': 'admin',
@@ -1364,7 +1364,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.10.188:8080/register'),
+        Uri.parse('http://localhost:8080/register'),
         headers: {
           'Content-Type': 'application/json',
         },

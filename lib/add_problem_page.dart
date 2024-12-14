@@ -69,7 +69,7 @@ class _UserHomePageState extends State<UserHomePage> {
     if (!mounted) return;
 
     try {
-      final response = await http.get(Uri.parse('http://192.168.10.188:8080/get_problems'));
+      final response = await http.get(Uri.parse('http://localhost:8080/get_problems'));
       if (response.statusCode == 200) {
         List<dynamic> fetchedProblems = List<dynamic>.from(json.decode(response.body));
         List<dynamic> userProblems = fetchedProblems
@@ -128,7 +128,7 @@ class _UserHomePageState extends State<UserHomePage> {
 
       try {
         final request = await HttpClient()
-            .postUrl(Uri.parse('http://192.168.10.188:8080/add_problem'));
+            .postUrl(Uri.parse('http://localhost:8080/add_problem'));
         request.headers.contentType = ContentType.json;
         request.write(jsonEncode(problemData));
 
