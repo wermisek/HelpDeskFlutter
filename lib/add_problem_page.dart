@@ -135,7 +135,7 @@ class _UserHomePageState extends State<UserHomePage> {
       setState(() {
         isLoading = false;
       });
-      _showErrorSnackBar('Wystąpił nieoczekiwany bł��d: ${e.toString()}');
+      _showErrorSnackBar('Wystąpił nieoczekiwany błąd: ${e.toString()}');
     }
   }
 
@@ -945,15 +945,11 @@ class _UserHomePageState extends State<UserHomePage> {
                                                       : FontWeight.w500,
                                                 ),
                                               ),
-                                              AnimatedContainer(
-                                                duration: Duration(milliseconds: 200),
-                                                padding: EdgeInsets.only(left: 4),
-                                                transform: Matrix4.identity()
-                                                  ..translate(hoverStates['expand_${problem['id']}'] == true ? 2.0 : 0.0),
-                                                child: Icon(
-                                                  Icons.arrow_forward_ios,
-                                                  size: 14,
-                                                ),
+                                              SizedBox(width: 4),
+                                              Icon(
+                                                Icons.arrow_forward,
+                                                size: 18,
+                                                color: Colors.black,
                                               ),
                                             ],
                                           ),
