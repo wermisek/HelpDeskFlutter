@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'problemtemp.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'dart:typed_data';
+import 'login.dart';
 
 void main() {
   runApp(MyApp());
@@ -27,13 +28,18 @@ class MyApp extends StatelessWidget {
         buttonTheme: ButtonThemeData(buttonColor: Colors.white),
         textTheme: TextTheme(bodyMedium: TextStyle(color: Colors.black)),
       ),
-      home: AdminHomePage(),
+      home: LoginPage(),
     );
   }
 }
 
 class AdminHomePage extends StatefulWidget {
-  const AdminHomePage({super.key});
+  final String username;
+
+  const AdminHomePage({
+    super.key,
+    required this.username,
+  });
 
   @override
   _AdminHomePageState createState() => _AdminHomePageState();
@@ -54,6 +60,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
   int currentPage = 0;
   final int itemsPerPage = 12;
   DateTime? selectedDate;
+  late String currentUsername;
+  Map<String, bool> hoverStates = {};
 
   Future<void> getProblems() async {
     try {
@@ -156,20 +164,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   Widget _buildProblemList() {
-    filteredProblems.sort((a, b) =>
-        DateTime.parse(b['timestamp'])
-            .compareTo(DateTime.parse(a['timestamp'])));
-
-    List<List<dynamic>> paginatedProblems = [];
-    for (int i = 0; i < filteredProblems.length; i += itemsPerPage) {
-      paginatedProblems.add(filteredProblems.sublist(
-        i,
-        i + itemsPerPage > filteredProblems.length
-            ? filteredProblems.length
-            : i + itemsPerPage,
-      ));
-    }
-
     return Expanded(
       child: Stack(
         children: [
@@ -189,128 +183,38 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     : Expanded(
                   child: PageView.builder(
                     controller: _pageController,
-                    itemCount: paginatedProblems.length,
+                          itemCount: (filteredProblems.length / itemsPerPage).ceil(),
                     onPageChanged: (pageIndex) {
                       setState(() {
                         currentPage = pageIndex;
                       });
                     },
                     itemBuilder: (context, pageIndex) {
-                      var pageProblems = paginatedProblems[pageIndex];
+                            int startIndex = pageIndex * itemsPerPage;
+                            int endIndex = (startIndex + itemsPerPage) > filteredProblems.length
+                                ? filteredProblems.length
+                                : startIndex + itemsPerPage;
+                            var pageProblems = filteredProblems.sublist(startIndex, endIndex);
+
                       return GridView.builder(
                         padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
-                        gridDelegate:
-                        SliverGridDelegateWithFixedCrossAxisCount(
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4,
                           crossAxisSpacing: 8.0,
                           mainAxisSpacing: 8.0,
-                          childAspectRatio: 1.87,
+                                childAspectRatio: 1.9,
                         ),
                         itemCount: pageProblems.length,
-                        itemBuilder: (context, index) {
-                          var problem = pageProblems[index];
-                          return Card(
-                            margin: EdgeInsets.symmetric(vertical: 5.0),
-                            elevation: 10,
-                            color: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            child: Column(
-                              children: [
-                                ListTile(
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-                                  title: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Sala: ${problem['room'] ?? 'Nieznana'}',
-                                        style: TextStyle(fontWeight: FontWeight.w600),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
-                                        style: TextStyle(color: Colors.grey),
-                                        maxLines: 1,
-                                      ),
-                                    ],
-                                  ),
-                                  subtitle: Text(
-                                    'Treść: ${_removeNewlines(problem['problem'] ?? 'Brak opisu')}',
-                                    maxLines: 1, // Ograniczamy tekst do jednej linii
-                                    overflow: TextOverflow.ellipsis, // Dodajemy trzy kropki, jeśli tekst nie zmieści się w tej jednej linii
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 2.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      ElevatedButton(
-                                        onPressed: () async {
-                                          final response = await http.put(
-                                            Uri.parse('http://localhost:8080/mark_as_read/${problem['id']}'),
-                                          );
-
-                                          if (response.statusCode == 200) {
-                                            // Przejdź na nową stronę, gdy status zmieniony pomyślnie
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => ProblemTempPage(problem: problem),
-                                              ),
-                                            ).then((shouldDelete) {
-                                              if (shouldDelete == true) {
-                                                // Zaktualizuj listę zgłoszeń, aby usunąć ten kafelek
-                                                setState(() {
-                                                  // Usuń problem z listy zgłoszeń
-                                                  problems.remove(problem);
-                                                });
-                                              }
-                                            });
-                                          } else {
-                                            // Obsługa błędów
-                                            print('Błąd odczytania wiadomości: ${response.body}');
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text('Nie udało się odczytać wiadomości.'),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.white,
-                                          foregroundColor: Colors.black,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                            side: BorderSide(color: Colors.black, width: 1),
-                                          ),
-                                          minimumSize: Size(120, 36),
-                                          padding: EdgeInsets.symmetric(horizontal: 5.0),
-                                        ),
-                                        child: Text(
-                                          'Rozwiń',
-                                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
+                              itemBuilder: (context, index) => _buildProblemCard(pageProblems[index]),
+                            );
+                          },
+                        ),
+                      ),
+                if (filteredProblems.isNotEmpty)
+                  _buildPaginationControls((filteredProblems.length / itemsPerPage).ceil()),
               ],
             ),
           ),
-
           Positioned(
             top: 0,
             left: 0,
@@ -325,10 +229,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   children: [
                     Text(
                       'Zgłoszenia',
-                      style: TextStyle(
+                                    style: TextStyle(
                         fontSize: 20.0,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                                      color: Colors.black,
                         shadows: [
                           Shadow(
                             offset: Offset(0, 2),
@@ -339,6 +243,29 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       ),
                     ),
                     Spacer(),
+                    SizedBox(
+                      width: 200,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 6.0),
+                          child: TextField(
+                            style: TextStyle(color: Colors.black),
+                            decoration: InputDecoration(
+                              hintText: 'Wyszukaj...',
+                              hintStyle: TextStyle(color: Colors.grey),
+                              prefixIcon: Icon(Icons.search, color: Colors.black),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: BorderSide(color: Color(0xFFF49402)),
+                              ),
+                            ),
+                            onChanged: _filterProblems,
+                          ),
+                        ),
+                                        ),
                     if (selectedDate != null)
                       IconButton(
                         icon: Icon(Icons.close, color: Colors.black),
@@ -349,36 +276,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           });
                         },
                       ),
-                    SizedBox(
-                      width: 200,
-                      child: Padding(
-                        padding: EdgeInsets.only(right: 6.0),
-                        child: TextField(
-                          style: TextStyle(color: Colors.black),
-                          decoration: InputDecoration(
-                            hintText: 'Wyszukaj...',
-                            hintStyle: TextStyle(color: Colors.grey),
-                            prefixIcon: Icon(Icons.search, color: Colors.black),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(color: Colors.grey),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(color: Color(0xFFF49402)),
-                            ),
-                          ),
-                          onChanged: _filterProblems,
-                        ),
-                      ),
-                    ),
                     IconButton(
                       icon: Icon(Icons.calendar_today, color: Colors.black),
                       onPressed: () async {
                         Set<DateTime> availableDates = _getAvailableDates();
                         DateTime initialDate = selectedDate ?? DateTime.now();
                         if (!availableDates.any((availableDate) =>
-                        availableDate.year == initialDate.year &&
+                            availableDate.year == initialDate.year &&
                             availableDate.month == initialDate.month &&
                             availableDate.day == initialDate.day)) {
                           initialDate = availableDates.first;
@@ -391,7 +295,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           lastDate: DateTime.now(),
                           selectableDayPredicate: (date) {
                             return availableDates.any((availableDate) =>
-                            availableDate.year == date.year &&
+                                availableDate.year == date.year &&
                                 availableDate.month == date.month &&
                                 availableDate.day == date.day);
                           },
@@ -408,7 +312,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                 ],
                               ),
                             );
-                          },//komentarz
+                          },
                         );
 
                         if (selectedDateTemp != null) {
@@ -422,44 +326,161 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   ],
                 ),
               ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+  }
+
+  Widget _buildUserList() {
+    return Expanded(
+      child: Stack(
+        children: [
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+            child: Column(
+              children: [
+                filteredUsers.isEmpty
+                    ? Expanded(
+                        child: Center(
+                          child: Text(
+                            'Brak użytkowników.',
+                            style: TextStyle(fontSize: 16.0, color: Colors.black),
+                          ),
+                        ),
+                      )
+                    : Expanded(
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: (filteredUsers.length / itemsPerPage).ceil(),
+                          onPageChanged: (pageIndex) {
+                            setState(() {
+                              currentPage = pageIndex;
+                            });
+                          },
+                          itemBuilder: (context, pageIndex) {
+                            int startIndex = pageIndex * itemsPerPage;
+                            int endIndex = (startIndex + itemsPerPage) > filteredUsers.length
+                                ? filteredUsers.length
+                                : startIndex + itemsPerPage;
+                            var pageUsers = filteredUsers.sublist(startIndex, endIndex);
+
+                            return GridView.builder(
+                              padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4,
+                                crossAxisSpacing: 8.0,
+                                mainAxisSpacing: 8.0,
+                                childAspectRatio: 1.87,
+                              ),
+                              itemCount: pageUsers.length,
+                              itemBuilder: (context, index) => _buildUserCard(pageUsers[index]),
+                      );
+                    },
+                  ),
+                ),
+                if (filteredUsers.isNotEmpty)
+                  _buildPaginationControls((filteredUsers.length / itemsPerPage).ceil()),
+              ],
             ),
           ),
-
-          if (filteredProblems.isNotEmpty)
-            Align(
-              alignment: Alignment.bottomCenter,
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 60.0,
+              color: Colors.white,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
+                padding: const EdgeInsets.symmetric(horizontal: 37.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back_ios, size: 20, color: Color(0xFFF49402)),
-                      onPressed: currentPage > 0
-                          ? () {
-                        _pageController.previousPage(
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                          : null,
-                    ),
                     Text(
-                      '${currentPage + 1} / ${paginatedProblems.length}',
-                      style: TextStyle(fontSize: 14.0, color: Colors.black),
+                      'Zarządzanie użytkownikami',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(0, 2),
+                            blurRadius: 4.0,
+                            color: Colors.grey.withOpacity(0.5),
+                          ),
+                        ],
+                      ),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.arrow_forward_ios, size: 20, color: Color(0xFFF49402)),
-                      onPressed: currentPage < paginatedProblems.length - 1
-                          ? () {
-                        _pageController.nextPage(
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                          : null,
+                    Spacer(),
+                    SizedBox(
+                      width: 200.0,
+                      child: MouseRegion(
+                        onEnter: (_) => setState(() => hoverStates['user_search'] = true),
+                        onExit: (_) => setState(() => hoverStates['user_search'] = false),
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 200),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(hoverStates['user_search'] == true ? 0.1 : 0.05),
+                                blurRadius: hoverStates['user_search'] == true ? 8 : 4,
+                                spreadRadius: hoverStates['user_search'] == true ? 1 : 0,
+                              ),
+                            ],
+                          ),
+                        child: TextField(
+                          style: TextStyle(color: Colors.black),
+                          decoration: InputDecoration(
+                            hintText: 'Wyszukaj...',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            prefixIcon: Icon(Icons.search, color: Colors.black),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(color: Colors.grey),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(color: Color(0xFFF49402)),
+                            ),
+                          ),
+                            onChanged: _filterUsersByQuery,
+                        ),
+                      ),
+                    ),
+                    ),
+                    SizedBox(width: 10.0),
+                    MouseRegion(
+                      onEnter: (_) => setState(() => hoverStates['add_user'] = true),
+                      onExit: (_) => setState(() => hoverStates['add_user'] = false),
+                      child: AnimatedContainer(
+                        duration: Duration(milliseconds: 200),
+                        transform: Matrix4.identity()
+                          ..scale(hoverStates['add_user'] == true ? 1.1 : 1.0),
+                        child: Tooltip(
+                          message: 'Dodaj użytkownika',
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _showAddUserDialog(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black,
+                              shape: CircleBorder(),
+                              padding: EdgeInsets.all(10.0),
+                              elevation: hoverStates['add_user'] == true ? 4 : 2,
+                            ),
+                            child: Icon(
+                              Icons.add,
+                              size: 20.0,
+                              color: Color(0xFFF49402),
+                ),
+              ),
+            ),
+          ),
                     ),
                   ],
+                ),
                 ),
               ),
             ),
@@ -570,252 +591,65 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
 
 
-  Widget _buildUserList() {
-    List<List<dynamic>> paginatedUsers = [];
-    for (int i = 0; i < filteredUsers.length; i += itemsPerPage) {
-      paginatedUsers.add(filteredUsers.sublist(
-        i,
-        i + itemsPerPage > filteredUsers.length
-            ? filteredUsers.length
-            : i + itemsPerPage,
-      ));
-    }
-
-    return Expanded(
-      child: Stack(
-        children: [
-          Container(
-            margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
-            child: Column(
-              children: [
-                filteredUsers.isEmpty
-                    ? Expanded(
-                  child: Center(
-                    child: Text(
-                      'Brak użytkowników.',
-                      style: TextStyle(fontSize: 16.0, color: Colors.black),
-                    ),
-                  ),
-                )
-                    : Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: paginatedUsers.length,
-                    onPageChanged: (pageIndex) {
-                      setState(() {
-                        currentPage = pageIndex;
-                      });
-                    },
-                    itemBuilder: (context, pageIndex) {
-                      var pageUsers = paginatedUsers[pageIndex];
-                      return GridView.builder(
-                        padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 8.0,
-                          mainAxisSpacing: 8.0,
-                          childAspectRatio: 1.87,
-                        ),
-                        itemCount: pageUsers.length,
-                        itemBuilder: (context, index) {
-                          var user = pageUsers[index];
-                          return Card(
-                            margin: EdgeInsets.symmetric(vertical: 5.0),
-                            elevation: 10,
-                            color: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            child: Column(
-                              children: [
-                                ListTile(
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 15.0, vertical: 10.0),
-                                  title: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Użytkownik: ${user['username'] ?? 'Nieznany użytkownik'}',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w600),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        'Rola: ${user['role'] ?? 'Brak roli'}',
-                                        style: TextStyle(color: Colors.grey),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8.0),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Tooltip(
-                                        message: 'Zmień login',
-                                        child: IconButton(
-                                          icon: Icon(
-                                              Icons.edit,
-                                              color: Colors.black),
-                                          onPressed: () {
-                                            _changeUsername(user);
-                                          },
-                                        ),
-                                      ),
-                                      Tooltip(
-                                        message: 'Zmień hasło',
-                                        child: IconButton(
-                                          icon: Icon(
-                                              Icons.lock,
-                                              color: Colors.black),
-                                          onPressed: () {
-                                            _changePassword(user);
-                                          },
-                                        ),
-                                      ),
-                                      Tooltip(
-                                        message: 'Usuń użytkownika',
-                                        child: IconButton(
-                                          icon: Icon(Icons.delete,
-                                              color: Colors.black),
-                                          onPressed: () {
-                                            _deleteUser(user);
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+  Widget _buildUserCard(dynamic user) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => hoverStates['user_${user['username']}'] = true),
+      onExit: (_) => setState(() => hoverStates['user_${user['username']}'] = false),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        transform: Matrix4.identity()
+          ..scale(hoverStates['user_${user['username']}'] == true ? 1.02 : 1.0),
+        child: Card(
+          margin: EdgeInsets.symmetric(vertical: 5.0),
+          elevation: hoverStates['user_${user['username']}'] == true ? 8 : 4,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
           ),
-
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 60.0,
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 37.0),
-                child: Row(
+          child: Column(
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Zarządzanie użytkownikami',
-                      style: TextStyle(
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        shadows: [
-                          Shadow(
-                            offset: Offset(0, 2),
-                            blurRadius: 4.0,
-                            color: Colors.grey.withOpacity(0.5),
-                          ),
-                        ],
-                      ),
+                      'Użytkownik: ${user['username'] ?? 'Nieznany użytkownik'}',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
-                    Spacer(),
-                    SizedBox(
-                      width: 200.0,
-                      child: TextField(
-                        style: TextStyle(color: Colors.black),
-                        decoration: InputDecoration(
-                          hintText: 'Wyszukaj...',
-                          hintStyle: TextStyle(color: Colors.grey),
-                          prefixIcon: Icon(Icons.search, color: Colors.black),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: BorderSide(color: Colors.grey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: BorderSide(color: Color(0xFFF49402)),
-                          ),
-                        ),
-                        onChanged: _filterUsersByQuery,
-                      ),
-                    ),
-                    SizedBox(width: 10.0),
-                    Tooltip(
-                      message: 'Dodaj użytkownika',
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _showAddUserDialog(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(10.0),
-                        ),
-                        child: Icon(Icons.add, size: 20.0, color: Color(0xFFF49402),),
-                      ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Rola: ${user['role'] ?? 'Brak roli'}',
+                      style: TextStyle(color: Colors.grey),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-
-          // Paginacja
-          if (filteredUsers.isNotEmpty)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 25.0, vertical: 10.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back_ios, size: 20,
-                          color: Color(0xFFF49402)),
-                      onPressed: currentPage > 0
-                          ? () {
-                        _pageController.previousPage(
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                          : null,
-                    ),
-                    Text(
-                      '${currentPage + 1} / ${paginatedUsers.length}',
-                      style: TextStyle(fontSize: 14.0, color: Colors.black),
+                      icon: Icon(Icons.edit, color: Colors.black),
+                      onPressed: () => _changeUsername(user),
                     ),
                     IconButton(
-                      icon: Icon(Icons.arrow_forward_ios, size: 20,
-                          color: Color(0xFFF49402)),
-                      onPressed: currentPage < paginatedUsers.length - 1
-                          ? () {
-                        _pageController.nextPage(
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                          : null,
+                      icon: Icon(Icons.lock, color: Colors.black),
+                      onPressed: () => _changePassword(user),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.black),
+                      onPressed: () => _deleteUser(user),
                     ),
                   ],
                 ),
               ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -969,8 +803,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(
-                    vertical: 12, horizontal: 24),
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
               ),
               child: Text('Zapisz'),
             ),
@@ -1177,7 +1010,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => SettingsPage()),
+                    MaterialPageRoute(builder: (context) => SettingsPage(username: widget.username)),
                   );
                 },
               ),
@@ -1300,11 +1133,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   height: 25,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(
-                        5.0),
+                    borderRadius: BorderRadius.circular(5.0),
                   ),
-                  overlayColor: WidgetStateProperty.all(
-                      Colors.transparent),
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
                 ),
                 dropdownStyleData: DropdownStyleData(
                   maxHeight: 150,
@@ -1390,5 +1221,293 @@ class _AdminHomePageState extends State<AdminHomePage> {
     } catch (e) {
       print("Błąd podczas wysyłania zapytania: $e");
     }
+  }
+
+  Widget _buildProblemCard(dynamic problem) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => hoverStates['problem_${problem['id']}'] = true),
+      onExit: (_) => setState(() => hoverStates['problem_${problem['id']}'] = false),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        transform: Matrix4.identity()
+          ..scale(hoverStates['problem_${problem['id']}'] == true ? 1.02 : 1.0),
+        child: Card(
+          margin: EdgeInsets.symmetric(vertical: 5.0),
+          elevation: hoverStates['problem_${problem['id']}'] == true ? 8 : 4,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sala: ${problem['room'] ?? 'Nieznana'}',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
+                      style: TextStyle(color: Colors.grey),
+                      maxLines: 1,
+                    ),
+                  ],
+                ),
+                subtitle: Text(
+                  'Treść: ${_removeNewlines(problem['problem'] ?? 'Brak opisu')}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        final response = await http.put(
+                          Uri.parse('http://localhost:8080/mark_as_read/${problem['id']}'),
+                        );
+
+                        if (response.statusCode == 200) {
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) => ProblemTempPage(problem: problem),
+                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                var begin = Offset(1.0, 0.0);
+                                var end = Offset.zero;
+                                var curve = Curves.easeInOut;
+                                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                return SlideTransition(
+                                  position: animation.drive(tween),
+                                  child: child,
+                                );
+                              },
+                              transitionDuration: Duration(milliseconds: 300),
+                            ),
+                          ).then((shouldDelete) {
+                            if (shouldDelete == true) {
+                              setState(() {
+                                problems.remove(problem);
+                              });
+                            }
+                          });
+                        } else {
+                          print('Błąd odczytania wiadomości: ${response.body}');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Nie udało się odczytać wiadomości.'),
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(color: Colors.black, width: 1),
+                        ),
+                        minimumSize: Size(120, 36),
+                        padding: EdgeInsets.symmetric(horizontal: 5.0),
+                      ),
+                      child: Text(
+                        'Rozwiń',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaginationControls(int totalPages) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: Icon(Icons.chevron_left),
+            onPressed: currentPage > 0
+                ? () {
+                    setState(() {
+                      currentPage--;
+                      _pageController.previousPage(
+                        duration: Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    });
+                  }
+                : null,
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              'Strona ${currentPage + 1} z $totalPages',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.chevron_right),
+            onPressed: currentPage < totalPages - 1
+                ? () {
+                    setState(() {
+                      currentPage++;
+                      _pageController.nextPage(
+                        duration: Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    });
+                  }
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showProblemDetails(dynamic problem) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String status = problem['status'] ?? 'Nieznany';
+        Color statusColor = status == 'Rozwiązane' ? Colors.green : Color(0xFFF49402);
+        String formattedDate = '';
+        
+        if (problem['timestamp'] != null) {
+          DateTime timestamp = DateTime.parse(problem['timestamp']);
+          formattedDate = '${timestamp.day}.${timestamp.month}.${timestamp.year} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+        }
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          backgroundColor: Colors.white,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Szczegóły zgłoszenia',
+                style: TextStyle(color: Colors.black),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Sala: ${problem['room'] ?? 'Nieznana'}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 8.0),
+                Text(
+                  'Opis:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  problem['description'] ?? 'Brak opisu',
+                  style: TextStyle(color: Colors.black),
+                ),
+                SizedBox(height: 16.0),
+                Text(
+                  'Zgłaszający: ${problem['username'] ?? 'Nieznany użytkownik'}',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                Text(
+                  'Data zgłoszenia: $formattedDate',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            if (status != 'Rozwiązane')
+              TextButton(
+                onPressed: () async {
+                  try {
+                    var response = await http.put(
+                      Uri.parse('http://localhost:8080/update_problem_status'),
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: json.encode({
+                        'id': problem['id'],
+                        'status': 'Rozwiązane',
+                      }),
+                    );
+
+                    if (response.statusCode == 200) {
+                      setState(() {
+                        problem['status'] = 'Rozwiązane';
+                        _applyCurrentFilter();
+                      });
+                      Navigator.of(context).pop();
+                    } else {
+                      print('Błąd aktualizacji statusu: ${response.body}');
+                    }
+                  } catch (e) {
+                    print('Błąd podczas aktualizacji statusu: $e');
+                  }
+                },
+                child: Text(
+                  'Oznacz jako rozwiązane',
+                  style: TextStyle(color: Colors.green),
+                ),
+              ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Zamknij',
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

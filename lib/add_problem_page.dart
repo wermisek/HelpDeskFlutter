@@ -49,7 +49,7 @@ class _UserHomePageState extends State<UserHomePage> {
   List<dynamic> problems = [];
   bool isLoading = false;
   Timer? _timer;
-
+  Map<String, bool> hoverStates = {};
 
   @override
   void initState() {
@@ -57,7 +57,7 @@ class _UserHomePageState extends State<UserHomePage> {
     _fetchUserProblems();
     _teacherController.text = widget.username;
 
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(Duration(seconds: 5), (timer) {
       if (mounted) {
         _fetchUserProblems();
       }
@@ -68,10 +68,34 @@ class _UserHomePageState extends State<UserHomePage> {
   Future<void> _fetchUserProblems() async {
     if (!mounted) return;
 
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      final response = await http.get(Uri.parse('http://localhost:8080/get_problems'));
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 10);
+      
+      final request = await client
+          .getUrl(Uri.parse('http://localhost:8080/get_problems'))
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw TimeoutException('The connection has timed out');
+            },
+          );
+
+      final response = await request.close().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw TimeoutException('The request has timed out');
+        },
+      );
+
+      final responseBody = await response.transform(utf8.decoder).join();
+
       if (response.statusCode == 200) {
-        List<dynamic> fetchedProblems = List<dynamic>.from(json.decode(response.body));
+        List<dynamic> fetchedProblems = List<dynamic>.from(json.decode(responseBody));
         List<dynamic> userProblems = fetchedProblems
             .where((problem) => problem['username'] == widget.username)
             .toList();
@@ -86,25 +110,63 @@ class _UserHomePageState extends State<UserHomePage> {
             problems = userProblems;
             isLoading = false;
           });
+        } else {
+          setState(() {
+            isLoading = false;
+          });
         }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        _showErrorSnackBar('Błąd pobierania danych: ${_getErrorMessage(response.statusCode, responseBody)}');
       }
+    } on TimeoutException {
+      setState(() {
+        isLoading = false;
+      });
+      _showErrorSnackBar('Przekroczono limit czasu połączenia');
+    } on SocketException {
+      setState(() {
+        isLoading = false;
+      });
+      _showErrorSnackBar('Nie można połączyć się z serwerem');
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Błąd połączenia z serwerem.')),
-      );
+      _showErrorSnackBar('Wystąpił nieoczekiwany bł��d: ${e.toString()}');
     }
   }
 
-
-
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16),
+        duration: Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
-    // Zatrzymaj Timer, aby uniknąć wycieków pamięci
     _timer?.cancel();
+    _teacherController.dispose();
+    _roomController.dispose();
+    _problemController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -127,67 +189,129 @@ class _UserHomePageState extends State<UserHomePage> {
       };
 
       try {
-        final request = await HttpClient()
-            .postUrl(Uri.parse('http://localhost:8080/add_problem'));
+        final client = HttpClient();
+        client.connectionTimeout = const Duration(seconds: 10);
+        
+        final request = await client
+            .postUrl(Uri.parse('http://localhost:8080/add_problem'))
+            .timeout(
+              const Duration(seconds: 30),
+              onTimeout: () {
+                throw TimeoutException('The connection has timed out');
+              },
+            );
+            
         request.headers.contentType = ContentType.json;
         request.write(jsonEncode(problemData));
 
-        final response = await request.close();
+        final response = await request.close().timeout(
+          const Duration(seconds: 30),
+          onTimeout: () {
+            throw TimeoutException('The request has timed out');
+          },
+        );
+
+        final responseBody = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 201) {
           _showDialog(
             context,
             title: 'Problem wysłany',
-            message: 'Dziękujemy, ${widget
-                .username}. Twój problem został przesłany.',
+            message: 'Dziękujemy, ${widget.username}. Twój problem został przesłany.',
           );
           _fetchUserProblems();
+          // Clear form after successful submission
+          _roomController.clear();
+          _problemController.clear();
         } else {
           _showDialog(
             context,
             title: 'Błąd',
-            message: 'Nie udało się wysłać problemu. Serwer zwrócił: ${response
-                .reasonPhrase}',
+            message: 'Nie udało się wysłać problemu. ${_getErrorMessage(response.statusCode, responseBody)}',
           );
         }
-      } catch (e) {
+      } on TimeoutException {
         _showDialog(
           context,
           title: 'Błąd połączenia',
-          message: 'Nie udało się połączyć z serwerem. Sprawdź połączenie sieciowe.',
+          message: 'Przekroczono limit czasu połączenia. Spróbuj ponownie później.',
+        );
+      } on SocketException {
+        _showDialog(
+          context,
+          title: 'Błąd połączenia',
+          message: 'Nie można połączyć się z serwerem. Sprawdź połączenie sieciowe.',
+        );
+      } catch (e) {
+        _showDialog(
+          context,
+          title: 'Błąd',
+          message: 'Wystąpił nieoczekiwany błąd: ${e.toString()}',
         );
       }
     }
   }
 
+  String _getErrorMessage(int statusCode, String responseBody) {
+    try {
+      final Map<String, dynamic> response = jsonDecode(responseBody);
+      return response['message'] ?? 'Unknown error';
+    } catch (e) {
+      switch (statusCode) {
+        case 400:
+          return 'Nieprawidłowe dane';
+        case 401:
+          return 'Brak autoryzacji';
+        case 403:
+          return 'Brak dostępu';
+        case 404:
+          return 'Nie znaleziono zasobu';
+        case 500:
+          return 'Błąd serwera';
+        default:
+          return 'Nieznany błąd (kod: $statusCode)';
+      }
+    }
+  }
 
   void _showDialog(BuildContext context, {required String title, required String message}) {
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white, // Set the background color to white
-          title: Text(
-            title,
-            style: TextStyle(color: Colors.black), // Set title text color to black
-          ),
-          content: Text(
-            message,
-            style: TextStyle(color: Colors.black), // Set content text color to black
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(
-                'OK',
-                style: TextStyle(color: Colors.black), // Ensure button text is also black
+      pageBuilder: (context, animation1, animation2) => Container(),
+      transitionBuilder: (context, animation1, animation2, child) {
+        return FadeTransition(
+          opacity: animation1,
+          child: ScaleTransition(
+            scale: animation1,
+            child: AlertDialog(
+              backgroundColor: Colors.white,
+              title: Text(
+                title,
+                style: TextStyle(color: Colors.black),
               ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              content: Text(
+                message,
+                style: TextStyle(color: Colors.black),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text(
+                    'OK',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
+      transitionDuration: Duration(milliseconds: 300),
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black54,
     );
   }
 
@@ -295,9 +419,6 @@ class _UserHomePageState extends State<UserHomePage> {
           ),
         ),
       ),
-      body: currentView == CurrentView.home
-          ? _buildHomeView()
-          : _buildMyProblemsView(),
       drawer: Drawer(
         child: Container(
           color: Colors.white,
@@ -329,40 +450,93 @@ class _UserHomePageState extends State<UserHomePage> {
                   ),
                 ),
               ),
-              ListTile(
-                leading: Icon(Icons.report_problem, color: Colors.black),
-                title: Text(
-                    'Dodaj problem', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  _switchView(CurrentView.home);
-                  Navigator.pop(context);
-                },
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['problem'] = true),
+                onExit: (_) => setState(() => hoverStates['problem'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['problem'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.report_problem, color: Colors.black),
+                    title: Text('Dodaj problem', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      _switchView(CurrentView.home);
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
               ),
-              ListTile(
-                leading: Icon(Icons.group, color: Colors.black),
-                title: Text('Moje problemy', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  _switchView(CurrentView.myProblems);
-                  setState(() {
-                    currentPage = 0;
-                  });
-                  Navigator.pop(context);
-                },
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['myProblems'] = true),
+                onExit: (_) => setState(() => hoverStates['myProblems'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['myProblems'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.group, color: Colors.black),
+                    title: Text('Moje problemy', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      _switchView(CurrentView.myProblems);
+                      setState(() {
+                        currentPage = 0;
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
               ),
-              ListTile(
-                leading: Icon(Icons.settings, color: Colors.black),
-                title: Text(
-                    'Ustawienia', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SettingsPage()),
-                  );
-                },
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['settings'] = true),
+                onExit: (_) => setState(() => hoverStates['settings'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['settings'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.settings, color: Colors.black),
+                    title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => SettingsPage(username: widget.username),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            var begin = Offset(1.0, 0.0);
+                            var end = Offset.zero;
+                            var curve = Curves.easeInOut;
+                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                            return SlideTransition(
+                              position: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                          transitionDuration: Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           ),
         ),
+      ),
+      body: AnimatedSwitcher(
+        duration: Duration(milliseconds: 300),
+        child: currentView == CurrentView.home
+            ? _buildHomeView()
+            : _buildMyProblemsView(),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: Offset(0.1, 0.0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
+          );
+        },
       ),
     );
   }
@@ -407,15 +581,32 @@ class _UserHomePageState extends State<UserHomePage> {
                         children: [
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 120.0, bottom: 20),
+                              padding: const EdgeInsets.only(left: 120.0, bottom: 20),
                               child: SizedBox(
                                 height: 90.0,
-                                child: _buildInputField(
-                                  controller: _teacherController,
-                                  labelText: 'Nauczyciel',
-                                  enabled: false,
-                                  isTeacherField: true,
+                                child: MouseRegion(
+                                  onEnter: (_) => setState(() => hoverStates['teacher'] = true),
+                                  onExit: (_) => setState(() => hoverStates['teacher'] = false),
+                                  child: AnimatedContainer(
+                                    duration: Duration(milliseconds: 200),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(hoverStates['teacher'] == true ? 0.6 : 0.5),
+                                          offset: Offset(0, hoverStates['teacher'] == true ? 4 : 2),
+                                          blurRadius: hoverStates['teacher'] == true ? 8 : 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: _buildInputField(
+                                      controller: _teacherController,
+                                      labelText: 'Nauczyciel',
+                                      enabled: false,
+                                      isTeacherField: true,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -423,21 +614,38 @@ class _UserHomePageState extends State<UserHomePage> {
                           SizedBox(width: 16),
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.only(
-                                  right: 120.0, left: 30, bottom: 20),
+                              padding: const EdgeInsets.only(right: 120.0, left: 30, bottom: 20),
                               child: SizedBox(
                                 height: 90.0,
-                                child: _buildInputField(
-                                  controller: _roomController,
-                                  labelText: 'Sala',
-                                  maxLines: 1,
-                                  validator: (value) {
-                                    if (value?.isEmpty ?? true) {
-                                      return 'Wprowadź nazwę Sali';
-                                    }
-                                    return null;
-                                  },
-                                  maxLength: 15,
+                                child: MouseRegion(
+                                  onEnter: (_) => setState(() => hoverStates['room'] = true),
+                                  onExit: (_) => setState(() => hoverStates['room'] = false),
+                                  child: AnimatedContainer(
+                                    duration: Duration(milliseconds: 200),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(hoverStates['room'] == true ? 0.6 : 0.5),
+                                          offset: Offset(0, hoverStates['room'] == true ? 4 : 2),
+                                          blurRadius: hoverStates['room'] == true ? 8 : 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: _buildInputField(
+                                      controller: _roomController,
+                                      labelText: 'Sala',
+                                      maxLines: 1,
+                                      validator: (value) {
+                                        if (value?.isEmpty ?? true) {
+                                          return 'Wprowadź nazwę Sali';
+                                        }
+                                        return null;
+                                      },
+                                      maxLength: 15,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -449,17 +657,35 @@ class _UserHomePageState extends State<UserHomePage> {
                         widthFactor: 0.8,
                         child: SizedBox(
                           height: 160.0,
-                          child: _buildInputField(
-                            controller: _problemController,
-                            labelText: 'Opis problemu',
-                            maxLines: 5,
-                            maxLength: 275, // Added maxLength here to limit input to 200 characters
-                            validator: (value) {
-                              if (value?.isEmpty ?? true) {
-                                return 'Wprowadź opis problemu';
-                              }
-                              return null;
-                            },
+                          child: MouseRegion(
+                            onEnter: (_) => setState(() => hoverStates['problem'] = true),
+                            onExit: (_) => setState(() => hoverStates['problem'] = false),
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 200),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8.0),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(hoverStates['problem'] == true ? 0.6 : 0.5),
+                                    offset: Offset(0, hoverStates['problem'] == true ? 4 : 2),
+                                    blurRadius: hoverStates['problem'] == true ? 8 : 4,
+                                  ),
+                                ],
+                              ),
+                              child: _buildInputField(
+                                controller: _problemController,
+                                labelText: 'Opis problemu',
+                                maxLines: 5,
+                                maxLength: 275,
+                                validator: (value) {
+                                  if (value?.isEmpty ?? true) {
+                                    return 'Wprowadź opis problemu';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -469,23 +695,34 @@ class _UserHomePageState extends State<UserHomePage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            SizedBox(
-                              width: 310,
-                              height: 60,
-                              child: ElevatedButton(
-                                onPressed: () => _submitProblem(context),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30),
+                            MouseRegion(
+                              onEnter: (_) => setState(() => hoverStates['submit'] = true),
+                              onExit: (_) => setState(() => hoverStates['submit'] = false),
+                              child: AnimatedContainer(
+                                duration: Duration(milliseconds: 200),
+                                child: SizedBox(
+                                  width: 310,
+                                  height: 60,
+                                  child: ElevatedButton(
+                                    onPressed: () => _submitProblem(context),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      foregroundColor: Colors.black,
+                                      elevation: hoverStates['submit'] == true ? 4.0 : 2.0,
+                                    ),
+                                    child: Text(
+                                      'Wyślij',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: hoverStates['submit'] == true
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
                                   ),
-                                  foregroundColor: Colors.black,
-                                  elevation: 2.0,
-                                ),
-                                child: Text(
-                                  'Wyślij',
-                                  style: TextStyle(fontSize: 16,
-                                      fontWeight: FontWeight.w600),
                                 ),
                               ),
                             ),
@@ -503,24 +740,23 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-
   Widget _buildMyProblemsView() {
     List<List<dynamic>> paginatedProblems = [];
     for (int i = 0; i < problems.length; i += itemsPerPage) {
       paginatedProblems.add(problems.sublist(
-          i, i + itemsPerPage > problems.length ? problems.length : i +
-          itemsPerPage));
+          i, i + itemsPerPage > problems.length ? problems.length : i + itemsPerPage));
     }
 
     if (isLoading) {
-      return Center(child: CircularProgressIndicator());
+      return Center(child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF49402)),
+      ));
     }
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
-
         child: paginatedProblems.isEmpty
             ? Center(
           child: Text(
@@ -577,57 +813,54 @@ class _UserHomePageState extends State<UserHomePage> {
                     itemBuilder: (context, index) {
                       var problem = pageProblems[index];
                       bool isRead = problem['read'] == 1;
+                      String cardKey = 'card_${problem['id']}';
 
-                      return IntrinsicHeight(
-                        child: Container(
+                      return MouseRegion(
+                        onEnter: (_) => setState(() => hoverStates[cardKey] = true),
+                        onExit: (_) => setState(() => hoverStates[cardKey] = false),
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 200),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                spreadRadius: 0,
+                                color: Colors.black.withOpacity(hoverStates[cardKey] == true ? 0.15 : 0.1),
+                                blurRadius: hoverStates[cardKey] == true ? 15 : 10,
+                                spreadRadius: hoverStates[cardKey] == true ? 1 : 0,
                                 offset: Offset(-3, 0),
                               ),
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                spreadRadius: 0,
+                                color: Colors.black.withOpacity(hoverStates[cardKey] == true ? 0.15 : 0.1),
+                                blurRadius: hoverStates[cardKey] == true ? 15 : 10,
+                                spreadRadius: hoverStates[cardKey] == true ? 1 : 0,
                                 offset: Offset(3, 0),
                               ),
                             ],
                           ),
-                          margin: EdgeInsets.symmetric(
-                              vertical: 5.0, horizontal: 10.0),
+                          margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       'Sala: ${problem['room'] ?? 'Nieznana'}',
                                       style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16),
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
                                     ),
-                                    Tooltip(
-                                      message: isRead
-                                          ? 'Przeczytana wiadomość'
-                                          : 'Nieprzeczytana wiadomość',
+                                    AnimatedSwitcher(
+                                      duration: Duration(milliseconds: 200),
                                       child: Icon(
-                                        isRead
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
-                                        color: isRead
-                                            ? Colors.green
-                                            : Colors.grey,
+                                        isRead ? Icons.visibility : Icons.visibility_off,
+                                        key: ValueKey<bool>(isRead),
+                                        color: isRead ? Colors.green : Colors.grey,
                                       ),
                                     ),
                                   ],
@@ -653,42 +886,77 @@ class _UserHomePageState extends State<UserHomePage> {
                                 ),
                                 SizedBox(height: 10),
                                 Padding(
-                                  padding:
-                                  const EdgeInsets.only(top: 15.0),
+                                  padding: const EdgeInsets.only(top: 15.0),
                                   child: Center(
-                                    child: ElevatedButton(
-                                      onPressed: () async {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ProblemTempPage(problem: problem),
+                                    child: MouseRegion(
+                                      onEnter: (_) => setState(() => hoverStates['expand_${problem['id']}'] = true),
+                                      onExit: (_) => setState(() => hoverStates['expand_${problem['id']}'] = false),
+                                      child: AnimatedContainer(
+                                        duration: Duration(milliseconds: 200),
+                                        transform: Matrix4.identity()
+                                          ..scale(hoverStates['expand_${problem['id']}'] == true ? 1.05 : 1.0),
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            Navigator.push(
+                                              context,
+                                              PageRouteBuilder(
+                                                pageBuilder: (context, animation, secondaryAnimation) => ProblemTempPage(problem: problem),
+                                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                                  var begin = Offset(1.0, 0.0);
+                                                  var end = Offset.zero;
+                                                  var curve = Curves.easeInOut;
+                                                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                                  return SlideTransition(
+                                                    position: animation.drive(tween),
+                                                    child: child,
+                                                  );
+                                                },
+                                                transitionDuration: Duration(milliseconds: 300),
+                                              ),
+                                            ).then((deleted) {
+                                              if (deleted == true) {
+                                                _fetchUserProblems();
+                                              }
+                                            });
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            foregroundColor: Colors.black,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(20),
+                                              side: BorderSide(
+                                                color: Colors.black,
+                                                width: hoverStates['expand_${problem['id']}'] == true ? 1.5 : 1,
+                                              ),
+                                            ),
+                                            minimumSize: Size(120, 36),
+                                            padding: EdgeInsets.symmetric(horizontal: 20.0),
+                                            elevation: hoverStates['expand_${problem['id']}'] == true ? 4 : 2,
                                           ),
-                                        ).then((deleted) {
-                                          if (deleted == true) {
-                                            _fetchUserProblems();
-                                          }
-                                        });
-
-
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: Colors.black,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                          BorderRadius.circular(20),
-                                          side: BorderSide(
-                                              color: Colors.black, width: 1),
-                                        ),
-                                        minimumSize: Size(120, 36),
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 20.0),
-                                      ),
-                                      child: Text(
-                                        'Rozwiń',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                'Rozwiń',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: hoverStates['expand_${problem['id']}'] == true
+                                                      ? FontWeight.w600
+                                                      : FontWeight.w500,
+                                                ),
+                                              ),
+                                              AnimatedContainer(
+                                                duration: Duration(milliseconds: 200),
+                                                padding: EdgeInsets.only(left: 4),
+                                                transform: Matrix4.identity()
+                                                  ..translate(hoverStates['expand_${problem['id']}'] == true ? 2.0 : 0.0),
+                                                child: Icon(
+                                                  Icons.arrow_forward_ios,
+                                                  size: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -707,36 +975,69 @@ class _UserHomePageState extends State<UserHomePage> {
             Padding(
               padding: const EdgeInsets.all(5.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios,
-                        size: 20, color: Color(0xFFF49402)),
-                    onPressed: currentPage > 0
-                        ? () {
-                      _pageController.previousPage(
-                        duration: Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                        : null,
+                  MouseRegion(
+                    onEnter: (_) => setState(() => hoverStates['prev_page'] = true),
+                    onExit: (_) => setState(() => hoverStates['prev_page'] = false),
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      transform: Matrix4.identity()
+                        ..translate(hoverStates['prev_page'] == true ? -2.0 : 0.0),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.arrow_back_ios,
+                          size: 20,
+                          color: currentPage > 0 ? Color(0xFFF49402) : Colors.grey,
+                        ),
+                        onPressed: currentPage > 0
+                            ? () {
+                                _pageController.previousPage(
+                                  duration: Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            : null,
+                      ),
+                    ),
                   ),
-                  Text(
-                    '${currentPage + 1} / ${paginatedProblems.length}',
-                    style: TextStyle(fontSize: 14.0, color: Colors.black),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: AnimatedDefaultTextStyle(
+                      duration: Duration(milliseconds: 200),
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      child: Text(
+                        '${currentPage + 1} / ${paginatedProblems.length}',
+                      ),
+                    ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.arrow_forward_ios,
-                        size: 20, color: Color(0xFFF49402)),
-                    onPressed: currentPage <
-                        paginatedProblems.length - 1
-                        ? () {
-                      _pageController.nextPage(
-                        duration: Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                        : null,
+                  MouseRegion(
+                    onEnter: (_) => setState(() => hoverStates['next_page'] = true),
+                    onExit: (_) => setState(() => hoverStates['next_page'] = false),
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      transform: Matrix4.identity()
+                        ..translate(hoverStates['next_page'] == true ? 2.0 : 0.0),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.arrow_forward_ios,
+                          size: 20,
+                          color: currentPage < paginatedProblems.length - 1 ? Color(0xFFF49402) : Colors.grey,
+                        ),
+                        onPressed: currentPage < paginatedProblems.length - 1
+                            ? () {
+                                _pageController.nextPage(
+                                  duration: Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            : null,
+                      ),
+                    ),
                   ),
                 ],
               ),

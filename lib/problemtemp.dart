@@ -176,87 +176,102 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
         elevation: 0,
         shape: Border(bottom: BorderSide(color: Color(0xFFF49402), width: 1)),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFF5F5F5), Color(0xFFF5F5F5)], // Gradient tła
+      body: AnimatedSwitcher(
+        duration: Duration(milliseconds: 300),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            )),
+            child: child,
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFF5F5F5), Color(0xFFF5F5F5)], // Gradient tła
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            SizedBox(height: 100),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 60.0),
-              child: Container(
-                height: 450.0,  // Increased from 400.0
-                padding: EdgeInsets.all(20.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8.0,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Szczegóły Zgłoszenia',
-                      style: TextStyle(
-                        fontSize: 24.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+          child: Column(
+            children: [
+              SizedBox(height: 100),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 60.0),
+                child: Container(
+                  height: 450.0,  // Increased from 400.0
+                  padding: EdgeInsets.all(20.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8.0,
+                        offset: Offset(0, 4),
                       ),
-                    ),
-                    SizedBox(height: 20.0),
-                    _buildDetailRow('Sala', widget.problem['room'] ?? 'Nieznana'),
-                    SizedBox(height: 15.0),
-                    _buildDetailRow('Nauczyciel', widget.problem['username'] ?? 'Nieznany'),
-                    SizedBox(height: 15.0),
-                    _buildDetailRow('Treść', widget.problem['problem'] ?? 'Brak opisu'),
-                    SizedBox(height: 15.0),
-                    _buildDetailRow('Czas zgłoszenia', formattedTimestamp),
-                    SizedBox(height: 15.0),
-                    _buildDetailRow('Komentarz', commentText),
-                    Spacer(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildButton(
-                          label: 'Zamknij',
-                          backgroundColor: Colors.white,
-                          textColor: Colors.black,
-                          borderColor: Colors.black,
-                          onPressed: () => Navigator.pop(context),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Szczegóły Zgłoszenia',
+                        style: TextStyle(
+                          fontSize: 24.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
-                        _buildButton(
-                          label: 'Usuń',
-                          backgroundColor: Colors.white,
-                          textColor: Colors.black,
-                          borderColor: Colors.red,
-                          onPressed: () => _deleteProblem(context, widget.problem['id'].toString()),
-                        ),
-                        _buildButton(
-                          label: 'Komentarz',
-                          backgroundColor: Colors.white,
-                          textColor: Colors.black,
-                          borderColor: Colors.blue,
-                          onPressed: () => _addComment(context, widget.problem['id'].toString()),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      SizedBox(height: 20.0),
+                      _buildDetailRow('Sala', widget.problem['room'] ?? 'Nieznana'),
+                      SizedBox(height: 15.0),
+                      _buildDetailRow('Nauczyciel', widget.problem['username'] ?? 'Nieznany'),
+                      SizedBox(height: 15.0),
+                      _buildDetailRow('Treść', widget.problem['problem'] ?? 'Brak opisu'),
+                      SizedBox(height: 15.0),
+                      _buildDetailRow('Czas zgłoszenia', formattedTimestamp),
+                      SizedBox(height: 15.0),
+                      _buildDetailRow('Komentarz', commentText),
+                      Spacer(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildButton(
+                            label: 'Zamknij',
+                            backgroundColor: Colors.white,
+                            textColor: Colors.black,
+                            borderColor: Colors.black,
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          _buildButton(
+                            label: 'Usuń',
+                            backgroundColor: Colors.white,
+                            textColor: Colors.black,
+                            borderColor: Colors.red,
+                            onPressed: () => _deleteProblem(context, widget.problem['id'].toString()),
+                          ),
+                          _buildButton(
+                            label: 'Komentarz',
+                            backgroundColor: Colors.white,
+                            textColor: Colors.black,
+                            borderColor: Colors.blue,
+                            onPressed: () => _addComment(context, widget.problem['id'].toString()),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
