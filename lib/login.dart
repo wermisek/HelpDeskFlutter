@@ -118,15 +118,14 @@ void initState() {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => AdminHomePage(),
+              builder: (context) => AdminHomePage(username: _usernameController.text),
             ),
           );
         } else if (role == 'user') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  UserHomePage(username: _usernameController.text),
+              builder: (context) => UserHomePage(username: _usernameController.text),
             ),
           );
         } else {

@@ -6,22 +6,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'login.dart';
 
-void main() {
-  runApp(TicTacToeApp());
-}
-
-class TicTacToeApp extends StatelessWidget {
-  const TicTacToeApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: TicTacToeGame(),
-    );
-  }
-}
-
 class TicTacToeGame extends StatefulWidget {
   const TicTacToeGame({super.key});
 
@@ -51,16 +35,12 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Kolko i Krzyzyk wersja KOTKI!!'),
-        backgroundColor: Colors.white, // Change the AppBar background color to white
+        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back), // Back arrow icon
+          icon: Icon(Icons.arrow_back),
           onPressed: () {
-            // Navigate to LoginPage when back arrow is pressed
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => LoginPage()), // Navigate to LoginPage
-            );
+            Navigator.pop(context);
           },
         ),
       ),
