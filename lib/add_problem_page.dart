@@ -135,7 +135,7 @@ class _UserHomePageState extends State<UserHomePage> {
       setState(() {
         isLoading = false;
       });
-      _showErrorSnackBar('Wystąpił nieoczekiwany bł��d: ${e.toString()}');
+      _showErrorSnackBar('Wystąpił nieoczekiwany błąd: ${e.toString()}');
     }
   }
 
@@ -953,6 +953,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                                 child: Icon(
                                                   Icons.arrow_forward_ios,
                                                   size: 14,
+                                                  color: Colors.black,
                                                 ),
                                               ),
                                             ],
