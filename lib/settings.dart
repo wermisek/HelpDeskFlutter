@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'login.dart'; // Importujemy stronę logowania
+import 'login.dart';  // Correct import for login page
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -46,11 +46,6 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           Column(
             children: [
-              Divider(
-                color: Color(0xFFF49402),
-                thickness: 1,
-                height: 1,
-              ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(

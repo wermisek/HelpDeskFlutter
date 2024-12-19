@@ -7,6 +7,7 @@ import 'settings.dart';
 import 'package:http/http.dart' as http;
 import 'usertempp.dart';
 import 'dart:async';
+import 'login.dart';
 
 void main() {
   runApp(MyApp());
@@ -53,6 +54,7 @@ class _UserHomePageState extends State<UserHomePage> {
   String? selectedCategory;
   String? selectedRoom;
   bool isManualRoomInput = false;
+  String? selectedPriority;
    
   final List<Map<String, dynamic>> categories = [
     {'id': 'hardware', 'name': 'Sprzęt', 'icon': Icons.computer},
@@ -183,6 +185,8 @@ class _UserHomePageState extends State<UserHomePage> {
         'username': widget.username,
         'room': room,
         'problem': problem,
+        'category': selectedCategory ?? 'other',
+        'priority': selectedPriority ?? 'low',
         'read': 0,
       };
 
@@ -221,6 +225,10 @@ class _UserHomePageState extends State<UserHomePage> {
           // Clear form after successful submission
           _roomController.clear();
           _problemController.clear();
+          setState(() {
+            selectedCategory = null;
+            selectedRoom = null;
+          });
         } else {
           _showDialog(
             context,
@@ -257,7 +265,7 @@ class _UserHomePageState extends State<UserHomePage> {
     } catch (e) {
       switch (statusCode) {
         case 400:
-          return 'Nieprawid��owe dane';
+          return 'Nieprawidłowe dane';
         case 401:
           return 'Brak autoryzacji';
         case 403:
@@ -507,20 +515,25 @@ class _UserHomePageState extends State<UserHomePage> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) => SettingsPage(username: widget.username),
-                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                            var begin = Offset(1.0, 0.0);
-                            var end = Offset.zero;
-                            var curve = Curves.easeInOut;
-                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                            return SlideTransition(
-                              position: animation.drive(tween),
-                              child: child,
-                            );
-                          },
-                          transitionDuration: Duration(milliseconds: 300),
-                        ),
+                        MaterialPageRoute(builder: (context) => SettingsPage(username: widget.username)),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['logout'] = true),
+                onExit: (_) => setState(() => hoverStates['logout'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['logout'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.logout, color: Colors.black),
+                    title: Text('Wyloguj się', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => LoginPage()),
+                        (Route<dynamic> route) => false,
                       );
                     },
                   ),
@@ -562,7 +575,7 @@ class _UserHomePageState extends State<UserHomePage> {
         Expanded(
           child: Container(
             color: Colors.grey[50],
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 3.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
             child: Form(
               key: _formKey,
               child: Column(
@@ -617,7 +630,7 @@ class _UserHomePageState extends State<UserHomePage> {
                             ],
                           ),
                           child: Padding(
-                            padding: EdgeInsets.all(16.0),
+                            padding: EdgeInsets.all(12.0),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -730,104 +743,253 @@ class _UserHomePageState extends State<UserHomePage> {
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 16),
-                                Container(
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12.0),
-                                  ),
-                                  child: DropdownButtonFormField<String>(
-                                    value: selectedCategory,
-                                    decoration: InputDecoration(
-                                      labelText: 'Kategoria problemu',
-                                      alignLabelWithHint: true,
-                                      floatingLabelBehavior: FloatingLabelBehavior.auto,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
-                                        borderSide: BorderSide(color: Colors.grey[300]!),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
-                                        borderSide: BorderSide(color: Colors.grey[300]!),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
-                                        borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
-                                      ),
-                                      errorBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
-                                        borderSide: BorderSide(color: Colors.red[400]!, width: 1),
-                                      ),
-                                      focusedErrorBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
-                                        borderSide: BorderSide(color: Colors.red[400]!, width: 1),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                      contentPadding: EdgeInsets.fromLTRB(16, 24, 16, 16),
-                                      labelStyle: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      floatingLabelStyle: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    style: TextStyle(
-                                      color: Colors.black87,
-                                      fontSize: 15,
-                                    ),
-                                    icon: Icon(Icons.arrow_drop_down, color: Color(0xFFF49402)),
-                                    isExpanded: true,
-                                    dropdownColor: Colors.white,
-                                    validator: (value) {
-                                      if (value == null) {
-                                        return 'Wybierz kategorię';
-                                      }
-                                      return null;
-                                    },
-                                    items: categories.map((category) {
-                                      return DropdownMenuItem<String>(
-                                        value: category['id'],
-                                        child: Container(
-                                          height: 40,
-                                          alignment: Alignment.centerLeft,
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                category['icon'],
-                                                size: 20,
-                                                color: Color(0xFFF49402),
-                                              ),
-                                              SizedBox(width: 12),
-                                              Text(
-                                                category['name'],
-                                                style: TextStyle(
-                                                  color: Colors.black87,
-                                                  fontSize: 15,
+                                SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(12.0),
+                                        ),
+                                        child: DropdownButtonFormField<String>(
+                                          value: selectedCategory,
+                                          decoration: InputDecoration(
+                                            labelText: 'Kategoria problemu',
+                                            alignLabelWithHint: true,
+                                            floatingLabelBehavior: FloatingLabelBehavior.auto,
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              borderSide: BorderSide(color: Colors.grey[300]!),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              borderSide: BorderSide(color: Colors.grey[300]!),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
+                                            ),
+                                            errorBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                            ),
+                                            focusedErrorBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                            ),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            contentPadding: EdgeInsets.fromLTRB(16, 24, 16, 16),
+                                            labelStyle: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            floatingLabelStyle: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          style: TextStyle(
+                                            color: Colors.black87,
+                                            fontSize: 15,
+                                          ),
+                                          icon: Icon(Icons.arrow_drop_down, color: Color(0xFFF49402)),
+                                          isExpanded: true,
+                                          dropdownColor: Colors.white,
+                                          validator: (value) {
+                                            if (value == null) {
+                                              return 'Wybierz kategorię';
+                                            }
+                                            return null;
+                                          },
+                                          items: categories.map((category) {
+                                            return DropdownMenuItem<String>(
+                                              value: category['id'],
+                                              child: Container(
+                                                height: 40,
+                                                alignment: Alignment.centerLeft,
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      category['icon'],
+                                                      size: 20,
+                                                      color: Color(0xFFF49402),
+                                                    ),
+                                                    SizedBox(width: 12),
+                                                    Text(
+                                                      category['name'],
+                                                      style: TextStyle(
+                                                        color: Colors.black87,
+                                                        fontSize: 15,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                            ],
-                                          ),
+                                            );
+                                          }).toList(),
+                                          onChanged: (String? newValue) {
+                                            setState(() {
+                                              selectedCategory = newValue;
+                                            });
+                                          },
                                         ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (String? newValue) {
-                                      setState(() {
-                                        selectedCategory = newValue;
-                                      });
-                                    },
-                                  ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 16),
+                                    Expanded(
+                                      child: Container(
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(12.0),
+                                        ),
+                                        child: DropdownButtonFormField<String>(
+                                          value: selectedPriority,
+                                          decoration: InputDecoration(
+                                            labelText: 'Priorytet',
+                                            alignLabelWithHint: true,
+                                            floatingLabelBehavior: FloatingLabelBehavior.auto,
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              borderSide: BorderSide(color: Colors.grey[300]!),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              borderSide: BorderSide(color: Colors.grey[300]!),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
+                                            ),
+                                            errorBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                            ),
+                                            focusedErrorBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                            ),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            contentPadding: EdgeInsets.fromLTRB(16, 24, 16, 16),
+                                            labelStyle: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            floatingLabelStyle: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          style: TextStyle(
+                                            color: Colors.black87,
+                                            fontSize: 15,
+                                          ),
+                                          icon: Icon(Icons.arrow_drop_down, color: Color(0xFFF49402)),
+                                          isExpanded: true,
+                                          dropdownColor: Colors.white,
+                                          validator: (value) {
+                                            if (value == null) {
+                                              return 'Wybierz priorytet';
+                                            }
+                                            return null;
+                                          },
+                                          items: [
+                                            DropdownMenuItem<String>(
+                                              value: 'low',
+                                              child: Container(
+                                                height: 40,
+                                                alignment: Alignment.centerLeft,
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.arrow_downward,
+                                                      size: 20,
+                                                      color: Colors.green,
+                                                    ),
+                                                    SizedBox(width: 12),
+                                                    Text(
+                                                      'Niski',
+                                                      style: TextStyle(
+                                                        color: Colors.black87,
+                                                        fontSize: 15,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            DropdownMenuItem<String>(
+                                              value: 'medium',
+                                              child: Container(
+                                                height: 40,
+                                                alignment: Alignment.centerLeft,
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.remove,
+                                                      size: 20,
+                                                      color: Colors.orange,
+                                                    ),
+                                                    SizedBox(width: 12),
+                                                    Text(
+                                                      'Średni',
+                                                      style: TextStyle(
+                                                        color: Colors.black87,
+                                                        fontSize: 15,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            DropdownMenuItem<String>(
+                                              value: 'high',
+                                              child: Container(
+                                                height: 40,
+                                                alignment: Alignment.centerLeft,
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.arrow_upward,
+                                                      size: 20,
+                                                      color: Colors.red,
+                                                    ),
+                                                    SizedBox(width: 12),
+                                                    Text(
+                                                      'Wysoki',
+                                                      style: TextStyle(
+                                                        color: Colors.black87,
+                                                        fontSize: 15,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                          onChanged: (String? newValue) {
+                                            setState(() {
+                                              selectedPriority = newValue;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
                         ),
-                        SizedBox(height: 16.0),
+                        SizedBox(height: 12.0),
                         Row(
                           children: [
                             Icon(Icons.description_outlined, 
@@ -925,7 +1087,7 @@ class _UserHomePageState extends State<UserHomePage> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 16.0),
+                        SizedBox(height: 12.0),
                         Center(
                           child: MouseRegion(
                             onEnter: (_) => setState(() => hoverStates['submit'] = true),
@@ -965,7 +1127,7 @@ class _UserHomePageState extends State<UserHomePage> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 16.0),
+                        SizedBox(height: 12.0),
                       ],
                     ),
                   ),

@@ -19,6 +19,24 @@ class ProblemTempPage extends StatefulWidget {
 class _ProblemTempPageState extends State<ProblemTempPage> {
   String? _comment;
 
+  // Helper function to get category name in Polish
+  String getCategoryName(String? categoryId) {
+    switch (categoryId) {
+      case 'hardware':
+        return 'Sprzęt';
+      case 'software':
+        return 'Oprogramowanie';
+      case 'network':
+        return 'Sieć';
+      case 'printer':
+        return 'Drukarka';
+      case 'other':
+        return 'Inne';
+      default:
+        return 'Nie określono';
+    }
+  }
+
   // Funkcja do usuwania problemu
   Future<void> _deleteProblem(BuildContext context, String problemId) async {
     final url = Uri.parse('http://localhost:8080/delete_problem/$problemId');
@@ -233,6 +251,8 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
                       _buildDetailRow('Sala', widget.problem['room'] ?? 'Nieznana'),
                       SizedBox(height: 15.0),
                       _buildDetailRow('Nauczyciel', widget.problem['username'] ?? 'Nieznany'),
+                      SizedBox(height: 15.0),
+                      _buildDetailRow('Kategoria', getCategoryName(widget.problem['category'])),
                       SizedBox(height: 15.0),
                       _buildDetailRow('Treść', widget.problem['problem'] ?? 'Brak opisu'),
                       SizedBox(height: 15.0),

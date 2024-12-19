@@ -48,6 +48,7 @@ class AdminHomePage extends StatefulWidget {
 class _AdminHomePageState extends State<AdminHomePage> {
   late Uint8List decodedImage;
   String searchQuery = '';
+  String? selectedCategory;
   List<dynamic> problems = [];
   List<dynamic> filteredProblems = [];
   List<dynamic> users = [];
@@ -56,7 +57,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
   bool showUsers = false;
   bool showProblems = true;
   int currentPageNumber = 1;
-  final PageController _pageController = PageController();
+  final PageController _problemsPageController = PageController();
+  final PageController _usersPageController = PageController();
   int currentPage = 0;
   final int itemsPerPage = 12;
   DateTime? selectedDate;
@@ -64,28 +66,77 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Map<String, bool> hoverStates = {};
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await getProblems();
+    await getUsers();
+
+    _refreshTimer = Timer.periodic(Duration(seconds: 10), (timer) {
+      if (!mounted || _isLoading) return;
+      getProblems();
+      getUsers();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _problemsPageController.dispose();
+    _usersPageController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> getProblems() async {
     if (_isLoading) return;
     _isLoading = true;
 
     try {
-      var response = await HttpClient().getUrl(Uri.parse('http://localhost:8080/get_problems'));
-      var data = await response.close();
-      String content = await data.transform(utf8.decoder).join();
-      var newProblems = jsonDecode(content);
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/get_problems'),
+      ).timeout(Duration(seconds: 5));
 
-      if (mounted && newProblems.toString() != problems.toString()) {
-        setState(() {
-          problems = newProblems;
-          _applyCurrentFilter();
-        });
+      if (response.statusCode == 200) {
+        var newProblems = jsonDecode(response.body);
+        if (mounted && newProblems.toString() != problems.toString()) {
+          setState(() {
+            problems = newProblems;
+            _applyCurrentFilter();
+          });
+        }
+      } else {
+        if (mounted) {
+          _showErrorDialog(context, 'Błąd serwera', 
+            'Nie udało się pobrać danych. Kod błędu: ${response.statusCode}');
+        }
+      }
+    } on TimeoutException {
+      if (mounted) {
+        _showErrorDialog(context, 'Błąd połączenia', 
+          'Przekroczono limit czasu połączenia z serwerem.');
+      }
+    } on SocketException {
+      if (mounted) {
+        _showErrorDialog(context, 'Błąd połączenia', 
+          'Nie można połączyć się z serwerem. Sprawdź czy serwer jest uruchomiony na localhost:8080');
       }
     } catch (e) {
       if (mounted) {
-        _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych z serwera.');
+        print('Error fetching problems: $e');
+        _showErrorDialog(context, 'Błąd połączenia', 
+          'Wystąpił nieoczekiwany błąd podczas pobierania danych.');
       }
     } finally {
-      _isLoading = false;
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -121,20 +172,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
     setState(() {
       filteredProblems = filtered;
       currentPage = 0;
-      _pageController.jumpToPage(0);
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    getProblems();
-    getUsers();
-
-    _refreshTimer = Timer.periodic(Duration(seconds: 10), (timer) {
-      if (!mounted || _isLoading) return;
-      getProblems();
-      getUsers();
+      if (_problemsPageController.hasClients) {
+        _problemsPageController.jumpToPage(0);
+      }
     });
   }
 
@@ -142,21 +182,41 @@ class _AdminHomePageState extends State<AdminHomePage> {
     if (_isLoading) return;
     
     try {
-      var response = await HttpClient().getUrl(Uri.parse('http://localhost:8080/get_users'));
-      var data = await response.close();
-      String content = await data.transform(utf8.decoder).join();
-      if (mounted) {
-        final newUsers = jsonDecode(content);
-        if (newUsers.toString() != users.toString()) {
-          setState(() {
-            users = newUsers;
-            filteredUsers = List.from(users);
-          });
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/get_users'),
+      ).timeout(Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          final newUsers = jsonDecode(response.body);
+          if (newUsers.toString() != users.toString()) {
+            setState(() {
+              users = newUsers;
+              filteredUsers = List.from(users);
+            });
+          }
         }
+      } else {
+        if (mounted) {
+          _showErrorDialog(context, 'Błąd serwera', 
+            'Nie udało się pobrać danych użytkowników. Kod błędu: ${response.statusCode}');
+        }
+      }
+    } on TimeoutException {
+      if (mounted) {
+        _showErrorDialog(context, 'Błąd połączenia', 
+          'Przekroczono limit czasu połączenia z serwerem.');
+      }
+    } on SocketException {
+      if (mounted) {
+        _showErrorDialog(context, 'Błąd połączenia', 
+          'Nie można połączyć się z serwerem. Sprawdź czy serwer jest uruchomiony na localhost:8080');
       }
     } catch (e) {
       if (mounted) {
-        _showErrorDialog(context, 'Błąd połączenia', 'Nie udało się pobrać danych użytkowników.');
+        print('Error fetching users: $e');
+        _showErrorDialog(context, 'Błąd połączenia', 
+          'Wystąpił nieoczekiwany błąd podczas pobierania danych użytkowników.');
       }
     }
   }
@@ -168,14 +228,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
               .compareTo(DateTime.parse(a['timestamp'])));
       filteredProblems = List.from(problems);
     });
-  }
-
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    _pageController.dispose();
-    _searchController.dispose();
-    super.dispose();
   }
 
   void _resetFilter() {
@@ -192,45 +244,54 @@ class _AdminHomePageState extends State<AdminHomePage> {
             margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
             child: Column(
               children: [
-                filteredProblems.isEmpty
-                    ? Expanded(
-                  child: Center(
-                    child: Text(
-                      'Brak zgłoszeń pasujących do wyszukiwania.',
-                      style: TextStyle(fontSize: 16.0, color: Colors.black),
+                if (filteredProblems.isEmpty && !_isLoading)
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'Brak zgłoszeń pasujących do wyszukiwania.',
+                        style: TextStyle(fontSize: 16.0, color: Colors.black),
+                      ),
+                    ),
+                  )
+                else if (_isLoading)
+                  Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _problemsPageController,
+                      itemCount: (filteredProblems.length / itemsPerPage).ceil(),
+                      onPageChanged: (pageIndex) {
+                        if (mounted) {
+                          setState(() {
+                            currentPage = pageIndex;
+                          });
+                        }
+                      },
+                      itemBuilder: (context, pageIndex) {
+                        int startIndex = pageIndex * itemsPerPage;
+                        int endIndex = (startIndex + itemsPerPage) > filteredProblems.length
+                            ? filteredProblems.length
+                            : startIndex + itemsPerPage;
+                        var pageProblems = filteredProblems.sublist(startIndex, endIndex);
+
+                        return GridView.builder(
+                          padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                            childAspectRatio: 1.8,
+                          ),
+                          itemCount: pageProblems.length,
+                          itemBuilder: (context, index) => _buildProblemCard(pageProblems[index]),
+                        );
+                      },
                     ),
                   ),
-                )
-                    : Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                          itemCount: (filteredProblems.length / itemsPerPage).ceil(),
-                    onPageChanged: (pageIndex) {
-                      setState(() {
-                        currentPage = pageIndex;
-                      });
-                    },
-                    itemBuilder: (context, pageIndex) {
-                            int startIndex = pageIndex * itemsPerPage;
-                            int endIndex = (startIndex + itemsPerPage) > filteredProblems.length
-                                ? filteredProblems.length
-                                : startIndex + itemsPerPage;
-                            var pageProblems = filteredProblems.sublist(startIndex, endIndex);
-
-                      return GridView.builder(
-                        padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 8.0,
-                          mainAxisSpacing: 8.0,
-                                childAspectRatio: 1.9,
-                        ),
-                        itemCount: pageProblems.length,
-                              itemBuilder: (context, index) => _buildProblemCard(pageProblems[index]),
-                            );
-                          },
-                        ),
-                      ),
                 if (filteredProblems.isNotEmpty)
                   _buildPaginationControls((filteredProblems.length / itemsPerPage).ceil()),
               ],
@@ -297,6 +358,19 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           });
                         },
                       ),
+                    if (selectedCategory != null)
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.black),
+                        onPressed: () {
+                          setState(() {
+                            selectedCategory = null;
+                            filteredProblems = List.from(problems);
+                            if (_problemsPageController.hasClients) {
+                              _problemsPageController.jumpToPage(0);
+                            }
+                          });
+                        },
+                      ),
                     IconButton(
                       icon: Icon(Icons.calendar_today, color: Colors.black),
                       onPressed: () async {
@@ -344,6 +418,110 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         }
                       },
                     ),
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.filter_alt, color: Colors.black),
+                      tooltip: 'Filtruj po kategorii',
+                      color: Colors.white,
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        side: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      onSelected: (String category) {
+                        setState(() {
+                          if (category == 'all') {
+                            selectedCategory = null;
+                            filteredProblems = List.from(problems);
+                          } else {
+                            selectedCategory = category;
+                            filteredProblems = problems.where((problem) =>
+                              problem['category'] == category
+                            ).toList();
+                          }
+                          
+                          filteredProblems.sort((a, b) =>
+                            DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
+                          
+                          if (_problemsPageController.hasClients) {
+                            _problemsPageController.jumpToPage(0);
+                          }
+                        });
+                      },
+                      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(
+                          value: 'hardware',
+                          child: Row(
+                            children: [
+                              Icon(Icons.computer, color: Color(0xFFF49402)),
+                              SizedBox(width: 12),
+                              Text('Sprzęt'),
+                            ],
+                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'software',
+                          child: Row(
+                            children: [
+                              Icon(Icons.apps, color: Color(0xFFF49402)),
+                              SizedBox(width: 12),
+                              Text('Oprogramowanie'),
+                            ],
+                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'network',
+                          child: Row(
+                            children: [
+                              Icon(Icons.wifi, color: Color(0xFFF49402)),
+                              SizedBox(width: 12),
+                              Text('Sieć'),
+                            ],
+                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'printer',
+                          child: Row(
+                            children: [
+                              Icon(Icons.print, color: Color(0xFFF49402)),
+                              SizedBox(width: 12),
+                              Text('Drukarka'),
+                            ],
+                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'other',
+                          child: Row(
+                            children: [
+                              Icon(Icons.more_horiz, color: Color(0xFFF49402)),
+                              SizedBox(width: 12),
+                              Text('Inne'),
+                            ],
+                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'all',
+                          child: Row(
+                            children: [
+                              Icon(Icons.clear_all, color: Color(0xFFF49402)),
+                              SizedBox(width: 12),
+                              Text('Wszystkie'),
+                            ],
+                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -362,45 +540,54 @@ class _AdminHomePageState extends State<AdminHomePage> {
             margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
             child: Column(
               children: [
-                filteredUsers.isEmpty
-                    ? Expanded(
-                        child: Center(
-                          child: Text(
-                            'Brak użytkowników.',
-                            style: TextStyle(fontSize: 16.0, color: Colors.black),
-                          ),
-                        ),
-                      )
-                    : Expanded(
-                        child: PageView.builder(
-                          controller: _pageController,
-                          itemCount: (filteredUsers.length / itemsPerPage).ceil(),
-                          onPageChanged: (pageIndex) {
-                            setState(() {
-                              currentPage = pageIndex;
-                            });
-                          },
-                          itemBuilder: (context, pageIndex) {
-                            int startIndex = pageIndex * itemsPerPage;
-                            int endIndex = (startIndex + itemsPerPage) > filteredUsers.length
-                                ? filteredUsers.length
-                                : startIndex + itemsPerPage;
-                            var pageUsers = filteredUsers.sublist(startIndex, endIndex);
+                if (filteredUsers.isEmpty && !_isLoading)
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'Brak użytkowników.',
+                        style: TextStyle(fontSize: 16.0, color: Colors.black),
+                      ),
+                    ),
+                  )
+                else if (_isLoading)
+                  Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _usersPageController,
+                      itemCount: (filteredUsers.length / itemsPerPage).ceil(),
+                      onPageChanged: (pageIndex) {
+                        if (mounted) {
+                          setState(() {
+                            currentPage = pageIndex;
+                          });
+                        }
+                      },
+                      itemBuilder: (context, pageIndex) {
+                        int startIndex = pageIndex * itemsPerPage;
+                        int endIndex = (startIndex + itemsPerPage) > filteredUsers.length
+                            ? filteredUsers.length
+                            : startIndex + itemsPerPage;
+                        var pageUsers = filteredUsers.sublist(startIndex, endIndex);
 
-                            return GridView.builder(
-                              padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 4,
-                                crossAxisSpacing: 8.0,
-                                mainAxisSpacing: 8.0,
-                                childAspectRatio: 1.87,
-                              ),
-                              itemCount: pageUsers.length,
-                              itemBuilder: (context, index) => _buildUserCard(pageUsers[index]),
-                      );
-                    },
+                        return GridView.builder(
+                          padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                            childAspectRatio: 1.87,
+                          ),
+                          itemCount: pageUsers.length,
+                          itemBuilder: (context, index) => _buildUserCard(pageUsers[index]),
+                        );
+                      },
+                    ),
                   ),
-                ),
                 if (filteredUsers.isNotEmpty)
                   _buildPaginationControls((filteredUsers.length / itemsPerPage).ceil()),
               ],
@@ -535,7 +722,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
               .compareTo(DateTime.parse(a['timestamp'])));
 
       currentPage = 0;
-      _pageController.jumpToPage(0);
+      if (_problemsPageController.hasClients) {
+        _problemsPageController.jumpToPage(0);
+      }
     });
   }
 
@@ -569,7 +758,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
               .compareTo(DateTime.parse(a['timestamp'])));
 
       currentPage = 0;
-      _pageController.jumpToPage(0);
+      if (_problemsPageController.hasClients) {
+        _problemsPageController.jumpToPage(0);
+      }
     });
   }
 
@@ -604,7 +795,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
       }
 
       currentPage = 0;
-      _pageController.jumpToPage(currentPage);
+      if (_usersPageController.hasClients) {
+        _usersPageController.jumpToPage(currentPage);
+      }
     });
   }
 
@@ -936,29 +1129,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'HelpDesk Admin Panel',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6.0), // Rounded corners
-              child: SizedBox(
-                width: 40.0, // Set the width of the image box
-                height: 40.0, // Set the height of the image box
-                child: Image.asset(
-                  'assets/images/small_image.JPEG',
-                  width: MediaQuery.of(context).size.width * 0.60,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ],
+        title: Text(
+          'HelpDesk Admin Panel',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,
@@ -991,50 +1167,89 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 6.0),
-                      Divider(
-                        color: Color(0xFFF49402),
-                        thickness: 1.0,
-                        indent: 0,
-                        endIndent: 0,
-                      ),
                     ],
                   ),
                 ),
               ),
-              ListTile(
-                leading: Icon(Icons.report_problem, color: Colors.black),
-                title: Text('Zgłoszenia', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  setState(() {
-                    showProblems = true;
-                    showUsers = false;
-                    _pageController.jumpToPage(0);
-                  });
-                  Navigator.pop(context);
-                },
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['problems'] = true),
+                onExit: (_) => setState(() => hoverStates['problems'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['problems'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.report_problem, color: Colors.black),
+                    title: Text('Zgłoszenia', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      setState(() {
+                        showProblems = true;
+                        showUsers = false;
+                        if (_problemsPageController.hasClients) {
+                          _problemsPageController.jumpToPage(0);
+                        }
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
               ),
-              ListTile(
-                leading: Icon(Icons.group, color: Colors.black),
-                title: Text('Użytkownicy', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  setState(() {
-                    showProblems = false;
-                    showUsers = true;
-                    _pageController.jumpToPage(0);
-                  });
-                  Navigator.pop(context);
-                },
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['users'] = true),
+                onExit: (_) => setState(() => hoverStates['users'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['users'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.group, color: Colors.black),
+                    title: Text('Użytkownicy', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      setState(() {
+                        showProblems = false;
+                        showUsers = true;
+                        if (_usersPageController.hasClients) {
+                          _usersPageController.jumpToPage(0);
+                        }
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
               ),
-              ListTile(
-                leading: Icon(Icons.settings, color: Colors.black),
-                title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SettingsPage(username: widget.username)),
-                  );
-                },
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['settings'] = true),
+                onExit: (_) => setState(() => hoverStates['settings'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['settings'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.settings, color: Colors.black),
+                    title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SettingsPage(username: widget.username)),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['logout'] = true),
+                onExit: (_) => setState(() => hoverStates['logout'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['logout'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.logout, color: Colors.black),
+                    title: Text('Wyloguj się', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => LoginPage()),
+                        (Route<dynamic> route) => false,
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           ),
@@ -1246,6 +1461,23 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   Widget _buildProblemCard(dynamic problem) {
+    String getCategoryName(String? categoryId) {
+      switch (categoryId) {
+        case 'hardware':
+          return 'Sprzęt';
+        case 'software':
+          return 'Oprogramowanie';
+        case 'network':
+          return 'Sieć';
+        case 'printer':
+          return 'Drukarka';
+        case 'other':
+          return 'Inne';
+        default:
+          return 'Nie określono';
+      }
+    }
+
     return MouseRegion(
       onEnter: (_) => setState(() => hoverStates['problem_${problem['id']}'] = true),
       onExit: (_) => setState(() => hoverStates['problem_${problem['id']}'] = false),
@@ -1263,29 +1495,37 @@ class _AdminHomePageState extends State<AdminHomePage> {
           child: Column(
             children: [
               ListTile(
-                contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+                contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 0.0),
                 title: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Sala: ${problem['room'] ?? 'Nieznana'}',
                       style: TextStyle(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: 2),
                     Text(
                       'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
                       style: TextStyle(color: Colors.grey),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Kategoria: ${getCategoryName(problem['category'])}',
+                      style: TextStyle(color: Colors.grey),
                       maxLines: 1,
                     ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Treść: ${_removeNewlines(problem['problem'] ?? 'Brak opisu')}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.black,
+                      ),
+                    ),
                   ],
-                ),
-                subtitle: Text(
-                  'Treść: ${_removeNewlines(problem['problem'] ?? 'Brak opisu')}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.black,
-                  ),
                 ),
               ),
               Padding(
@@ -1369,7 +1609,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ? () {
                     setState(() {
                       currentPage--;
-                      _pageController.previousPage(
+                      _problemsPageController.previousPage(
                         duration: Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
                       );
@@ -1393,7 +1633,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ? () {
                     setState(() {
                       currentPage++;
-                      _pageController.nextPage(
+                      _problemsPageController.nextPage(
                         duration: Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
                       );
@@ -1477,6 +1717,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   'Zgłaszający: ${problem['username'] ?? 'Nieznany użytkownik'}',
                   style: TextStyle(color: Colors.grey[600]),
                 ),
+                SizedBox(height: 4.0),
                 Text(
                   'Data zgłoszenia: $formattedDate',
                   style: TextStyle(color: Colors.grey[600]),
