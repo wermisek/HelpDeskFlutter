@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'login.dart'; // Importujemy stronę logowania
-import 'ea.dart'; // Import the ea.dart file
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -155,63 +154,7 @@ class _SettingsPageState extends State<SettingsPage> {
           Positioned(
             bottom: 20,
             right: 20,
-            child: MouseRegion(
-              onEnter: (_) => setState(() => isHovered = true),
-              onExit: (_) => setState(() => isHovered = false),
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                height: isHovered ? 65 : 56,
-                width: isHovered ? 65 : 56,
-                decoration: BoxDecoration(
-                  color: Color(0xFFF5F5F5),
-                  shape: BoxShape.circle,
-                  boxShadow: isHovered
-                      ? [BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                  )]
-                      : [],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(30),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation1, animation2) => TicTacToeGame(),
-                          transitionDuration: Duration(milliseconds: 300),
-                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                            var begin = Offset(1.0, 0.0);
-                            var end = Offset.zero;
-                            var curve = Curves.easeInOutQuart;
-                            var tween = Tween(begin: begin, end: end).chain(
-                              CurveTween(curve: curve),
-                            );
-                            return SlideTransition(
-                              position: animation.drive(tween),
-                              child: child,
-                            );
-                          },
-                        ),
-                      );
-                    },
-                    child: AnimatedOpacity(
-                      duration: Duration(milliseconds: 200),
-                      opacity: isHovered ? 1.0 : 0.0,
-                      child: Icon(
-                        Icons.pets, // Changed to cat-related icon
-                        color: Colors.black,
-                        size: 30,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            child: Container(), // Empty container instead of easter egg button
           ),
         ],
       ),

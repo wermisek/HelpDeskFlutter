@@ -8,7 +8,6 @@ import 'package:http/http.dart' as http;
 import 'usertempp.dart';
 import 'dart:async';
 
-
 void main() {
   runApp(MyApp());
 }
@@ -31,7 +30,6 @@ class UserHomePage extends StatefulWidget {
   const UserHomePage({super.key, required this.username});
 
   @override
-  // ignore: library_private_types_in_public_api
   _UserHomePageState createState() => _UserHomePageState();
 }
 
@@ -50,6 +48,27 @@ class _UserHomePageState extends State<UserHomePage> {
   bool isLoading = false;
   Timer? _timer;
   Map<String, bool> hoverStates = {};
+  bool _isFetching = false;
+  List<dynamic> get filteredProblems => problems;
+  String? selectedCategory;
+  String? selectedRoom;
+  bool isManualRoomInput = false;
+   
+  final List<Map<String, dynamic>> categories = [
+    {'id': 'hardware', 'name': 'Sprzęt', 'icon': Icons.computer},
+    {'id': 'software', 'name': 'Oprogramowanie', 'icon': Icons.apps},
+    {'id': 'network', 'name': 'Sieć', 'icon': Icons.wifi},
+    {'id': 'printer', 'name': 'Drukarka', 'icon': Icons.print},
+    {'id': 'other', 'name': 'Inne', 'icon': Icons.more_horiz},
+  ];
+
+  final List<String> rooms = [
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
+    '11', '12', '13', '14', '15', '16', '17', '18', '19', '20',
+    '21', '22', '23', '24', '25', '26', '27', '28', '29', '30',
+    '31', '32', '33', '34', '35', '36', '37', '38', '39', '40',
+    'Sala gimnastyczna', 'Biblioteka', 'Świetlica', 'Aula'
+  ];
 
   @override
   void initState() {
@@ -57,20 +76,16 @@ class _UserHomePageState extends State<UserHomePage> {
     _fetchUserProblems();
     _teacherController.text = widget.username;
 
-    _timer = Timer.periodic(Duration(seconds: 5), (timer) {
-      if (mounted) {
+    _timer = Timer.periodic(Duration(seconds: 10), (timer) {
+      if (mounted && !_isFetching) {
         _fetchUserProblems();
       }
     });
   }
 
-  // Odświeżenie danych
   Future<void> _fetchUserProblems() async {
-    if (!mounted) return;
-
-    setState(() {
-      isLoading = true;
-    });
+    if (!mounted || _isFetching) return;
+    _isFetching = true;
 
     try {
       final client = HttpClient();
@@ -78,64 +93,47 @@ class _UserHomePageState extends State<UserHomePage> {
       
       final request = await client
           .getUrl(Uri.parse('http://localhost:8080/get_problems'))
-          .timeout(
-            const Duration(seconds: 30),
-            onTimeout: () {
-              throw TimeoutException('The connection has timed out');
-            },
-          );
+          .timeout(Duration(seconds: 30));
 
-      final response = await request.close().timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw TimeoutException('The request has timed out');
-        },
-      );
-
+      final response = await request.close().timeout(Duration(seconds: 30));
       final responseBody = await response.transform(utf8.decoder).join();
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
-        List<dynamic> fetchedProblems = List<dynamic>.from(json.decode(responseBody));
-        List<dynamic> userProblems = fetchedProblems
+        List<dynamic> fetchedProblems = List<dynamic>.from(json.decode(responseBody))
             .where((problem) => problem['username'] == widget.username)
-            .toList();
+            .toList()
+          ..sort((a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
 
-        // Sort problems by timestamp, newest first
-        userProblems.sort((a, b) =>
-            DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp']))
-        );
-
-        if (userProblems.toString() != problems.toString()) {
+        if (mounted && fetchedProblems.toString() != problems.toString()) {
           setState(() {
-            problems = userProblems;
-            isLoading = false;
-          });
-        } else {
-          setState(() {
+            problems = fetchedProblems;
             isLoading = false;
           });
         }
       } else {
+        if (mounted) {
+          _showErrorSnackBar('Błąd pobierania danych: ${_getErrorMessage(response.statusCode, responseBody)}');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        if (e is TimeoutException) {
+          _showErrorSnackBar('Przekroczono limit czasu połączenia');
+        } else if (e is SocketException) {
+          _showErrorSnackBar('Nie można połączyć się z serwerem');
+        } else {
+          _showErrorSnackBar('Wystąpił nieoczekiwany błąd: ${e.toString()}');
+        }
+      }
+    } finally {
+      if (mounted) {
         setState(() {
           isLoading = false;
         });
-        _showErrorSnackBar('Błąd pobierania danych: ${_getErrorMessage(response.statusCode, responseBody)}');
       }
-    } on TimeoutException {
-      setState(() {
-        isLoading = false;
-      });
-      _showErrorSnackBar('Przekroczono limit czasu połączenia');
-    } on SocketException {
-      setState(() {
-        isLoading = false;
-      });
-      _showErrorSnackBar('Nie można połączyć się z serwerem');
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      _showErrorSnackBar('Wystąpił nieoczekiwany błąd: ${e.toString()}');
+      _isFetching = false;
     }
   }
 
@@ -259,7 +257,7 @@ class _UserHomePageState extends State<UserHomePage> {
     } catch (e) {
       switch (statusCode) {
         case 400:
-          return 'Nieprawidłowe dane';
+          return 'Nieprawid��owe dane';
         case 401:
           return 'Brak autoryzacji';
         case 403:
@@ -315,8 +313,6 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-
-
   Widget _buildInputField({
     required TextEditingController controller,
     required String labelText,
@@ -329,56 +325,70 @@ class _UserHomePageState extends State<UserHomePage> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            offset: Offset(0, 2),
-            blurRadius: 4,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: Colors.grey[300]!),
       ),
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
         enabled: enabled,
         maxLength: maxLength,
+        buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+          if (maxLength == null) return null;
+          return Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Text(
+              '$currentLength/$maxLength',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+              ),
+            ),
+          );
+        },
+        style: TextStyle(
+          color: isTeacherField ? Colors.grey[700] : Colors.black87,
+          fontSize: 15,
+        ),
         decoration: InputDecoration(
           labelText: labelText,
-          labelStyle: TextStyle(color: Colors.black),
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+          labelStyle: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: enabled ? Colors.white : Colors.grey[50],
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(12.0),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(12.0),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(12.0),
             borderSide: BorderSide.none,
           ),
-          disabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide.none,
-          ),
-          hoverColor: Colors.transparent,
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(12.0),
+            borderSide: BorderSide(color: Colors.red[400]!, width: 1),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(12.0),
+            borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.0),
             borderSide: BorderSide.none,
           ),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-        ),
-        style: TextStyle(
-          color: isTeacherField && controller.text.isNotEmpty
-              ? Colors.grey
-              : Colors.black,
+          errorStyle: TextStyle(
+            color: Colors.red[400],
+            fontSize: 12,
+          ),
         ),
         validator: validator,
         onChanged: (text) {
@@ -551,187 +561,415 @@ class _UserHomePageState extends State<UserHomePage> {
         ),
         Expanded(
           child: Container(
-            color: Colors.white,
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Zgłoś problem',
-                        style: TextStyle(
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(0, 2),
-                              blurRadius: 4.0,
-                              color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey[50],
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 3.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Text(
+                      'Zgłoś problem',
+                      style: TextStyle(
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 80.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.info_outline, 
+                              size: 18, 
+                              color: Color(0xFFF49402)
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Informacje podstawowe',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                      SizedBox(height: 16.0),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 120.0, bottom: 20),
-                              child: SizedBox(
-                                height: 90.0,
-                                child: MouseRegion(
-                                  onEnter: (_) => setState(() => hoverStates['teacher'] = true),
-                                  onExit: (_) => setState(() => hoverStates['teacher'] = false),
-                                  child: AnimatedContainer(
-                                    duration: Duration(milliseconds: 200),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(8.0),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.grey.withOpacity(hoverStates['teacher'] == true ? 0.6 : 0.5),
-                                          offset: Offset(0, hoverStates['teacher'] == true ? 4 : 2),
-                                          blurRadius: hoverStates['teacher'] == true ? 8 : 4,
+                        SizedBox(height: 12.0),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                spreadRadius: 0,
+                                blurRadius: 20,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
+                                        controller: _teacherController,
+                                        enabled: false,
+                                        decoration: InputDecoration(
+                                          labelText: 'Nauczyciel',
+                                          alignLabelWithHint: true,
+                                          floatingLabelBehavior: FloatingLabelBehavior.auto,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            borderSide: BorderSide(color: Colors.grey[300]!),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            borderSide: BorderSide(color: Colors.grey[300]!),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
+                                          ),
+                                          errorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                          ),
+                                          focusedErrorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.grey[50],
+                                          contentPadding: EdgeInsets.fromLTRB(16, 24, 16, 16),
+                                          labelStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          floatingLabelStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          counterText: '',
                                         ),
-                                      ],
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                          fontSize: 15,
+                                        ),
+                                      ),
                                     ),
-                                    child: _buildInputField(
-                                      controller: _teacherController,
-                                      labelText: 'Nauczyciel',
-                                      enabled: false,
-                                      isTeacherField: true,
+                                    SizedBox(width: 16.0),
+                                    Expanded(
+                                      child: TextFormField(
+                                        controller: _roomController,
+                                        decoration: InputDecoration(
+                                          labelText: 'Sala',
+                                          alignLabelWithHint: true,
+                                          floatingLabelBehavior: FloatingLabelBehavior.auto,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            borderSide: BorderSide(color: Colors.grey[300]!),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            borderSide: BorderSide(color: Colors.grey[300]!),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
+                                          ),
+                                          errorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                          ),
+                                          focusedErrorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                            borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          contentPadding: EdgeInsets.fromLTRB(16, 24, 16, 16),
+                                          labelStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          floatingLabelStyle: TextStyle(
+                                            color: _roomController.selection.isValid ? Color(0xFFF49402) : Colors.grey[600],
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          counterText: '',
+                                        ),
+                                        validator: (value) {
+                                          if (value?.isEmpty ?? true) {
+                                            return 'Wprowadź nazwę Sali';
+                                          }
+                                          return null;
+                                        },
+                                        maxLength: 15,
+                                        style: TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 15,
+                                        ),
+                                      ),
                                     ),
+                                  ],
+                                ),
+                                SizedBox(height: 16),
+                                Container(
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12.0),
+                                  ),
+                                  child: DropdownButtonFormField<String>(
+                                    value: selectedCategory,
+                                    decoration: InputDecoration(
+                                      labelText: 'Kategoria problemu',
+                                      alignLabelWithHint: true,
+                                      floatingLabelBehavior: FloatingLabelBehavior.auto,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                        borderSide: BorderSide(color: Colors.grey[300]!),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                        borderSide: BorderSide(color: Colors.grey[300]!),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                        borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
+                                      ),
+                                      errorBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                        borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                      ),
+                                      focusedErrorBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                        borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      contentPadding: EdgeInsets.fromLTRB(16, 24, 16, 16),
+                                      labelStyle: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      floatingLabelStyle: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    style: TextStyle(
+                                      color: Colors.black87,
+                                      fontSize: 15,
+                                    ),
+                                    icon: Icon(Icons.arrow_drop_down, color: Color(0xFFF49402)),
+                                    isExpanded: true,
+                                    dropdownColor: Colors.white,
+                                    validator: (value) {
+                                      if (value == null) {
+                                        return 'Wybierz kategorię';
+                                      }
+                                      return null;
+                                    },
+                                    items: categories.map((category) {
+                                      return DropdownMenuItem<String>(
+                                        value: category['id'],
+                                        child: Container(
+                                          height: 40,
+                                          alignment: Alignment.centerLeft,
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                category['icon'],
+                                                size: 20,
+                                                color: Color(0xFFF49402),
+                                              ),
+                                              SizedBox(width: 12),
+                                              Text(
+                                                category['name'],
+                                                style: TextStyle(
+                                                  color: Colors.black87,
+                                                  fontSize: 15,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        selectedCategory = newValue;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 16.0),
+                        Row(
+                          children: [
+                            Icon(Icons.description_outlined, 
+                              size: 18, 
+                              color: Color(0xFFF49402)
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Szczegóły problemu',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 12.0),
+                        Container(
+                          height: 250,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: TextFormField(
+                                  controller: _problemController,
+                                  expands: true,
+                                  maxLines: null,
+                                  textAlignVertical: TextAlignVertical.top,
+                                  decoration: InputDecoration(
+                                    labelText: 'Opis problemu',
+                                    alignLabelWithHint: true,
+                                    floatingLabelBehavior: FloatingLabelBehavior.auto,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                      borderSide: BorderSide(color: Colors.grey[300]!),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                      borderSide: BorderSide(color: Colors.grey[300]!),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                      borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                      borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                      borderSide: BorderSide(color: Colors.red[400]!, width: 1),
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: EdgeInsets.fromLTRB(16, 24, 16, 16),
+                                    labelStyle: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    floatingLabelStyle: TextStyle(
+                                      color: _problemController.selection.isValid ? Color(0xFFF49402) : Colors.grey[600],
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    counterText: '',
+                                  ),
+                                  maxLength: 275,
+                                  style: TextStyle(
+                                    color: Colors.black87,
+                                    fontSize: 15,
+                                  ),
+                                  onChanged: (text) {
+                                    setState(() {});
+                                  },
+                                  validator: (value) {
+                                    if (value?.isEmpty ?? true) {
+                                      return 'Wprowadź opis problemu';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 8,
+                                right: 16,
+                                child: Text(
+                                  '${_problemController.text.length}/275',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 120.0, left: 30, bottom: 20),
-                              child: SizedBox(
-                                height: 90.0,
-                                child: MouseRegion(
-                                  onEnter: (_) => setState(() => hoverStates['room'] = true),
-                                  onExit: (_) => setState(() => hoverStates['room'] = false),
-                                  child: AnimatedContainer(
-                                    duration: Duration(milliseconds: 200),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(8.0),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.grey.withOpacity(hoverStates['room'] == true ? 0.6 : 0.5),
-                                          offset: Offset(0, hoverStates['room'] == true ? 4 : 2),
-                                          blurRadius: hoverStates['room'] == true ? 8 : 4,
-                                        ),
-                                      ],
-                                    ),
-                                    child: _buildInputField(
-                                      controller: _roomController,
-                                      labelText: 'Sala',
-                                      maxLines: 1,
-                                      validator: (value) {
-                                        if (value?.isEmpty ?? true) {
-                                          return 'Wprowadź nazwę Sali';
-                                        }
-                                        return null;
-                                      },
-                                      maxLength: 15,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16.0),
-                      FractionallySizedBox(
-                        widthFactor: 0.8,
-                        child: SizedBox(
-                          height: 160.0,
+                        ),
+                        SizedBox(height: 16.0),
+                        Center(
                           child: MouseRegion(
-                            onEnter: (_) => setState(() => hoverStates['problem'] = true),
-                            onExit: (_) => setState(() => hoverStates['problem'] = false),
+                            onEnter: (_) => setState(() => hoverStates['submit'] = true),
+                            onExit: (_) => setState(() => hoverStates['submit'] = false),
                             child: AnimatedContainer(
                               duration: Duration(milliseconds: 200),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8.0),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(hoverStates['problem'] == true ? 0.6 : 0.5),
-                                    offset: Offset(0, hoverStates['problem'] == true ? 4 : 2),
-                                    blurRadius: hoverStates['problem'] == true ? 8 : 4,
+                              transform: Matrix4.identity()
+                                ..scale(hoverStates['submit'] == true ? 1.02 : 1.0),
+                              child: ElevatedButton(
+                                onPressed: () => _submitProblem(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFFF49402),
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
                                   ),
-                                ],
-                              ),
-                              child: _buildInputField(
-                                controller: _problemController,
-                                labelText: 'Opis problemu',
-                                maxLines: 5,
-                                maxLength: 275,
-                                validator: (value) {
-                                  if (value?.isEmpty ?? true) {
-                                    return 'Wprowadź opis problemu';
-                                  }
-                                  return null;
-                                },
+                                  elevation: hoverStates['submit'] == true ? 8 : 4,
+                                  shadowColor: Color(0xFFF49402).withOpacity(0.5),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.send, size: 18, color: Colors.white),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Wyślij zgłoszenie',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24.0),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 50.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            MouseRegion(
-                              onEnter: (_) => setState(() => hoverStates['submit'] = true),
-                              onExit: (_) => setState(() => hoverStates['submit'] = false),
-                              child: AnimatedContainer(
-                                duration: Duration(milliseconds: 200),
-                                child: SizedBox(
-                                  width: 310,
-                                  height: 60,
-                                  child: ElevatedButton(
-                                    onPressed: () => _submitProblem(context),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      foregroundColor: Colors.black,
-                                      elevation: hoverStates['submit'] == true ? 4.0 : 2.0,
-                                    ),
-                                    child: Text(
-                                      'Wyślij',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: hoverStates['submit'] == true
-                                            ? FontWeight.w600
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                        SizedBox(height: 16.0),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -741,311 +979,149 @@ class _UserHomePageState extends State<UserHomePage> {
   }
 
   Widget _buildMyProblemsView() {
-    List<List<dynamic>> paginatedProblems = [];
-    for (int i = 0; i < problems.length; i += itemsPerPage) {
-      paginatedProblems.add(problems.sublist(
-          i, i + itemsPerPage > problems.length ? problems.length : i + itemsPerPage));
-    }
-
-    if (isLoading) {
-      return Center(child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF49402)),
-      ));
-    }
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
-        child: paginatedProblems.isEmpty
-            ? Center(
-          child: Text(
-            'Brak zgłoszeń.',
-            style: TextStyle(fontSize: 16.0, color: Colors.black),
-          ),
-        )
-            : Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+        children: [
+        Expanded(
+          child: Container(
+            margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+            child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 10.0),
-                  child: Text(
-                    'Zgłoszenia',
-                    style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                      shadows: [
-                        Shadow(
-                          offset: Offset(0, 2),
-                          blurRadius: 4.0,
-                          color: Colors.grey.withOpacity(0.5),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10.0),
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: paginatedProblems.length,
-                onPageChanged: (pageIndex) {
-                  setState(() {
-                    currentPage = pageIndex;
-                  });
-                },
-                itemBuilder: (context, pageIndex) {
-                  var pageProblems = paginatedProblems[pageIndex];
-                  return GridView.builder(
-                    padding: EdgeInsets.symmetric(vertical: 3.0),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 8.0,
-                      mainAxisSpacing: 8.0,
-                      childAspectRatio: 1.9,
-                    ),
-                    itemCount: pageProblems.length,
-                    itemBuilder: (context, index) {
-                      var problem = pageProblems[index];
-                      bool isRead = problem['read'] == 1;
-                      String cardKey = 'card_${problem['id']}';
-
-                      return MouseRegion(
-                        onEnter: (_) => setState(() => hoverStates[cardKey] = true),
-                        onExit: (_) => setState(() => hoverStates[cardKey] = false),
-                        child: AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(hoverStates[cardKey] == true ? 0.15 : 0.1),
-                                blurRadius: hoverStates[cardKey] == true ? 15 : 10,
-                                spreadRadius: hoverStates[cardKey] == true ? 1 : 0,
-                                offset: Offset(-3, 0),
-                              ),
-                              BoxShadow(
-                                color: Colors.black.withOpacity(hoverStates[cardKey] == true ? 0.15 : 0.1),
-                                blurRadius: hoverStates[cardKey] == true ? 15 : 10,
-                                spreadRadius: hoverStates[cardKey] == true ? 1 : 0,
-                                offset: Offset(3, 0),
-                              ),
-                            ],
+                if (filteredProblems.isEmpty)
+                  Expanded(
+                        child: Center(
+                          child: Text(
+                            'Brak zgłoszeń.',
+                            style: TextStyle(fontSize: 16.0, color: Colors.black),
                           ),
-                          margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        ),
+                      )
+                else
+                  Expanded(
+                        child: GridView.builder(
+                          padding: EdgeInsets.symmetric(vertical: 3.0),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                            childAspectRatio: 1.9,
+                          ),
+                          itemCount: problems.length,
+                          itemBuilder: (context, index) {
+                            var problem = problems[index];
+                            bool isRead = problem['read'] == 1;
+
+                            return Card(
+                              color: Colors.white,
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Sala: ${problem['room'] ?? 'Nieznana'}',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Icon(
+                                          isRead ? Icons.visibility : Icons.visibility_off,
+                                          color: isRead ? Colors.green : Colors.grey,
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 4),
                                     Text(
-                                      'Sala: ${problem['room'] ?? 'Nieznana'}',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
+                                      'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
+                                      style: TextStyle(color: Colors.black, fontSize: 14),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Flexible(
+                                      child: Text(
+                                        'Treść: ${problem['problem'] ?? 'Brak opisu'}',
+                                        style: TextStyle(color: Colors.black, fontSize: 14),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    AnimatedSwitcher(
-                                      duration: Duration(milliseconds: 200),
-                                      child: Icon(
-                                        isRead ? Icons.visibility : Icons.visibility_off,
-                                        key: ValueKey<bool>(isRead),
-                                        color: isRead ? Colors.green : Colors.grey,
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 16.0),
+                                      child: Center(
+                                        child: ElevatedButton(
+                                          onPressed: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ProblemTempPage(problem: problem),
+                                            ),
+                                          ).then((deleted) {
+                                            if (deleted == true) {
+                                              _fetchUserProblems();
+                                            }
+                                          }),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            foregroundColor: Colors.black,
+                                            elevation: 1,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                              side: BorderSide(color: Colors.black),
+                                            ),
+                                          ),
+                                          child: Text('Rozwiń'),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Nauczyciel: ${problem['username'] ??
-                                      'Nieznany'}',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 14),
-                                ),
-                                SizedBox(height: 4),
-                                Flexible(
-                                  child: Text(
-                                    'Treść: ${problem['problem'] ?? 'Brak opisu'}',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 14,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 15.0),
-                                  child: Center(
-                                    child: MouseRegion(
-                                      onEnter: (_) => setState(() => hoverStates['expand_${problem['id']}'] = true),
-                                      onExit: (_) => setState(() => hoverStates['expand_${problem['id']}'] = false),
-                                      child: AnimatedContainer(
-                                        duration: Duration(milliseconds: 200),
-                                        transform: Matrix4.identity()
-                                          ..scale(hoverStates['expand_${problem['id']}'] == true ? 1.05 : 1.0),
-                                        child: ElevatedButton(
-                                          onPressed: () async {
-                                            Navigator.push(
-                                              context,
-                                              PageRouteBuilder(
-                                                pageBuilder: (context, animation, secondaryAnimation) => ProblemTempPage(problem: problem),
-                                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                                  var begin = Offset(1.0, 0.0);
-                                                  var end = Offset.zero;
-                                                  var curve = Curves.easeInOut;
-                                                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                                                  return SlideTransition(
-                                                    position: animation.drive(tween),
-                                                    child: child,
-                                                  );
-                                                },
-                                                transitionDuration: Duration(milliseconds: 300),
-                                              ),
-                                            ).then((deleted) {
-                                              if (deleted == true) {
-                                                _fetchUserProblems();
-                                              }
-                                            });
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            foregroundColor: Colors.black,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(20),
-                                              side: BorderSide(
-                                                color: Colors.black,
-                                                width: hoverStates['expand_${problem['id']}'] == true ? 1.5 : 1,
-                                              ),
-                                            ),
-                                            minimumSize: Size(120, 36),
-                                            padding: EdgeInsets.symmetric(horizontal: 20.0),
-                                            elevation: hoverStates['expand_${problem['id']}'] == true ? 4 : 2,
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                'Rozwiń',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: hoverStates['expand_${problem['id']}'] == true
-                                                      ? FontWeight.w600
-                                                      : FontWeight.w500,
-                                                ),
-                                              ),
-                                              AnimatedContainer(
-                                                duration: Duration(milliseconds: 200),
-                                                padding: EdgeInsets.only(left: 4),
-                                                transform: Matrix4.identity()
-                                                  ..translate(hoverStates['expand_${problem['id']}'] == true ? 2.0 : 0.0),
-                                                child: Icon(
-                                                  Icons.arrow_forward_ios,
-                                                  size: 14,
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  );
-                },
-              ),
+                      ),
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios, size: 20),
+                      onPressed: currentPage > 0
+                          ? () {
+                              setState(() {
+                                currentPage--;
+                                _pageController.jumpToPage(currentPage);
+                              });
+                            }
+                          : null,
+                    ),
+                    Text('${currentPage + 1} / ${(problems.length / itemsPerPage).ceil()}'),
+                    IconButton(
+                      icon: Icon(Icons.arrow_forward_ios, size: 20),
+                      onPressed: currentPage < (problems.length / itemsPerPage).ceil() - 1
+                          ? () {
+                              setState(() {
+                                currentPage++;
+                                _pageController.jumpToPage(currentPage);
+                              });
+                            }
+                          : null,
+                    ),
+                  ],
+                  ),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  MouseRegion(
-                    onEnter: (_) => setState(() => hoverStates['prev_page'] = true),
-                    onExit: (_) => setState(() => hoverStates['prev_page'] = false),
-                    child: AnimatedContainer(
-                      duration: Duration(milliseconds: 200),
-                      transform: Matrix4.identity()
-                        ..translate(hoverStates['prev_page'] == true ? -2.0 : 0.0),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.arrow_back_ios,
-                          size: 20,
-                          color: currentPage > 0 ? Color(0xFFF49402) : Colors.grey,
-                        ),
-                        onPressed: currentPage > 0
-                            ? () {
-                                _pageController.previousPage(
-                                  duration: Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              }
-                            : null,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: AnimatedDefaultTextStyle(
-                      duration: Duration(milliseconds: 200),
-                      style: TextStyle(
-                        fontSize: 14.0,
-                        color: Colors.black,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      child: Text(
-                        '${currentPage + 1} / ${paginatedProblems.length}',
-                      ),
-                    ),
-                  ),
-                  MouseRegion(
-                    onEnter: (_) => setState(() => hoverStates['next_page'] = true),
-                    onExit: (_) => setState(() => hoverStates['next_page'] = false),
-                    child: AnimatedContainer(
-                      duration: Duration(milliseconds: 200),
-                      transform: Matrix4.identity()
-                        ..translate(hoverStates['next_page'] == true ? 2.0 : 0.0),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.arrow_forward_ios,
-                          size: 20,
-                          color: currentPage < paginatedProblems.length - 1 ? Color(0xFFF49402) : Colors.grey,
-                        ),
-                        onPressed: currentPage < paginatedProblems.length - 1
-                            ? () {
-                                _pageController.nextPage(
-                                  duration: Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              }
-                            : null,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
       ),
+      ],
     );
   }
 }
