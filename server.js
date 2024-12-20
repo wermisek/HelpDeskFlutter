@@ -45,7 +45,18 @@ try {
             console.error('Error adding category column:', err.message);
         }
     }
-    
+
+    try {
+        db.prepare('ALTER TABLE problems ADD COLUMN priority TEXT DEFAULT "low"').run();
+        console.log('Column "priority" added to "problems" table.');
+    } catch (err) {
+        if (err.message.includes("duplicate column name: priority")) {
+            console.log('Column "priority" already exists in "problems" table.');
+        } else {
+            console.error('Error adding priority column:', err.message);
+        }
+    }
+
     db.pragma('foreign_keys = ON');
 
     // Create users table if it doesn't exist
@@ -68,7 +79,8 @@ try {
             problem TEXT NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             read INTEGER DEFAULT 0,
-            category TEXT CHECK(category IN ('hardware', 'software', 'network', 'printer', 'other')) DEFAULT NULL
+            category TEXT CHECK(category IN ('hardware', 'software', 'network', 'printer', 'other')) DEFAULT NULL,
+            priority TEXT CHECK(priority IN ('low', 'medium', 'high')) DEFAULT 'low'
         )
     `).run();
     console.log('Problems table initialized');
@@ -133,15 +145,15 @@ app.post('/login', (req, res) => {
 
 // Endpoint to add a new problem
 app.post('/add_problem', (req, res) => {
-    const { username, room, problem, category } = req.body;
+    const { username, room, problem, category, priority } = req.body;
 
     if (!username || !room || !problem) {
         return res.status(400).send({ message: 'Username, room, and problem are required' });
     }
 
     try {
-        const stmt = db.prepare('INSERT INTO problems (username, room, problem, category) VALUES (?, ?, ?, ?)');
-        stmt.run(username, room, problem, category || 'other');
+        const stmt = db.prepare('INSERT INTO problems (username, room, problem, category, priority) VALUES (?, ?, ?, ?, ?)');
+        stmt.run(username, room, problem, category || 'other', priority || 'low');
         res.status(201).send({ message: 'Problem added successfully' });
     } catch (err) {
         console.error('Error inserting problem:', err.message);
@@ -228,6 +240,34 @@ app.get('/get_users', (req, res) => {
     } catch (err) {
         console.error('Error fetching users:', err.message);
         return res.status(500).send({ message: 'Error fetching users' });
+    }
+});
+
+// Endpoint to update problem priority
+app.put('/update_priority/:id', (req, res) => {
+    const problemId = req.params.id;
+    const { priority } = req.body;
+
+    if (!problemId || !priority) {
+        return res.status(400).send({ message: 'Problem ID and priority are required' });
+    }
+
+    if (!['low', 'medium', 'high'].includes(priority)) {
+        return res.status(400).send({ message: 'Priority must be low, medium, or high' });
+    }
+
+    try {
+        const stmt = db.prepare('UPDATE problems SET priority = ? WHERE id = ?');
+        const result = stmt.run(priority, problemId);
+
+        if (result.changes === 0) {
+            return res.status(404).send({ message: 'Problem not found' });
+        }
+
+        res.status(200).send({ message: 'Priority updated successfully' });
+    } catch (err) {
+        console.error('Error updating priority:', err.message);
+        return res.status(500).send({ message: 'Error updating priority' });
     }
 });
 

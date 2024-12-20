@@ -49,6 +49,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   late Uint8List decodedImage;
   String searchQuery = '';
   String? selectedCategory;
+  String? selectedPriority;
   List<dynamic> problems = [];
   List<dynamic> filteredProblems = [];
   List<dynamic> users = [];
@@ -65,6 +66,27 @@ class _AdminHomePageState extends State<AdminHomePage> {
   late String currentUsername;
   Map<String, bool> hoverStates = {};
   bool _isLoading = false;
+
+  String getRelativeTime(String timestamp) {
+    final now = DateTime.now();
+    final date = DateTime.parse(timestamp);
+    final difference = now.difference(date);
+
+    if (difference.inMinutes < 1) {
+      return 'Przed chwilą';
+    } else if (difference.inHours < 1) {
+      final minutes = difference.inMinutes;
+      return '$minutes ${minutes == 1 ? 'minuta' : minutes < 5 ? 'minuty' : 'minut'} temu';
+    } else if (difference.inDays < 1) {
+      final hours = difference.inHours;
+      return '$hours ${hours == 1 ? 'godzina' : hours < 5 ? 'godziny' : 'godzin'} temu';
+    } else if (difference.inDays < 7) {
+      final days = difference.inDays;
+      return '$days ${days == 1 ? 'dzień' : 'dni'} temu';
+    } else {
+      return '${date.day}.${date.month}.${date.year}';
+    }
+  }
 
   @override
   void initState() {
@@ -279,12 +301,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         var pageProblems = filteredProblems.sublist(startIndex, endIndex);
 
                         return GridView.builder(
-                          padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
+                          padding: EdgeInsets.fromLTRB(6.0, 50.0, 6.0, 20.0),
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 4,
-                            crossAxisSpacing: 8.0,
+                            crossAxisSpacing: 6.0,
                             mainAxisSpacing: 8.0,
-                            childAspectRatio: 1.8,
+                            childAspectRatio: 2.2,
                           ),
                           itemCount: pageProblems.length,
                           itemBuilder: (context, index) => _buildProblemCard(pageProblems[index]),
@@ -309,45 +331,77 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text(
-                      'Zgłoszenia',
-                                    style: TextStyle(
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                        shadows: [
-                          Shadow(
-                            offset: Offset(0, 2),
-                            blurRadius: 4.0,
-                            color: Colors.grey.withOpacity(0.5),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Spacer(),
-                    SizedBox(
-                      width: 200,
-                      child: Padding(
-                        padding: EdgeInsets.only(right: 6.0),
-                          child: TextField(
-                            style: TextStyle(color: Colors.black),
-                            decoration: InputDecoration(
-                              hintText: 'Wyszukaj...',
-                              hintStyle: TextStyle(color: Colors.grey),
-                              prefixIcon: Icon(Icons.search, color: Colors.black),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                                borderSide: BorderSide(color: Colors.grey),
+                    // Title with counter
+                    Row(
+                      children: [
+                        Text(
+                          'Zgłoszenia',
+                          style: TextStyle(
+                            fontSize: 20.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 2),
+                                blurRadius: 4.0,
+                                color: Colors.grey.withOpacity(0.5),
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                                borderSide: BorderSide(color: Color(0xFFF49402)),
-                              ),
-                            ),
-                            onChanged: _filterProblems,
+                            ],
                           ),
                         ),
-                                        ),
+                        SizedBox(width: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFF49402),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${problems.length}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Spacer(),
+                    // Search bar
+                    Container(
+                      width: 250,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: MouseRegion(
+                        onEnter: (_) => setState(() => hoverStates['searchBar'] = true),
+                        onExit: (_) => setState(() => hoverStates['searchBar'] = false),
+                        child: TextField(
+                          style: TextStyle(color: Colors.black),
+                          decoration: InputDecoration(
+                            hintText: 'Wyszukaj zgłoszenia...',
+                            hintStyle: TextStyle(color: Colors.grey[500]),
+                            prefixIcon: AnimatedContainer(
+                              duration: Duration(milliseconds: 200),
+                              child: Icon(
+                                Icons.search,
+                                color: hoverStates['searchBar'] == true
+                                    ? Color(0xFFF49402)
+                                    : Colors.grey[600],
+                                size: hoverStates['searchBar'] == true ? 24 : 22,
+                              ),
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          onChanged: _filterProblems,
+                        ),
+                      ),
+                    ),
                     if (selectedDate != null)
                       IconButton(
                         icon: Icon(Icons.close, color: Colors.black),
@@ -522,14 +576,96 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         ),
                       ],
                     ),
+                    SizedBox(width: 8),
+                    // Priority Filter Button
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.priority_high, color: Colors.black),
+                      tooltip: 'Filtruj po priorytecie',
+                      color: Colors.white,
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        side: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      onSelected: (String priority) {
+                        setState(() {
+                          if (priority == 'all') {
+                            selectedPriority = null;
+                            filteredProblems = List.from(problems);
+                          } else {
+                            selectedPriority = priority;
+                            filteredProblems = problems.where((problem) =>
+                              problem['priority'] == priority
+                            ).toList();
+                          }
+                          
+                          filteredProblems.sort((a, b) =>
+                            DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
+                          
+                          if (_problemsPageController.hasClients) {
+                            _problemsPageController.jumpToPage(0);
+                          }
+                        });
+                      },
+                      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(
+                          value: 'high',
+                          child: Row(
+                            children: [
+                              Icon(Icons.arrow_upward, color: Colors.red),
+                              SizedBox(width: 12),
+                              Text('Wysoki priorytet'),
+                            ],
+                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'medium',
+                          child: Row(
+                            children: [
+                              Icon(Icons.remove, color: Colors.orange),
+                              SizedBox(width: 12),
+                              Text('Średni priorytet'),
+                            ],
+                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'low',
+                          child: Row(
+                            children: [
+                              Icon(Icons.arrow_downward, color: Colors.green),
+                              SizedBox(width: 12),
+                              Text('Niski priorytet'),
+                            ],
+                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'all',
+                          child: Row(
+                            children: [
+                              Icon(Icons.clear_all, color: Color(0xFFF49402)),
+                              SizedBox(width: 12),
+                              Text('Wszystkie'),
+                            ],
+                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildUserList() {
@@ -620,23 +756,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       ),
                     ),
                     Spacer(),
-                    SizedBox(
+                    Container(
                       width: 200.0,
                       child: MouseRegion(
                         onEnter: (_) => setState(() => hoverStates['user_search'] = true),
                         onExit: (_) => setState(() => hoverStates['user_search'] = false),
-                        child: AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(hoverStates['user_search'] == true ? 0.1 : 0.05),
-                                blurRadius: hoverStates['user_search'] == true ? 8 : 4,
-                                spreadRadius: hoverStates['user_search'] == true ? 1 : 0,
-                              ),
-                            ],
-                          ),
                         child: TextField(
                           style: TextStyle(color: Colors.black),
                           decoration: InputDecoration(
@@ -652,10 +776,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
                               borderSide: BorderSide(color: Color(0xFFF49402)),
                             ),
                           ),
-                            onChanged: _filterUsersByQuery,
+                          onChanged: _filterUsersByQuery,
                         ),
                       ),
-                    ),
                     ),
                     SizedBox(width: 10.0),
                     MouseRegion(
@@ -682,16 +805,16 @@ class _AdminHomePageState extends State<AdminHomePage> {
                               Icons.add,
                               size: 20.0,
                               color: Color(0xFFF49402),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-                    ),
-                  ],
-                ),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -1478,6 +1601,66 @@ class _AdminHomePageState extends State<AdminHomePage> {
       }
     }
 
+    Color getPriorityColor(String? priority) {
+      switch (priority) {
+        case 'high':
+          return Colors.red;
+        case 'medium':
+          return Colors.orange;
+        case 'low':
+          return Colors.green;
+        default:
+          return Colors.grey;
+      }
+    }
+
+    String getPriorityText(String? priority) {
+      switch (priority) {
+        case 'high':
+          return 'Wysoki';
+        case 'medium':
+          return 'Średni';
+        case 'low':
+          return 'Niski';
+        default:
+          return 'Nieokreślony';
+      }
+    }
+
+    IconData getPriorityIcon(String? priority) {
+      switch (priority) {
+        case 'high':
+          return Icons.arrow_upward;
+        case 'medium':
+          return Icons.remove;
+        case 'low':
+          return Icons.arrow_downward;
+        default:
+          return Icons.remove;
+      }
+    }
+
+    String getRelativeTime(String timestamp) {
+      final now = DateTime.now();
+      final date = DateTime.parse(timestamp);
+      final difference = now.difference(date);
+
+      if (difference.inMinutes < 1) {
+        return 'Przed chwilą';
+      } else if (difference.inHours < 1) {
+        final minutes = difference.inMinutes;
+        return '$minutes ${minutes == 1 ? 'minuta' : minutes < 5 ? 'minuty' : 'minut'} temu';
+      } else if (difference.inDays < 1) {
+        final hours = difference.inHours;
+        return '$hours ${hours == 1 ? 'godzina' : hours < 5 ? 'godziny' : 'godzin'} temu';
+      } else if (difference.inDays < 7) {
+        final days = difference.inDays;
+        return '$days ${days == 1 ? 'dzień' : 'dni'} temu';
+      } else {
+        return '${date.day}.${date.month}.${date.year}';
+      }
+    }
+
     return MouseRegion(
       onEnter: (_) => setState(() => hoverStates['problem_${problem['id']}'] = true),
       onExit: (_) => setState(() => hoverStates['problem_${problem['id']}'] = false),
@@ -1491,101 +1674,206 @@ class _AdminHomePageState extends State<AdminHomePage> {
           color: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
+            side: BorderSide(
+              color: getPriorityColor(problem['priority']).withOpacity(0.3),
+              width: 1.0,
+            ),
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 0.0),
-                title: Column(
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Sala: ${problem['room'] ?? 'Nieznana'}',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Kategoria: ${getCategoryName(problem['category'])}',
-                      style: TextStyle(color: Colors.grey),
-                      maxLines: 1,
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Treść: ${_removeNewlines(problem['problem'] ?? 'Brak opisu')}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () async {
-                        final response = await http.put(
-                          Uri.parse('http://localhost:8080/mark_as_read/${problem['id']}'),
-                        );
-
-                        if (response.statusCode == 200) {
-                          Navigator.push(
-                            context,
-                            PageRouteBuilder(
-                              pageBuilder: (context, animation, secondaryAnimation) => ProblemTempPage(problem: problem),
-                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                var begin = Offset(1.0, 0.0);
-                                var end = Offset.zero;
-                                var curve = Curves.easeInOut;
-                                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                                return SlideTransition(
-                                  position: animation.drive(tween),
-                                  child: child,
-                                );
-                              },
-                              transitionDuration: Duration(milliseconds: 300),
+                    // Header Row with Room and Priority
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Room Number with Icon
+                        Row(
+                          children: [
+                            Icon(Icons.room, size: 18, color: Colors.grey[800]),
+                            SizedBox(width: 4),
+                            Text(
+                              'Sala ${problem['room'] ?? 'Nieznana'}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: Colors.grey[800],
+                              ),
                             ),
-                          ).then((shouldDelete) {
-                            if (shouldDelete == true) {
-                              setState(() {
-                                problems.remove(problem);
-                              });
-                            }
-                          });
-                        } else {
-                          print('Błąd odczytania wiadomości: ${response.body}');
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Nie udało się odczytać wiadomości.'),
+                            SizedBox(width: 12),
+                            // Time information
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  size: 14,
+                                  color: Colors.grey[600],
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  getRelativeTime(problem['timestamp']),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(color: Colors.black, width: 1),
+                          ],
                         ),
-                        minimumSize: Size(120, 36),
-                        padding: EdgeInsets.symmetric(horizontal: 5.0),
+                        // Priority Badge
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                          decoration: BoxDecoration(
+                            color: getPriorityColor(problem['priority']).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12.0),
+                            border: Border.all(
+                              color: getPriorityColor(problem['priority']).withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                getPriorityIcon(problem['priority']),
+                                size: 14,
+                                color: getPriorityColor(problem['priority']),
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                getPriorityText(problem['priority']),
+                                style: TextStyle(
+                                  color: getPriorityColor(problem['priority']),
+                                  fontSize: 12.0,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    // Problem Description
+                    Text(
+                      _removeNewlines(problem['problem'] ?? 'Brak opisu'),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black87,
+                        height: 1.3,
                       ),
-                      child: Text(
-                        'Rozwiń',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 8),
+                    // Bottom Info Row
+                    Row(
+                      children: [
+                        // User Info
+                        Row(
+                          children: [
+                            Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
+                            SizedBox(width: 4),
+                            Text(
+                              problem['username'] ?? 'Nieznany',
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(width: 16),
+                        // Category
+                        Row(
+                          children: [
+                            Icon(Icons.category_outlined, size: 16, color: Colors.grey[600]),
+                            SizedBox(width: 4),
+                            Text(
+                              getCategoryName(problem['category']),
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Spacer(),
+                        // View Details Button
+                        TextButton(
+                          onPressed: () async {
+                            final response = await http.put(
+                              Uri.parse('http://localhost:8080/mark_as_read/${problem['id']}'),
+                            );
+
+                            if (response.statusCode == 200) {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (context, animation, secondaryAnimation) => ProblemTempPage(problem: problem),
+                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                    var begin = Offset(1.0, 0.0);
+                                    var end = Offset.zero;
+                                    var curve = Curves.easeInOut;
+                                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                    return SlideTransition(
+                                      position: animation.drive(tween),
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration: Duration(milliseconds: 300),
+                                ),
+                              ).then((shouldDelete) {
+                                if (shouldDelete == true) {
+                                  setState(() {
+                                    problems.remove(problem);
+                                  });
+                                }
+                              });
+                            } else {
+                              print('Błąd odczytania wiadomości: ${response.body}');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Nie udało się odczytać wiadomości.'),
+                                ),
+                              );
+                            }
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.grey[700],
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Szczegóły',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Transform.translate(
+                                offset: Offset(0, 2),
+                                child: Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 12,
+                                  color: Color(0xFFF49402),
+                                ),
+                              ),
+                              SizedBox(width: 2),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
