@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'usertempp.dart';
 import 'dart:async';
 import 'login.dart';
+import 'models/issue_template.dart';
 
 void main() {
   runApp(MyApp());
@@ -48,7 +49,10 @@ class _UserHomePageState extends State<UserHomePage> {
   List<dynamic> problems = [];
   bool isLoading = false;
   Timer? _timer;
-  Map<String, bool> hoverStates = {};
+  Map<String, bool> hoverStates = {
+    'submit': false,
+    'template': false,
+  };
   bool _isFetching = false;
   List<dynamic> get filteredProblems => problems;
   String? selectedCategory;
@@ -659,6 +663,264 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
+  void _showTemplateSelection() {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      backgroundColor: Colors.white,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7,
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.only(top: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFF49402).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.description_outlined,
+                      color: Color(0xFFF49402),
+                      size: 20,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    'Wybierz szablon zgłoszenia',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 12),
+            Divider(height: 1),
+            // Scroll indicator
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.grey[400],
+                    size: 20,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'Przewiń w dół',
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Templates list
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: IssueTemplate.predefinedTemplates.length,
+                itemBuilder: (context, index) {
+                  final template = IssueTemplate.predefinedTemplates[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _problemController.text = template.description;
+                          selectedCategory = template.category;
+                          selectedPriority = template.priority;
+                          if (template.roomSuggestion.isNotEmpty) {
+                            _roomController.text = template.roomSuggestion;
+                          }
+                        });
+                        Navigator.pop(context);
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[200]!),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              spreadRadius: 0,
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFF49402).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    _getCategoryIcon(template.category),
+                                    color: Color(0xFFF49402),
+                                    size: 20,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    template.name,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: _getPriorityColor(template.priority).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _getPriorityIconData(template.priority),
+                                        color: _getPriorityColor(template.priority),
+                                        size: 16,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        _getPriorityText(template.priority),
+                                        style: TextStyle(
+                                          color: _getPriorityColor(template.priority),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              template.description,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.orange;
+      case 'low':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getPriorityText(String priority) {
+    switch (priority) {
+      case 'high':
+        return 'Wysoki';
+      case 'medium':
+        return 'Średni';
+      case 'low':
+        return 'Niski';
+      default:
+        return 'Nieznany';
+    }
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'printer':
+        return Icons.print;
+      case 'hardware':
+        return Icons.computer;
+      case 'network':
+        return Icons.wifi;
+      case 'software':
+        return Icons.apps;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  IconData _getPriorityIconData(String priority) {
+    switch (priority) {
+      case 'high':
+        return Icons.arrow_upward;
+      case 'medium':
+        return Icons.remove;
+      case 'low':
+        return Icons.arrow_downward;
+      default:
+        return Icons.remove;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -828,7 +1090,7 @@ class _UserHomePageState extends State<UserHomePage> {
         Expanded(
           child: Container(
             color: Colors.grey[50],
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
+            padding: const EdgeInsets.fromLTRB(16.0, 2.0, 16.0, 0),
             child: Form(
               key: _formKey,
               child: Column(
@@ -865,6 +1127,31 @@ class _UserHomePageState extends State<UserHomePage> {
                                 fontSize: 16.0,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87,
+                              ),
+                            ),
+                            Spacer(),
+                            MouseRegion(
+                              onEnter: (_) => setState(() => hoverStates['template'] = true),
+                              onExit: (_) => setState(() => hoverStates['template'] = false),
+                              child: TextButton.icon(
+                                onPressed: _showTemplateSelection,
+                                icon: Icon(Icons.description_outlined, color: Color(0xFFF49402)),
+                                label: Text(
+                                  'Użyj szablonu',
+                                  style: TextStyle(
+                                    color: Color(0xFFF49402),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  backgroundColor: hoverStates['template'] == true
+                                      ? Color(0xFFF49402).withOpacity(0.15)
+                                      : Color(0xFFF49402).withOpacity(0.1),
+                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -1222,6 +1509,7 @@ class _UserHomePageState extends State<UserHomePage> {
                             onExit: (_) => setState(() => hoverStates['submit'] = false),
                             child: AnimatedContainer(
                               duration: Duration(milliseconds: 200),
+                              margin: EdgeInsets.only(bottom: 0),
                               transform: Matrix4.identity()
                                 ..scale(hoverStates['submit'] == true ? 1.02 : 1.0),
                               child: ElevatedButton(
@@ -1255,7 +1543,6 @@ class _UserHomePageState extends State<UserHomePage> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 12.0),
                       ],
                     ),
                   ),
