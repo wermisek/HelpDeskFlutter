@@ -243,6 +243,30 @@ app.get('/get_users', (req, res) => {
     }
 });
 
+// Endpoint to update problem comment
+app.put('/update_comment/:id', (req, res) => {
+    const problemId = req.params.id;
+    const { comment } = req.body;
+
+    if (!problemId || !comment) {
+        return res.status(400).send({ message: 'Problem ID and comment are required' });
+    }
+
+    try {
+        const stmt = db.prepare('UPDATE problems SET comment = ? WHERE id = ?');
+        const result = stmt.run(comment, problemId);
+
+        if (result.changes === 0) {
+            return res.status(404).send({ message: 'Problem not found' });
+        }
+
+        res.status(200).send({ message: 'Comment updated successfully' });
+    } catch (err) {
+        console.error('Error updating comment:', err.message);
+        return res.status(500).send({ message: 'Error updating comment' });
+    }
+});
+
 // Endpoint to update problem priority
 app.put('/update_priority/:id', (req, res) => {
     const problemId = req.params.id;

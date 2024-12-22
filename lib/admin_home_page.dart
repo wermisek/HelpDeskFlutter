@@ -10,6 +10,7 @@ import 'problemtemp.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'dart:typed_data';
 import 'login.dart';
+import 'statystyki_admin.dart';
 
 void main() {
   runApp(MyApp());
@@ -98,8 +99,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
     await getProblems();
     await getUsers();
 
-    _refreshTimer = Timer.periodic(Duration(seconds: 10), (timer) {
-      if (!mounted || _isLoading) return;
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(Duration(seconds: 2), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       getProblems();
       getUsers();
     });
@@ -125,7 +130,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
       if (response.statusCode == 200) {
         var newProblems = jsonDecode(response.body);
-        if (mounted && newProblems.toString() != problems.toString()) {
+        if (mounted) {
           setState(() {
             problems = newProblems;
             _applyCurrentFilter();
@@ -1245,8 +1250,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   final TextEditingController _searchController = TextEditingController();
 
-
-
+  String _truncateText(String text, int maxLength) {
+    if (text.length <= maxLength) return text;
+    return '${text.substring(0, maxLength)}...';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1351,6 +1358,24 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => SettingsPage(username: widget.username)),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['stats'] = true),
+                onExit: (_) => setState(() => hoverStates['stats'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['stats'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.bar_chart, color: Colors.black),
+                    title: Text('Statystyki', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => StatystykiAdminPage(username: widget.username)),
                       );
                     },
                   ),
@@ -1698,7 +1723,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
                             Icon(Icons.room, size: 18, color: Colors.grey[800]),
                             SizedBox(width: 4),
                             Text(
-                              'Sala ${problem['room'] ?? 'Nieznana'}',
+                              (problem['room'] ?? 'Nieznana').toLowerCase().startsWith('sala') 
+                                ? _truncateText(problem['room'] ?? 'Nieznana', 7)
+                                : 'Sala ${_truncateText(problem['room'] ?? 'Nieznana', 7)}',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
@@ -1763,7 +1790,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     SizedBox(height: 8),
                     // Problem Description
                     Text(
-                      _removeNewlines(problem['problem'] ?? 'Brak opisu'),
+                      _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'), 40),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.black87,
@@ -1832,9 +1859,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                 ),
                               ).then((shouldDelete) {
                                 if (shouldDelete == true) {
-                                  setState(() {
-                                    problems.remove(problem);
-                                  });
+                                  getProblems(); // Refresh the entire list
                                 }
                               });
                             } else {

@@ -55,6 +55,7 @@ class _UserHomePageState extends State<UserHomePage> {
   String? selectedRoom;
   bool isManualRoomInput = false;
   String? selectedPriority;
+  int selectedFloor = 0;
    
   final List<Map<String, dynamic>> categories = [
     {'id': 'hardware', 'name': 'Sprzęt', 'icon': Icons.computer},
@@ -406,6 +407,258 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
+  Widget _buildPriorityButton(String value, String label, IconData icon, Color color) {
+    bool isSelected = selectedPriority == value;
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              selectedPriority = value;
+            });
+          },
+          borderRadius: BorderRadius.circular(12.0),
+          child: Container(
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
+              borderRadius: BorderRadius.circular(11.0),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: isSelected ? color : Colors.grey[600],
+                ),
+                SizedBox(width: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? color : Colors.grey[600],
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryButton(String value, String label, IconData icon) {
+    bool isSelected = selectedCategory == value;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            selectedCategory = value;
+          });
+        },
+        borderRadius: BorderRadius.circular(12.0),
+        child: Container(
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: isSelected ? Color(0xFFF49402).withOpacity(0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(11.0),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected ? Color(0xFFF49402) : Colors.grey[600],
+              ),
+              SizedBox(width: 2),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? Color(0xFFF49402) : Colors.grey[600],
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpecialRoomsSheet() {
+    final List<Map<String, dynamic>> specialRooms = [
+      {'name': 'Sala gimnastyczna', 'icon': Icons.fitness_center},
+      {'name': 'Biblioteka', 'icon': Icons.local_library},
+      {'name': 'Sekretariat', 'icon': Icons.business_center},
+      {'name': 'Księgowa', 'icon': Icons.account_balance},
+      {'name': 'Pedagog', 'icon': Icons.psychology},
+      {'name': 'Aula', 'icon': Icons.meeting_room},
+    ];
+    
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.6,
+        minHeight: MediaQuery.of(context).size.height * 0.4,
+      ),
+      padding: EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            width: 40,
+            height: 4,
+            margin: EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFF49402).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.room_preferences,
+                    color: Color(0xFFF49402),
+                    size: 20,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'Pomieszczenia specjalne',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 12),
+          Divider(height: 1),
+          // Scroll indicator
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Colors.grey[400],
+                  size: 20,
+                ),
+                SizedBox(width: 4),
+                Text(
+                  'Przewiń w dół',
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Room buttons
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              physics: BouncingScrollPhysics(),
+              child: Column(
+                children: specialRooms.map((room) {
+                  bool isSelected = _roomController.text == room['name'] as String;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6.0),
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _roomController.text = room['name'] as String;
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Color(0xFFF49402).withOpacity(0.1) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected ? Color(0xFFF49402) : Colors.grey[200]!,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: isSelected 
+                                  ? Color(0xFFF49402).withOpacity(0.1)
+                                  : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                room['icon'] as IconData,
+                                color: isSelected ? Color(0xFFF49402) : Colors.grey[600],
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Text(
+                              room['name'] as String,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                color: isSelected ? Color(0xFFF49402) : Colors.black87,
+                              ),
+                            ),
+                            if (isSelected) ...[
+                              Spacer(),
+                              Icon(
+                                Icons.check_circle,
+                                color: Color(0xFFF49402),
+                                size: 20,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          // Bottom padding
+          SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -581,6 +834,7 @@ class _UserHomePageState extends State<UserHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  SizedBox(height: 15.0),
                   Center(
                     child: Text(
                       'Zgłoś problem',
@@ -592,9 +846,9 @@ class _UserHomePageState extends State<UserHomePage> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  SizedBox(height: 15.0),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 80.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 55.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -693,6 +947,29 @@ class _UserHomePageState extends State<UserHomePage> {
                                           labelText: 'Sala',
                                           alignLabelWithHint: true,
                                           floatingLabelBehavior: FloatingLabelBehavior.auto,
+                                          prefixIcon: Icon(
+                                            Icons.meeting_room_outlined,
+                                            color: _roomController.text.isEmpty ? Colors.grey[600] : Color(0xFFF49402),
+                                            size: 20,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              Icons.more_vert,
+                                              color: Colors.grey[600],
+                                              size: 20,
+                                            ),
+                                            onPressed: () {
+                                              showModalBottomSheet(
+                                                context: context,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.vertical(
+                                                    top: Radius.circular(20),
+                                                  ),
+                                                ),
+                                                builder: (context) => _buildSpecialRoomsSheet(),
+                                              );
+                                            },
+                                          ),
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(12.0),
                                             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -722,23 +999,27 @@ class _UserHomePageState extends State<UserHomePage> {
                                             fontWeight: FontWeight.w500,
                                           ),
                                           floatingLabelStyle: TextStyle(
-                                            color: _roomController.selection.isValid ? Color(0xFFF49402) : Colors.grey[600],
+                                            color: _roomController.text.isNotEmpty ? Color(0xFFF49402) : Colors.grey[600],
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500,
                                           ),
                                           counterText: '',
                                         ),
+                                        style: TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                         validator: (value) {
                                           if (value?.isEmpty ?? true) {
-                                            return 'Wprowadź nazwę Sali';
+                                            return 'Wprowadź numer sali';
                                           }
                                           return null;
                                         },
                                         maxLength: 15,
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 15,
-                                        ),
+                                        onChanged: (text) {
+                                          setState(() {});
+                                        },
                                       ),
                                     ),
                                   ],
@@ -747,240 +1028,87 @@ class _UserHomePageState extends State<UserHomePage> {
                                 Row(
                                   children: [
                                     Expanded(
-                                      child: Container(
-                                        height: 56,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(12.0),
-                                        ),
-                                        child: DropdownButtonFormField<String>(
-                                          value: selectedCategory,
-                                          decoration: InputDecoration(
-                                            labelText: 'Kategoria problemu',
-                                            alignLabelWithHint: true,
-                                            floatingLabelBehavior: FloatingLabelBehavior.auto,
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12.0),
-                                              borderSide: BorderSide(color: Colors.grey[300]!),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12.0),
-                                              borderSide: BorderSide(color: Colors.grey[300]!),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12.0),
-                                              borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
-                                            ),
-                                            errorBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12.0),
-                                              borderSide: BorderSide(color: Colors.red[400]!, width: 1),
-                                            ),
-                                            focusedErrorBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12.0),
-                                              borderSide: BorderSide(color: Colors.red[400]!, width: 1),
-                                            ),
-                                            filled: true,
-                                            fillColor: Colors.white,
-                                            contentPadding: EdgeInsets.fromLTRB(16, 24, 16, 16),
-                                            labelStyle: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                            floatingLabelStyle: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          style: TextStyle(
-                                            color: Colors.black87,
-                                            fontSize: 15,
-                                          ),
-                                          icon: Icon(Icons.arrow_drop_down, color: Color(0xFFF49402)),
-                                          isExpanded: true,
-                                          dropdownColor: Colors.white,
-                                          validator: (value) {
-                                            if (value == null) {
-                                              return 'Wybierz kategorię';
-                                            }
-                                            return null;
-                                          },
-                                          items: categories.map((category) {
-                                            return DropdownMenuItem<String>(
-                                              value: category['id'],
-                                              child: Container(
-                                                height: 40,
-                                                alignment: Alignment.centerLeft,
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      category['icon'],
-                                                      size: 20,
-                                                      color: Color(0xFFF49402),
-                                                    ),
-                                                    SizedBox(width: 12),
-                                                    Text(
-                                                      category['name'],
-                                                      style: TextStyle(
-                                                        color: Colors.black87,
-                                                        fontSize: 15,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 4, bottom: 8),
+                                            child: Text(
+                                              'Kategoria problemu',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
                                               ),
-                                            );
-                                          }).toList(),
-                                          onChanged: (String? newValue) {
-                                            setState(() {
-                                              selectedCategory = newValue;
-                                            });
-                                          },
-                                        ),
+                                            ),
+                                          ),
+                                          Container(
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              border: Border.all(color: Colors.grey[300]!),
+                                            ),
+                                            child: Row(
+                                              children: categories.map((category) {
+                                                return Expanded(
+                                                  child: Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: EdgeInsets.symmetric(horizontal: 2),
+                                                          child: _buildCategoryButton(
+                                                            category['id'],
+                                                            category['name'],
+                                                            category['icon'],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      if (category != categories.last)
+                                                        Container(width: 1, height: 24, color: Colors.grey[300]),
+                                                    ],
+                                                  ),
+                                                );
+                                              }).toList(),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                     SizedBox(width: 16),
                                     Expanded(
-                                      child: Container(
-                                        height: 56,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(12.0),
-                                        ),
-                                        child: DropdownButtonFormField<String>(
-                                          value: selectedPriority,
-                                          decoration: InputDecoration(
-                                            labelText: 'Priorytet',
-                                            alignLabelWithHint: true,
-                                            floatingLabelBehavior: FloatingLabelBehavior.auto,
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12.0),
-                                              borderSide: BorderSide(color: Colors.grey[300]!),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12.0),
-                                              borderSide: BorderSide(color: Colors.grey[300]!),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12.0),
-                                              borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
-                                            ),
-                                            errorBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12.0),
-                                              borderSide: BorderSide(color: Colors.red[400]!, width: 1),
-                                            ),
-                                            focusedErrorBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12.0),
-                                              borderSide: BorderSide(color: Colors.red[400]!, width: 1),
-                                            ),
-                                            filled: true,
-                                            fillColor: Colors.white,
-                                            contentPadding: EdgeInsets.fromLTRB(16, 24, 16, 16),
-                                            labelStyle: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                            floatingLabelStyle: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 4, bottom: 8),
+                                            child: Text(
+                                              'Priorytet',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                             ),
                                           ),
-                                          style: TextStyle(
-                                            color: Colors.black87,
-                                            fontSize: 15,
+                                          Container(
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(12.0),
+                                              border: Border.all(color: Colors.grey[300]!),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                _buildPriorityButton('low', 'Niski', Icons.arrow_downward, Colors.green),
+                                                Container(width: 1, height: 24, color: Colors.grey[300]),
+                                                _buildPriorityButton('medium', 'Średni', Icons.remove, Colors.orange),
+                                                Container(width: 1, height: 24, color: Colors.grey[300]),
+                                                _buildPriorityButton('high', 'Wysoki', Icons.arrow_upward, Colors.red),
+                                              ],
+                                            ),
                                           ),
-                                          icon: Icon(Icons.arrow_drop_down, color: Color(0xFFF49402)),
-                                          isExpanded: true,
-                                          dropdownColor: Colors.white,
-                                          validator: (value) {
-                                            if (value == null) {
-                                              return 'Wybierz priorytet';
-                                            }
-                                            return null;
-                                          },
-                                          items: [
-                                            DropdownMenuItem<String>(
-                                              value: 'low',
-                                              child: Container(
-                                                height: 40,
-                                                alignment: Alignment.centerLeft,
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.arrow_downward,
-                                                      size: 20,
-                                                      color: Colors.green,
-                                                    ),
-                                                    SizedBox(width: 12),
-                                                    Text(
-                                                      'Niski',
-                                                      style: TextStyle(
-                                                        color: Colors.black87,
-                                                        fontSize: 15,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            DropdownMenuItem<String>(
-                                              value: 'medium',
-                                              child: Container(
-                                                height: 40,
-                                                alignment: Alignment.centerLeft,
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.remove,
-                                                      size: 20,
-                                                      color: Colors.orange,
-                                                    ),
-                                                    SizedBox(width: 12),
-                                                    Text(
-                                                      'Średni',
-                                                      style: TextStyle(
-                                                        color: Colors.black87,
-                                                        fontSize: 15,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            DropdownMenuItem<String>(
-                                              value: 'high',
-                                              child: Container(
-                                                height: 40,
-                                                alignment: Alignment.centerLeft,
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.arrow_upward,
-                                                      size: 20,
-                                                      color: Colors.red,
-                                                    ),
-                                                    SizedBox(width: 12),
-                                                    Text(
-                                                      'Wysoki',
-                                                      style: TextStyle(
-                                                        color: Colors.black87,
-                                                        fontSize: 15,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                          onChanged: (String? newValue) {
-                                            setState(() {
-                                              selectedPriority = newValue;
-                                            });
-                                          },
-                                        ),
+                                        ],
                                       ),
                                     ),
                                   ],
