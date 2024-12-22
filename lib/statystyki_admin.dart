@@ -21,6 +21,7 @@ class _StatystykiAdminPageState extends State<StatystykiAdminPage> {
   Map<String, int> priorityStats = {};
   Map<String, int> dailyStats = {};
   Map<String, int> weeklyStats = {};
+  Map<String, int> userStats = {};
   int totalProblems = 0;
   int solvedProblems = 0;
   int pendingProblems = 0;
@@ -50,6 +51,7 @@ class _StatystykiAdminPageState extends State<StatystykiAdminPage> {
         priorityStats = {};
         dailyStats = {};
         weeklyStats = {};
+        userStats = {};
         totalProblems = problems.length;
         solvedProblems = 0;
         pendingProblems = 0;
@@ -60,6 +62,10 @@ class _StatystykiAdminPageState extends State<StatystykiAdminPage> {
 
         // Calculate statistics
         for (var problem in problems) {
+          // User stats
+          final username = problem['username'] as String? ?? 'unknown';
+          userStats[username] = (userStats[username] ?? 0) + 1;
+
           // Category stats
           final category = problem['category'] as String? ?? 'other';
           categoryStats[category] = (categoryStats[category] ?? 0) + 1;
@@ -105,13 +111,53 @@ class _StatystykiAdminPageState extends State<StatystykiAdminPage> {
             }
 
             // Weekly stats (last 4 weeks)
-            final weekNumber = (now.difference(date).inDays / 7).floor();
-            if (weekNumber < 4) {
-              final weekKey = 'Tydzień ${weekNumber + 1}';
-              weeklyStats[weekKey] = (weeklyStats[weekKey] ?? 0) + 1;
+            if (problem['timestamp'] != null) {
+              final date = DateTime.parse(problem['timestamp']);
+              final daysAgo = now.difference(date).inDays;
+              
+              // Initialize all 4 weeks with zero if not already done
+              for (int i = 1; i <= 4; i++) {
+                final weekKey = 'Tydzień $i';
+                if (!weeklyStats.containsKey(weekKey)) {
+                  weeklyStats[weekKey] = 0;
+                }
+              }
+
+              // Add to appropriate week
+              if (daysAgo < 28) {  // 4 weeks * 7 days
+                final weekNumber = (daysAgo / 7).floor() + 1;
+                if (weekNumber <= 4) {
+                  final weekKey = 'Tydzień $weekNumber';
+                  weeklyStats[weekKey] = (weeklyStats[weekKey] ?? 0) + 1;
+                }
+              }
             }
           }
         }
+
+        // Sort daily stats by date
+        var sortedDailyStats = Map.fromEntries(
+          dailyStats.entries.toList()
+            ..sort((a, b) {
+              var partsA = a.key.split('.');
+              var partsB = b.key.split('.');
+              var dateA = DateTime(2024, int.parse(partsA[1]), int.parse(partsA[0]));
+              var dateB = DateTime(2024, int.parse(partsB[1]), int.parse(partsB[0]));
+              return dateA.compareTo(dateB);
+            })
+        );
+        dailyStats = sortedDailyStats;
+
+        // Sort weekly stats by week number
+        var sortedWeeklyStats = Map.fromEntries(
+          weeklyStats.entries.toList()
+            ..sort((a, b) {
+              var weekA = int.parse(a.key.split(' ')[1]);
+              var weekB = int.parse(b.key.split(' ')[1]);
+              return weekA.compareTo(weekB);
+            })
+        );
+        weeklyStats = sortedWeeklyStats;
 
         // Calculate average response time
         if (problemsWithResponse > 0) {
@@ -232,12 +278,18 @@ class _StatystykiAdminPageState extends State<StatystykiAdminPage> {
     final List<FlSpot> spots = [];
     final List<String> bottomTitles = [];
     int index = 0;
+    int maxValue = 0;
 
     data.forEach((key, value) {
       spots.add(FlSpot(index.toDouble(), value.toDouble()));
       bottomTitles.add(key);
+      if (value > maxValue) maxValue = value;
       index++;
     });
+
+    // Add padding to max value for better visualization
+    maxValue = maxValue + (maxValue * 0.2).ceil();
+    if (maxValue == 0) maxValue = 1;
 
     return Container(
       decoration: BoxDecoration(
@@ -278,69 +330,133 @@ class _StatystykiAdminPageState extends State<StatystykiAdminPage> {
             ],
           ),
           SizedBox(height: 8),
-          Container(
-            height: 100,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 1,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: Colors.grey.withOpacity(0.1),
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        if (value.toInt() >= bottomTitles.length) return Text('');
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 2.0),
-                          child: Text(
-                            bottomTitles[value.toInt()],
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8.0, top: 8.0),
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Colors.grey.withOpacity(0.1),
+                        strokeWidth: 1,
+                      );
+                    },
+                    horizontalInterval: maxValue > 4 ? maxValue / 4 : 1,
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          if (value == 0 || value.toInt() != value) return Text('');
+                          return Text(
+                            value.toInt().toString(),
                             style: TextStyle(
                               color: Colors.grey[600],
-                              fontSize: 9,
+                              fontSize: 10,
                             ),
-                          ),
-                        );
+                          );
+                        },
+                        interval: maxValue > 4 ? maxValue / 4 : 1,
+                        reservedSize: 24,
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 22,
+                        getTitlesWidget: (value, meta) {
+                          if (value.toInt() >= bottomTitles.length) return Text('');
+                          return Transform.rotate(
+                            angle: -0.5,
+                            child: Container(
+                              padding: EdgeInsets.only(top: 5.0),
+                              child: Text(
+                                bottomTitles[value.toInt()],
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 9,
+                                ),
+                                maxLines: 1,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey[300]!, width: 1),
+                      left: BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                  ),
+                  minX: -0.5,
+                  maxX: spots.length - 0.5,
+                  minY: 0,
+                  maxY: maxValue.toDouble(),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      color: Color(0xFFF49402),
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      curveSmoothness: 0.2,
+                      preventCurveOverShooting: true,
+                      preventCurveOvershootingThreshold: 1.0,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, barData, index) {
+                          return FlDotCirclePainter(
+                            radius: 3,
+                            color: Colors.white,
+                            strokeWidth: 1.5,
+                            strokeColor: Color(0xFFF49402),
+                          );
+                        },
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFFF49402).withOpacity(0.2),
+                            Color(0xFFF49402).withOpacity(0.0),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ],
+                  lineTouchData: LineTouchData(
+                    enabled: true,
+                    touchTooltipData: LineTouchTooltipData(
+                      fitInsideHorizontally: true,
+                      fitInsideVertically: true,
+                      showOnTopOfTheChartBoxArea: true,
+                      tooltipPadding: EdgeInsets.all(8),
+                      getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                        return touchedSpots.map((LineBarSpot touchedSpot) {
+                          return LineTooltipItem(
+                            '${touchedSpot.y.toInt()}',
+                            const TextStyle(
+                              color: Color(0xFFF49402),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        }).toList();
                       },
                     ),
                   ),
                 ),
-                borderData: FlBorderData(show: false),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: true,
-                    color: Color(0xFFF49402),
-                    barWidth: 2,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 3,
-                          color: Colors.white,
-                          strokeWidth: 1.5,
-                          strokeColor: Color(0xFFF49402),
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: Color(0xFFF49402).withOpacity(0.1),
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
@@ -449,6 +565,110 @@ class _StatystykiAdminPageState extends State<StatystykiAdminPage> {
     );
   }
 
+  Widget _buildUserStats() {
+    // Sort users by number of problems (descending)
+    var sortedUsers = userStats.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Color(0xFFF49402).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(Icons.person, size: 16, color: Color(0xFFF49402)),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Statystyki użytkowników',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          ...sortedUsers.take(5).map((entry) {
+            final percentage = (entry.value / totalProblems * 100).toStringAsFixed(1);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        entry.key,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      Text(
+                        '$percentage% (${entry.value})',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFF49402),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Container(
+                    height: 6,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3),
+                      color: Colors.grey[200],
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Row(
+                          children: [
+                            Container(
+                              width: constraints.maxWidth * (entry.value / totalProblems),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(3),
+                                color: Color(0xFFF49402),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -485,66 +705,80 @@ class _StatystykiAdminPageState extends State<StatystykiAdminPage> {
                 ? Center(child: CircularProgressIndicator(color: Color(0xFFF49402)))
                 : Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: Column(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        GridView.count(
-                          crossAxisCount: 3,
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          mainAxisSpacing: 12.0,
-                          crossAxisSpacing: 12.0,
-                          childAspectRatio: 1.5,
-                          children: [
-                            _buildStatCard(
-                              'Wszystkie zgłoszenia',
-                              totalProblems.toString(),
-                              Icons.assignment,
-                              Color(0xFFF49402),
-                            ),
-                            _buildStatCard(
-                              'Rozwiązane',
-                              solvedProblems.toString(),
-                              Icons.check_circle,
-                              Colors.green,
-                            ),
-                            _buildStatCard(
-                              'W toku',
-                              pendingProblems.toString(),
-                              Icons.pending,
-                              Colors.orange,
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 12),
+                        // Left column - Stats and Categories
                         Expanded(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                          flex: 2,
+                          child: Column(
                             children: [
-                              Expanded(
-                                flex: 2,
-                                child: _buildCategoryStats(),
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                flex: 3,
-                                child: Column(
+                              // Top stats in a row
+                              Container(
+                                height: 70,
+                                child: Row(
                                   children: [
                                     Expanded(
-                                      child: _buildLineChart(
-                                        dailyStats,
-                                        'Zgłoszenia w ostatnich 7 dniach',
-                                        Icons.calendar_today,
+                                      child: _buildCompactStatCard(
+                                        'Wszystkie',
+                                        totalProblems.toString(),
+                                        Icons.assignment,
+                                        Color(0xFFF49402),
                                       ),
                                     ),
-                                    SizedBox(height: 12),
+                                    SizedBox(width: 8),
                                     Expanded(
-                                      child: _buildLineChart(
-                                        weeklyStats,
-                                        'Zgłoszenia w ostatnich 4 tygodniach',
-                                        Icons.date_range,
+                                      child: _buildCompactStatCard(
+                                        'Średnie',
+                                        (priorityStats['medium'] ?? 0).toString(),
+                                        Icons.warning_amber,
+                                        Colors.orange,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Expanded(
+                                      child: _buildCompactStatCard(
+                                        'Niskie',
+                                        (priorityStats['low'] ?? 0).toString(),
+                                        Icons.low_priority,
+                                        Colors.green,
                                       ),
                                     ),
                                   ],
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              // Category stats
+                              Expanded(
+                                child: _buildCategoryStats(),
+                              ),
+                              SizedBox(height: 12),
+                              // User stats
+                              Expanded(
+                                child: _buildUserStats(),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        // Right column - Charts
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: _buildLineChart(
+                                  dailyStats,
+                                  'Zgłoszenia w ostatnich 7 dniach',
+                                  Icons.calendar_today,
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              Expanded(
+                                child: _buildLineChart(
+                                  weeklyStats,
+                                  'Zgłoszenia w ostatnich 4 tygodniach',
+                                  Icons.date_range,
                                 ),
                               ),
                             ],
@@ -555,6 +789,55 @@ class _StatystykiAdminPageState extends State<StatystykiAdminPage> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCompactStatCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 16, color: color),
+                SizedBox(width: 4),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
