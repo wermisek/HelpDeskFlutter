@@ -129,34 +129,70 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ).timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {
-        var newProblems = jsonDecode(response.body);
-        if (mounted) {
+        List<dynamic> fetchedProblems = List<dynamic>.from(json.decode(response.body));
+        
+        if (mounted && fetchedProblems.toString() != problems.toString()) {
           setState(() {
-            problems = newProblems;
-            _applyCurrentFilter();
+            problems = fetchedProblems;
+            
+            // Apply current filters and sorting
+            List<dynamic> filtered = List.from(problems);
+            
+            // Apply search filter if active
+            if (searchQuery.isNotEmpty) {
+              if (int.tryParse(searchQuery) != null) {
+                filtered = filtered.where((problem) =>
+                  problem['room'].toString().toLowerCase().contains(searchQuery.toLowerCase())
+                ).toList();
+              } else {
+                filtered = filtered.where((problem) =>
+                  problem['username'].toString().toLowerCase().contains(searchQuery.toLowerCase())
+                ).toList();
+              }
+            }
+            
+            // Apply date filter if active
+            if (selectedDate != null) {
+              filtered = filtered.where((problem) {
+                if (problem['timestamp'] != null) {
+                  DateTime problemDate = DateTime.parse(problem['timestamp']);
+                  return problemDate.year == selectedDate!.year &&
+                      problemDate.month == selectedDate!.month &&
+                      problemDate.day == selectedDate!.day;
+                }
+                return false;
+              }).toList();
+            }
+            
+            // Apply category filter if active
+            if (selectedCategory != null) {
+              filtered = filtered.where((problem) => problem['category'] == selectedCategory).toList();
+            }
+            
+            // Apply priority filter if active
+            if (selectedPriority != null) {
+              filtered = filtered.where((problem) => problem['priority'] == selectedPriority).toList();
+            }
+            
+            // Always sort by newest first
+            filtered.sort((a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
+            
+            filteredProblems = filtered;
+            _isLoading = false;
           });
         }
       } else {
         if (mounted) {
-          _showErrorDialog(context, 'Błąd serwera', 
-            'Nie udało się pobrać danych. Kod błędu: ${response.statusCode}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to fetch problems')),
+          );
         }
-      }
-    } on TimeoutException {
-      if (mounted) {
-        _showErrorDialog(context, 'Błąd połączenia', 
-          'Przekroczono limit czasu połączenia z serwerem.');
-      }
-    } on SocketException {
-      if (mounted) {
-        _showErrorDialog(context, 'Błąd połączenia', 
-          'Nie można połączyć się z serwerem. Sprawdź czy serwer jest uruchomiony na localhost:8080');
       }
     } catch (e) {
       if (mounted) {
-        print('Error fetching problems: $e');
-        _showErrorDialog(context, 'Błąd połączenia', 
-          'Wystąpił nieoczekiwany błąd podczas pobierania danych.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
       }
     } finally {
       if (mounted) {
@@ -1346,24 +1382,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ),
               ),
               MouseRegion(
-                onEnter: (_) => setState(() => hoverStates['settings'] = true),
-                onExit: (_) => setState(() => hoverStates['settings'] = false),
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  color: hoverStates['settings'] == true ? Colors.grey[200] : Colors.transparent,
-                  child: ListTile(
-                    leading: Icon(Icons.settings, color: Colors.black),
-                    title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SettingsPage(username: widget.username)),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              MouseRegion(
                 onEnter: (_) => setState(() => hoverStates['stats'] = true),
                 onExit: (_) => setState(() => hoverStates['stats'] = false),
                 child: AnimatedContainer(
@@ -1376,6 +1394,24 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => StatystykiAdminPage(username: widget.username)),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['settings'] = true),
+                onExit: (_) => setState(() => hoverStates['settings'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['settings'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.settings, color: Colors.black),
+                    title: Text('Ustawienia', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SettingsPage(username: widget.username)),
                       );
                     },
                   ),
@@ -1790,7 +1826,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     SizedBox(height: 8),
                     // Problem Description
                     Text(
-                      _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'), 40),
+                      _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'),35),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.black87,

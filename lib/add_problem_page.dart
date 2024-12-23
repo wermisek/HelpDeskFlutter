@@ -9,6 +9,7 @@ import 'usertempp.dart';
 import 'dart:async';
 import 'login.dart';
 import 'models/issue_template.dart';
+import 'statystyki_user.dart';
 
 void main() {
   runApp(MyApp());
@@ -46,7 +47,6 @@ class _UserHomePageState extends State<UserHomePage> {
   final int itemsPerPage = 12;
   final PageController _pageController = PageController();
   int currentPage = 0;
-  List<dynamic> problems = [];
   bool isLoading = false;
   Timer? _timer;
   Map<String, bool> hoverStates = {
@@ -54,13 +54,19 @@ class _UserHomePageState extends State<UserHomePage> {
     'template': false,
   };
   bool _isFetching = false;
-  List<dynamic> get filteredProblems => problems;
+  List<dynamic> _problems = [];
+  List<dynamic> _filteredProblems = [];
   String? selectedCategory;
   String? selectedRoom;
   bool isManualRoomInput = false;
   String? selectedPriority;
   int selectedFloor = 0;
-   
+  String searchQuery = '';
+  String? selectedSortOption;
+
+  List<dynamic> get problems => _problems;
+  List<dynamic> get filteredProblems => _filteredProblems.isEmpty ? _problems : _filteredProblems;
+
   final List<Map<String, dynamic>> categories = [
     {'id': 'hardware', 'name': 'Sprzęt', 'icon': Icons.computer},
     {'id': 'software', 'name': 'Oprogramowanie', 'icon': Icons.apps},
@@ -113,10 +119,42 @@ class _UserHomePageState extends State<UserHomePage> {
             .toList()
           ..sort((a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
 
-        if (mounted && fetchedProblems.toString() != problems.toString()) {
+        if (mounted && fetchedProblems.toString() != _problems.toString()) {
           setState(() {
-            problems = fetchedProblems;
-            isLoading = false;
+            _problems = fetchedProblems;
+            
+            // Apply current filters if any are active
+            if (selectedCategory != null || selectedPriority != null || searchQuery.isNotEmpty) {
+              List<dynamic> filtered = List.from(_problems);
+              
+              // Apply search filter if active
+              if (searchQuery.isNotEmpty) {
+                filtered = filtered.where((problem) {
+                  final roomMatch = problem['room'].toString().toLowerCase().contains(searchQuery.toLowerCase());
+                  final descriptionMatch = problem['problem'].toString().toLowerCase().contains(searchQuery.toLowerCase());
+                  return roomMatch || descriptionMatch;
+                }).toList();
+              }
+              
+              // Apply category filter if active
+              if (selectedCategory != null) {
+                filtered = filtered.where((problem) => problem['category'] == selectedCategory).toList();
+              }
+              
+              // Apply priority filter if active
+              if (selectedPriority != null) {
+                filtered = filtered.where((problem) => problem['priority'] == selectedPriority).toList();
+              }
+              
+              _filteredProblems = filtered;
+            } else {
+              _filteredProblems = [];
+            }
+            
+            // Apply current sorting if active
+            if (selectedSortOption != null) {
+              _applySorting();
+            }
           });
         }
       } else {
@@ -921,6 +959,259 @@ class _UserHomePageState extends State<UserHomePage> {
     }
   }
 
+  IconData _getPriorityIcon(String? priority) {
+    switch (priority) {
+      case 'high':
+        return Icons.arrow_upward;
+      case 'medium':
+        return Icons.remove;
+      case 'low':
+        return Icons.arrow_downward;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  String _truncateText(String text, int maxLength) {
+    if (text.length <= maxLength) return text;
+    return '${text.substring(0, maxLength)}...';
+  }
+
+  String _removeNewlines(String text) {
+    return text.replaceAll('\n', ' ');
+  }
+
+  String getRelativeTime(String timestamp) {
+    final now = DateTime.now();
+    final date = DateTime.parse(timestamp);
+    final difference = now.difference(date);
+
+    if (difference.inMinutes < 1) {
+      return 'Przed chwilą';
+    } else if (difference.inHours < 1) {
+      final minutes = difference.inMinutes;
+      return '$minutes ${minutes == 1 ? 'minuta' : minutes < 5 ? 'minuty' : 'minut'} temu';
+    } else if (difference.inDays < 1) {
+      final hours = difference.inHours;
+      return '$hours ${hours == 1 ? 'godzina' : hours < 5 ? 'godziny' : 'godzin'} temu';
+    } else if (difference.inDays < 7) {
+      final days = difference.inDays;
+      return '$days ${days == 1 ? 'dzień' : 'dni'} temu';
+    } else {
+      return '${date.day}.${date.month}.${date.year}';
+    }
+  }
+
+  void _filterProblems(String query) {
+    if (!mounted) return;
+    
+    setState(() {
+      searchQuery = query;
+      if (query.isEmpty) {
+        _filteredProblems = [];
+      } else {
+        _filteredProblems = _problems.where((problem) {
+          final roomMatch = problem['room'].toString().toLowerCase().contains(query.toLowerCase());
+          final descriptionMatch = problem['problem'].toString().toLowerCase().contains(query.toLowerCase());
+          return roomMatch || descriptionMatch;
+        }).toList();
+      }
+      
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(0);
+      }
+    });
+  }
+
+  void _filterByCategory(String category) {
+    setState(() {
+      if (category == 'all') {
+        selectedCategory = null;
+        _filteredProblems = [];
+      } else {
+        selectedCategory = category;
+        _filteredProblems = _problems.where((problem) =>
+          problem['category'] == category
+        ).toList();
+      }
+      
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(0);
+      }
+    });
+  }
+
+  void _filterByPriority(String priority) {
+    setState(() {
+      if (priority == 'all') {
+        selectedPriority = null;
+        _filteredProblems = [];
+      } else {
+        selectedPriority = priority;
+        _filteredProblems = _problems.where((problem) =>
+          problem['priority'] == priority
+        ).toList();
+      }
+      
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(0);
+      }
+    });
+  }
+
+  void _applySorting() {
+    if (!mounted) return;
+    
+    setState(() {
+      var problemsToSort = List<dynamic>.from(_filteredProblems.isEmpty ? _problems : _filteredProblems);
+      
+      switch (selectedSortOption) {
+        case 'newest':
+          problemsToSort.sort((a, b) => 
+            DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
+          break;
+        case 'oldest':
+          problemsToSort.sort((a, b) => 
+            DateTime.parse(a['timestamp']).compareTo(DateTime.parse(b['timestamp'])));
+          break;
+        case 'room':
+          problemsToSort.sort((a, b) => 
+            int.parse(a['room'].toString()).compareTo(int.parse(b['room'].toString())));
+          break;
+        case 'priority':
+          final priorityOrder = {'high': 0, 'medium': 1, 'low': 2};
+          problemsToSort.sort((a, b) => 
+            (priorityOrder[a['priority']] ?? 3).compareTo(priorityOrder[b['priority']] ?? 3));
+          break;
+      }
+      
+      _filteredProblems = problemsToSort;
+    });
+  }
+
+  Widget _buildFilterButtons() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        PopupMenuButton<String>(
+          icon: Icon(Icons.sort, color: Colors.black),
+          tooltip: 'Sortuj',
+          color: Colors.white,
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
+          onSelected: (String option) {
+            if (mounted) {
+              setState(() {
+                selectedSortOption = option;
+                _applySorting();
+              });
+            }
+          },
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            _buildPopupMenuItem('newest', Icons.arrow_downward, 'Najnowsze'),
+            _buildPopupMenuItem('oldest', Icons.arrow_upward, 'Najstarsze'),
+            _buildPopupMenuItem('room', Icons.meeting_room, 'Numer sali'),
+            _buildPopupMenuItem('priority', Icons.priority_high, 'Priorytet'),
+          ],
+        ),
+        SizedBox(width: 8),
+        PopupMenuButton<String>(
+          icon: Icon(Icons.filter_alt, color: Colors.black),
+          tooltip: 'Filtruj po kategorii',
+          color: Colors.white,
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
+          onSelected: (String category) {
+            setState(() {
+              if (category == 'all') {
+                selectedCategory = null;
+                _filteredProblems = List.from(_problems);
+              } else {
+                selectedCategory = category;
+                _filteredProblems = _problems.where((problem) =>
+                  problem['category'] == category
+                ).toList();
+              }
+              
+              _filteredProblems.sort((a, b) =>
+                DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
+              
+              if (_pageController.hasClients) {
+                _pageController.jumpToPage(0);
+              }
+            });
+          },
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            _buildPopupMenuItem('hardware', Icons.computer, 'Sprzęt'),
+            _buildPopupMenuItem('software', Icons.apps, 'Oprogramowanie'),
+            _buildPopupMenuItem('network', Icons.wifi, 'Sieć'),
+            _buildPopupMenuItem('printer', Icons.print, 'Drukarka'),
+            _buildPopupMenuItem('other', Icons.more_horiz, 'Inne'),
+            _buildPopupMenuItem('all', Icons.clear_all, 'Wszystkie'),
+          ],
+        ),
+        SizedBox(width: 8),
+        PopupMenuButton<String>(
+          icon: Icon(Icons.priority_high, color: Colors.black),
+          tooltip: 'Filtruj po priorytecie',
+          color: Colors.white,
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
+          onSelected: (String priority) {
+            setState(() {
+              if (priority == 'all') {
+                selectedPriority = null;
+                _filteredProblems = List.from(_problems);
+              } else {
+                selectedPriority = priority;
+                _filteredProblems = _problems.where((problem) =>
+                  problem['priority'] == priority
+                ).toList();
+              }
+              
+              _filteredProblems.sort((a, b) =>
+                DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
+              
+              if (_pageController.hasClients) {
+                _pageController.jumpToPage(0);
+              }
+            });
+          },
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            _buildPopupMenuItem('high', Icons.arrow_upward, 'Wysoki priorytet'),
+            _buildPopupMenuItem('medium', Icons.remove, 'Średni priorytet'),
+            _buildPopupMenuItem('low', Icons.arrow_downward, 'Niski priorytet'),
+            _buildPopupMenuItem('all', Icons.clear_all, 'Wszystkie'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  PopupMenuItem<String> _buildPopupMenuItem(String value, IconData icon, String text) {
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, color: Color(0xFFF49402)),
+          SizedBox(width: 12),
+          Text(text),
+        ],
+        mainAxisSize: MainAxisSize.min,
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1014,6 +1305,24 @@ class _UserHomePageState extends State<UserHomePage> {
                         currentPage = 0;
                       });
                       Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ),
+              MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['stats'] = true),
+                onExit: (_) => setState(() => hoverStates['stats'] = false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  color: hoverStates['stats'] == true ? Colors.grey[200] : Colors.transparent,
+                  child: ListTile(
+                    leading: Icon(Icons.bar_chart, color: Colors.black),
+                    title: Text('Moje statystyki', style: TextStyle(color: Colors.black)),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => StatystykiUserPage(username: widget.username)),
+                      );
                     },
                   ),
                 ),
@@ -1557,7 +1866,54 @@ class _UserHomePageState extends State<UserHomePage> {
 
   Widget _buildMyProblemsView() {
     return Column(
-        children: [
+      children: [
+        Container(
+          height: 60,
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 37.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  width: 250,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: MouseRegion(
+                    onEnter: (_) => setState(() => hoverStates['searchBar'] = true),
+                    onExit: (_) => setState(() => hoverStates['searchBar'] = false),
+                    child: TextField(
+                      style: TextStyle(color: Colors.black),
+                      decoration: InputDecoration(
+                        hintText: 'Wyszukaj zgłoszenia...',
+                        hintStyle: TextStyle(color: Colors.grey[500]),
+                        prefixIcon: AnimatedContainer(
+                          duration: Duration(milliseconds: 200),
+                          child: Icon(
+                            Icons.search,
+                            color: hoverStates['searchBar'] == true
+                                ? Color(0xFFF49402)
+                                : Colors.grey[600],
+                            size: hoverStates['searchBar'] == true ? 24 : 22,
+                          ),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                      onChanged: _filterProblems,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                _buildFilterButtons(),
+              ],
+            ),
+          ),
+        ),
         Expanded(
           child: Container(
             margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
@@ -1582,81 +1938,171 @@ class _UserHomePageState extends State<UserHomePage> {
                             mainAxisSpacing: 8.0,
                             childAspectRatio: 1.9,
                           ),
-                          itemCount: problems.length,
+                          itemCount: filteredProblems.length,
                           itemBuilder: (context, index) {
-                            var problem = problems[index];
+                            var problem = filteredProblems[index];
                             bool isRead = problem['read'] == 1;
 
-                            return Card(
-                              color: Colors.white,
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            return MouseRegion(
+                              onEnter: (_) => setState(() => hoverStates['problem_${problem['id']}'] = true),
+                              onExit: (_) => setState(() => hoverStates['problem_${problem['id']}'] = false),
+                              child: AnimatedContainer(
+                                duration: Duration(milliseconds: 200),
+                                transform: Matrix4.identity()
+                                  ..scale(hoverStates['problem_${problem['id']}'] == true ? 1.02 : 1.0),
+                                child: Card(
+                                  margin: EdgeInsets.symmetric(vertical: 5.0),
+                                  elevation: hoverStates['problem_${problem['id']}'] == true ? 8 : 4,
+                                  color: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    side: BorderSide(
+                                      color: _getPriorityColor(problem['priority']).withOpacity(0.3),
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          'Sala: ${problem['room'] ?? 'Nieznana'}',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                          ),
+                                        // Header Row with Room and Priority
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            // Room Number with Icon and Time
+                                            Row(
+                                              children: [
+                                                Icon(Icons.room, size: 18, color: Colors.grey[800]),
+                                                SizedBox(width: 4),
+                                                Text(
+                                                  (problem['room'] ?? 'Nieznana').toLowerCase().startsWith('sala') 
+                                                    ? _truncateText(problem['room'] ?? 'Nieznana', 7)
+                                                    : 'Sala ${_truncateText(problem['room'] ?? 'Nieznana', 7)}',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 14,
+                                                    color: Colors.grey[800],
+                                                  ),
+                                                ),
+                                                SizedBox(width: 12),
+                                                // Time information
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.access_time,
+                                                      size: 14,
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                    SizedBox(width: 4),
+                                                    Text(
+                                                      getRelativeTime(problem['timestamp']),
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.grey[600],
+                                                        fontStyle: FontStyle.italic,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            // Priority Badge
+                                            Container(
+                                              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                                              decoration: BoxDecoration(
+                                                color: _getPriorityColor(problem['priority']).withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(12.0),
+                                                border: Border.all(
+                                                  color: _getPriorityColor(problem['priority']).withOpacity(0.3),
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    _getPriorityIcon(problem['priority']),
+                                                    size: 14,
+                                                    color: _getPriorityColor(problem['priority']),
+                                                  ),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    _getPriorityText(problem['priority']),
+                                                    style: TextStyle(
+                                                      color: _getPriorityColor(problem['priority']),
+                                                      fontSize: 12.0,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        Icon(
-                                          isRead ? Icons.visibility : Icons.visibility_off,
-                                          color: isRead ? Colors.green : Colors.grey,
+                                        SizedBox(height: 8),
+                                        // Problem Description
+                                        Text(
+                                          _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'),35),
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.black87,
+                                            height: 1.3,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        SizedBox(height: 8),
+                                        // Bottom Info Row
+                                        Row(
+                                          children: [
+                                            Spacer(),
+                                            // View Details Button
+                                            TextButton(
+                                              onPressed: () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => ProblemTempPage(problem: problem),
+                                                ),
+                                              ).then((deleted) {
+                                                if (deleted == true) {
+                                                  _fetchUserProblems();
+                                                }
+                                              }),
+                                              style: TextButton.styleFrom(
+                                                foregroundColor: Colors.black87,
+                                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    'Szczegóły',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w500,
+                                                      color: Colors.black87,
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: EdgeInsets.only(left: 4, top: 1),
+                                                    child: Icon(Icons.arrow_forward, 
+                                                      size: 16,
+                                                      color: Colors.black87,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      'Nauczyciel: ${problem['username'] ?? 'Nieznany'}',
-                                      style: TextStyle(color: Colors.black, fontSize: 14),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Flexible(
-                                      child: Text(
-                                        'Treść: ${problem['problem'] ?? 'Brak opisu'}',
-                                        style: TextStyle(color: Colors.black, fontSize: 14),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 16.0),
-                                      child: Center(
-                                        child: ElevatedButton(
-                                          onPressed: () => Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => ProblemTempPage(problem: problem),
-                                            ),
-                                          ).then((deleted) {
-                                            if (deleted == true) {
-                                              _fetchUserProblems();
-                                            }
-                                          }),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            foregroundColor: Colors.black,
-                                            elevation: 1,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(8),
-                                              side: BorderSide(color: Colors.black),
-                                            ),
-                                          ),
-                                          child: Text('Rozwiń'),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             );
@@ -1679,10 +2125,10 @@ class _UserHomePageState extends State<UserHomePage> {
                             }
                           : null,
                     ),
-                    Text('${currentPage + 1} / ${(problems.length / itemsPerPage).ceil()}'),
+                    Text('${currentPage + 1} / ${(filteredProblems.length / itemsPerPage).ceil()}'),
                     IconButton(
                       icon: Icon(Icons.arrow_forward_ios, size: 20),
-                      onPressed: currentPage < (problems.length / itemsPerPage).ceil() - 1
+                      onPressed: currentPage < (filteredProblems.length / itemsPerPage).ceil() - 1
                           ? () {
                               setState(() {
                                 currentPage++;
