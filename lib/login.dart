@@ -5,13 +5,13 @@ import 'package:http/http.dart' as http;
 import 'add_problem_page.dart';
 import 'admin_home_page.dart';
 import 'dart:io';
+import 'dart:ui';
 import 'package:path_provider/path_provider.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -19,12 +19,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Strona Logowania',
-      theme: ThemeData.light().copyWith(
-        primaryColor: Colors.blueAccent,
+      title: 'HelpDesk Login',
+      theme: ThemeData(
+        primaryColor: Color(0xFF2C3E50),
         scaffoldBackgroundColor: Colors.white,
-        buttonTheme: ButtonThemeData(buttonColor: Colors.black),
-        textTheme: TextTheme(bodyMedium: TextStyle(color: Colors.black)),
+        buttonTheme: ButtonThemeData(buttonColor: Color(0xFF2C3E50)),
+        textTheme: GoogleFonts.poppinsTextTheme(),
       ),
       home: LoginPage(),
     );
@@ -240,33 +240,39 @@ Future<Map<String, String>?> _loadCredentials() async {
 
   @override
 Widget build(BuildContext context) {
+  final orangeAccent = Color(0xFFF49402); // Define orange accent color
+  
   return Scaffold(
-    appBar: AppBar(
-      title: Text('HelpDesk Drzewniak'),
-      backgroundColor: Color.fromRGBO(245, 245, 245, 1),
-      elevation: 0,
-      automaticallyImplyLeading: false,
-    ),
     body: Stack(
       children: [
         Container(
-          color: Color.fromRGBO(245, 245, 245, 1),
+          color: Color(0xFFF5F5F5),
+          width: double.infinity,
+          height: double.infinity,
         ),
-        Positioned.fill(
-          child: Align(
-            alignment: Alignment.center,
-            child: Image.asset(
-              'assets/images/Background_image.JPEG',
-              width: MediaQuery.of(context).size.width * 0.60,
-              fit: BoxFit.cover,
-            ),
+        Center(
+          child: Image.asset(
+            'assets/images/Background_image.JPEG',
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            fit: BoxFit.cover,
           ),
         ),
         Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 600),
+          child: Card(
+            elevation: 10,
+            shadowColor: Colors.black12,
+            color: Colors.white.withOpacity(0.75),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+              side: BorderSide(color: orangeAccent.withOpacity(0.3), width: 1), // Subtle orange border
+            ),
+            child: Container(
+              width: 600,
+              padding: EdgeInsets.symmetric(
+                horizontal: 50,
+                vertical: 40,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -274,42 +280,46 @@ Widget build(BuildContext context) {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      'Zaloguj się',
-                      style: TextStyle(
-                        fontSize: 30,
+                      'HelpDesk Drzewniak',
+                      style: GoogleFonts.poppins(
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
                     ),
-                    SizedBox(height: 30), // Zmniejszony odstęp między napisem a polami
-
-                    // Pierwsze pole tekstowe
+                    Text(
+                      'Zaloguj się do swojego konta',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: orangeAccent, // Orange subtitle
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                    
                     _buildTextField(
                       controller: _usernameController,
                       label: 'Nazwa użytkownika',
-                      icon: Icons.person,
+                      icon: Icons.person_outline,
                       errorText: _usernameError,
+                      accentColor: orangeAccent,
                     ),
-                    SizedBox(height: 20),
-
-                    // Drugie pole tekstowe
+                    SizedBox(height: 15),
+                    
                     _buildTextField(
                       controller: _passwordController,
                       label: 'Hasło',
                       obscureText: true,
-                      icon: Icons.lock,
+                      icon: Icons.lock_outline,
                       onFieldSubmitted: (_) => _login(context),
                       errorText: _passwordError,
+                      accentColor: orangeAccent,
                     ),
-                    SizedBox(height: 20),
-
-                    // Wyrównanie checkboxa z innymi polami tekstowymi
+                    SizedBox(height: 15),
+                    
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.start, // Wyrównanie na lewo
                       children: [
-                        SizedBox(width: 75), // Przesunięcie checkboxa o 50 px w prawo
                         Transform.scale(
-                          scale: 1.4, // Zwiększenie rozmiaru checkboxa
+                          scale: 1.0,
                           child: Checkbox(
                             value: _rememberMe,
                             onChanged: (bool? value) {
@@ -317,17 +327,28 @@ Widget build(BuildContext context) {
                                 _rememberMe = value!;
                               });
                             },
-                            activeColor: Color(0xFFF49402), // Kolor zaznaczonego checkboxa
+                            activeColor: orangeAccent, // Orange checkbox
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
                         ),
-                        Text('Zapamiętaj mnie'),
+                        Text(
+                          'Zapamiętaj mnie',
+                          style: GoogleFonts.poppins(
+                            color: Colors.black87,
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
-
-                    // Przycisk logowania lub animacja ładowania
+                    SizedBox(height: 25),
+                    
                     isLoading
-                        ? CircularProgressIndicator() // Animacja ładowania
-                        : _buildLoginButton(context),
+                        ? CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(orangeAccent),
+                          )
+                        : _buildLoginButton(context, orangeAccent),
                   ],
                 ),
               ),
@@ -339,102 +360,100 @@ Widget build(BuildContext context) {
   );
 }
 
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    bool obscureText = false,
-    required IconData icon,
-    String? errorText,
-    Function(String)? onFieldSubmitted,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 450, // Szerokość kontenera
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              // Zmniejszony cień
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                spreadRadius: 1, // Mniejszy spread
-                blurRadius: 4,   // Mniejszy blur
-                offset: Offset(0, 2), // Mniejszy offset
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                spreadRadius: 1, // Mniejszy spread
-                blurRadius: 6,   // Mniejszy blur
-                offset: Offset(0, 2), // Mniejszy offset
-              ),
-            ],
+Widget _buildTextField({
+  required TextEditingController controller,
+  required String label,
+  bool obscureText = false,
+  required IconData icon,
+  String? errorText,
+  Function(String)? onFieldSubmitted,
+  required Color accentColor,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: errorText != null ? Colors.red.shade300 : Colors.grey.shade300,
+            width: 1,
           ),
-          child: TextFormField(
-            controller: controller,
-            obscureText: obscureText,
-            decoration: InputDecoration(
-              labelText: label,
-              labelStyle: TextStyle(color: Colors.black),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-              prefixIcon: Icon(icon, color: Colors.black),
+        ),
+        child: TextFormField(
+          controller: controller,
+          obscureText: obscureText,
+          style: GoogleFonts.poppins(
+            color: Colors.black,
+            fontSize: 14,
+          ),
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: GoogleFonts.poppins(
+              color: Colors.grey[700],
+              fontSize: 13,
             ),
-            style: TextStyle(color: Colors.black),
-            validator: (value) {
-              if (value?.isEmpty ?? true) {
-                return 'Proszę podać $label';
-              }
-              return null;
-            },
-            onFieldSubmitted: onFieldSubmitted,
+            prefixIcon: Icon(
+              icon,
+              color: accentColor,  // Orange icon
+              size: 20,
+            ),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            filled: true,
+            fillColor: Colors.transparent,
+            focusedBorder: OutlineInputBorder(  // Orange border on focus
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: accentColor, width: 1.5),
+            ),
           ),
-        ),
-        SizedBox(height: 6), // Odstęp od pola tekstowego
-
-        // Animowana wysokość kontenera dla błędu
-        AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          height: errorText != null ? 20 : 0, // Jeśli błąd istnieje, kontener ma wysokość 20
-          curve: Curves.easeInOut,
-          child: errorText != null
-              ? Text(
-            errorText,
-            style: TextStyle(color: Colors.red, fontSize: 12),
-          )
-              : SizedBox.shrink(), // Jeśli brak błędu, wyświetla pusty widget
-        ),
-      ],
-    );
-  }
-  
-
-  Widget _buildLoginButton(BuildContext context) {
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      child: ElevatedButton(
-        onPressed: () => _login(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black,
-          minimumSize: Size(200, 60),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 5,
-        ),
-        child: Text(
-          'Zaloguj się',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
+          onFieldSubmitted: onFieldSubmitted,
         ),
       ),
-    );
-  }
+      if (errorText != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 6, left: 12),
+          child: Text(
+            errorText,
+            style: GoogleFonts.poppins(
+              color: Colors.red.shade400,
+              fontSize: 11,
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+Widget _buildLoginButton(BuildContext context, Color accentColor) {
+  return Container(
+    width: double.infinity,
+    height: 45,
+    child: ElevatedButton(
+      onPressed: () => _login(context),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: accentColor,  // Orange button
+        foregroundColor: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: EdgeInsets.symmetric(vertical: 12),
+      ),
+      child: Text(
+        'Zaloguj się',
+        style: GoogleFonts.poppins(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.3,
+        ),
+      ),
+    ),
+  );
+}
 }
 

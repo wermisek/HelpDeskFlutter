@@ -80,7 +80,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       return '$minutes ${minutes == 1 ? 'minuta' : minutes < 5 ? 'minuty' : 'minut'} temu';
     } else if (difference.inDays < 1) {
       final hours = difference.inHours;
-      return '$hours ${hours == 1 ? 'godzina' : hours < 5 ? 'godziny' : 'godzin'} temu';
+      return '$hours ${hours == 1 ? 'godz' : hours < 5 ? 'godz' : 'godz'} temu';
     } else if (difference.inDays < 7) {
       final days = difference.inDays;
       return '$days ${days == 1 ? 'dzień' : 'dni'} temu';
@@ -324,39 +324,91 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   )
                 else
                   Expanded(
-                    child: PageView.builder(
-                      controller: _problemsPageController,
-                      itemCount: (filteredProblems.length / itemsPerPage).ceil(),
-                      onPageChanged: (pageIndex) {
-                        if (mounted) {
-                          setState(() {
-                            currentPage = pageIndex;
-                          });
-                        }
-                      },
-                      itemBuilder: (context, pageIndex) {
-                        int startIndex = pageIndex * itemsPerPage;
-                        int endIndex = (startIndex + itemsPerPage) > filteredProblems.length
-                            ? filteredProblems.length
-                            : startIndex + itemsPerPage;
-                        var pageProblems = filteredProblems.sublist(startIndex, endIndex);
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: PageView.builder(
+                            controller: _problemsPageController,
+                            itemCount: (filteredProblems.length / itemsPerPage).ceil(),
+                            onPageChanged: (pageIndex) {
+                              if (mounted) {
+                                setState(() {
+                                  currentPage = pageIndex;
+                                });
+                              }
+                            },
+                            itemBuilder: (context, pageIndex) {
+                              int startIndex = pageIndex * itemsPerPage;
+                              int endIndex = (startIndex + itemsPerPage) > filteredProblems.length
+                                  ? filteredProblems.length
+                                  : startIndex + itemsPerPage;
+                              var pageProblems = filteredProblems.sublist(startIndex, endIndex);
 
-                        return GridView.builder(
-                          padding: EdgeInsets.fromLTRB(6.0, 50.0, 6.0, 20.0),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 6.0,
-                            mainAxisSpacing: 8.0,
-                            childAspectRatio: 2.2,
+                              return GridView.builder(
+                                padding: EdgeInsets.fromLTRB(6.0, 50.0, 6.0, 20.0),
+                                physics: NeverScrollableScrollPhysics(),
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 4,
+                                  crossAxisSpacing: 6.0,
+                                  mainAxisSpacing: 8.0,
+                                  childAspectRatio: 2.2,
+                                ),
+                                itemCount: pageProblems.length,
+                                itemBuilder: (context, index) => _buildProblemCard(pageProblems[index]),
+                              );
+                            },
                           ),
-                          itemCount: pageProblems.length,
-                          itemBuilder: (context, index) => _buildProblemCard(pageProblems[index]),
-                        );
-                      },
+                        ),
+                        if (filteredProblems.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.chevron_left),
+                                  onPressed: currentPage > 0
+                                      ? () {
+                                          setState(() {
+                                            currentPage--;
+                                            _problemsPageController.previousPage(
+                                              duration: Duration(milliseconds: 300),
+                                              curve: Curves.easeInOut,
+                                            );
+                                          });
+                                        }
+                                      : null,
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                                  child: Text(
+                                    'Strona ${currentPage + 1} z ${(filteredProblems.length / itemsPerPage).ceil()}',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.chevron_right),
+                                  onPressed: currentPage < (filteredProblems.length / itemsPerPage).ceil() - 1
+                                      ? () {
+                                          setState(() {
+                                            currentPage++;
+                                            _problemsPageController.nextPage(
+                                              duration: Duration(milliseconds: 300),
+                                              curve: Curves.easeInOut,
+                                            );
+                                          });
+                                        }
+                                      : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                if (filteredProblems.isNotEmpty)
-                  _buildPaginationControls((filteredProblems.length / itemsPerPage).ceil()),
               ],
             ),
           ),
@@ -714,7 +766,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       child: Stack(
         children: [
           Container(
-            margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+            margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 25.0),
             child: Column(
               children: [
                 if (filteredUsers.isEmpty && !_isLoading)
@@ -734,39 +786,91 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   )
                 else
                   Expanded(
-                    child: PageView.builder(
-                      controller: _usersPageController,
-                      itemCount: (filteredUsers.length / itemsPerPage).ceil(),
-                      onPageChanged: (pageIndex) {
-                        if (mounted) {
-                          setState(() {
-                            currentPage = pageIndex;
-                          });
-                        }
-                      },
-                      itemBuilder: (context, pageIndex) {
-                        int startIndex = pageIndex * itemsPerPage;
-                        int endIndex = (startIndex + itemsPerPage) > filteredUsers.length
-                            ? filteredUsers.length
-                            : startIndex + itemsPerPage;
-                        var pageUsers = filteredUsers.sublist(startIndex, endIndex);
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: PageView.builder(
+                            controller: _usersPageController,
+                            itemCount: (filteredUsers.length / itemsPerPage).ceil(),
+                            onPageChanged: (pageIndex) {
+                              if (mounted) {
+                                setState(() {
+                                  currentPage = pageIndex;
+                                });
+                              }
+                            },
+                            itemBuilder: (context, pageIndex) {
+                              int startIndex = pageIndex * itemsPerPage;
+                              int endIndex = (startIndex + itemsPerPage) > filteredUsers.length
+                                  ? filteredUsers.length
+                                  : startIndex + itemsPerPage;
+                              var pageUsers = filteredUsers.sublist(startIndex, endIndex);
 
-                        return GridView.builder(
-                          padding: EdgeInsets.fromLTRB(8.0, 50.0, 8.0, 20.0),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 8.0,
-                            mainAxisSpacing: 8.0,
-                            childAspectRatio: 1.87,
+                              return GridView.builder(
+                                padding: EdgeInsets.fromLTRB(8.0, 40.0, 8.0, 20.0),
+                                physics: NeverScrollableScrollPhysics(),
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 4,
+                                  crossAxisSpacing: 8.0,
+                                  mainAxisSpacing: 8.0,
+                                  childAspectRatio: 1.87,
+                                ),
+                                itemCount: pageUsers.length,
+                                itemBuilder: (context, index) => _buildUserCard(pageUsers[index]),
+                              );
+                            },
                           ),
-                          itemCount: pageUsers.length,
-                          itemBuilder: (context, index) => _buildUserCard(pageUsers[index]),
-                        );
-                      },
+                        ),
+                        if (filteredUsers.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.chevron_left),
+                                  onPressed: currentPage > 0
+                                      ? () {
+                                          setState(() {
+                                            currentPage--;
+                                            _usersPageController.previousPage(
+                                              duration: Duration(milliseconds: 300),
+                                              curve: Curves.easeInOut,
+                                            );
+                                          });
+                                        }
+                                      : null,
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                                  child: Text(
+                                    'Strona ${currentPage + 1} z ${(filteredUsers.length / itemsPerPage).ceil()}',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.chevron_right),
+                                  onPressed: currentPage < (filteredUsers.length / itemsPerPage).ceil() - 1
+                                      ? () {
+                                          setState(() {
+                                            currentPage++;
+                                            _usersPageController.nextPage(
+                                              duration: Duration(milliseconds: 300),
+                                              curve: Curves.easeInOut,
+                                            );
+                                          });
+                                        }
+                                      : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                if (filteredUsers.isNotEmpty)
-                  _buildPaginationControls((filteredUsers.length / itemsPerPage).ceil()),
               ],
             ),
           ),
@@ -775,10 +879,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
             left: 0,
             right: 0,
             child: Container(
-              height: 60.0,
+              height: 45.0,
               color: Colors.white,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 37.0),
+                padding: const EdgeInsets.symmetric(horizontal: 30.0),
                 child: Row(
                   children: [
                     Text(
@@ -983,51 +1087,184 @@ class _AdminHomePageState extends State<AdminHomePage> {
           color: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
+            side: BorderSide(
+              color: Color(0xFFF49402).withOpacity(0.3),
+              width: 1.0,
+            ),
           ),
-          child: Column(
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          child: Container(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with username and role badge
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      'Użytkownik: ${user['username'] ?? 'Nieznany użytkownik'}',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+                    // Username with icon
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.person_outline, 
+                              size: 20, 
+                              color: Colors.grey[800]
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Flexible(
+                            child: Text(
+                              _truncateText(user['username'] ?? 'Nieznany użytkownik', 15),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                color: Colors.grey[800],
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Rola: ${user['role'] ?? 'Brak roli'}',
-                      style: TextStyle(color: Colors.grey),
+                    SizedBox(width: 12),
+                    // Role badge
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFF49402).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12.0),
+                        border: Border.all(
+                          color: Color(0xFFF49402).withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            user['role'] == 'admin' ? Icons.admin_panel_settings : Icons.person,
+                            size: 16,
+                            color: Color(0xFFF49402),
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            user['role'] == 'admin' ? 'Admin' : 'User',
+                            style: TextStyle(
+                              color: Color(0xFFF49402),
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                SizedBox(height: 16),
+                // Action buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Colors.black),
-                      onPressed: () => _changeUsername(user),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.lock, color: Colors.black),
-                      onPressed: () => _changePassword(user),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.black),
-                      onPressed: () => _deleteUser(user),
+                    // Edit and Password buttons in a row
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 10,
+                            child: _buildActionButton(
+                              icon: Icons.edit_outlined,
+                              label: 'Edytuj',
+                              onPressed: () => _changeUsername(user),
+                              compact: true,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          Expanded(
+                            flex: 10,
+                            child: _buildActionButton(
+                              icon: Icons.lock_outline,
+                              label: 'Hasło',
+                              onPressed: () => _changePassword(user),
+                              compact: true,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          // Delete button
+                          _buildActionButton(
+                            icon: Icons.delete_outline,
+                            label: 'Usuń',
+                            isDestructive: true,
+                            onPressed: () => _deleteUser(user),
+                            compact: true,
+                            iconOnly: true,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    bool isDestructive = false,
+    bool compact = false,
+    bool iconOnly = false,
+  }) {
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: isDestructive ? Colors.red.shade700 : Colors.grey[700],
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 8 : 12,
+          vertical: 6,
+        ),
+        backgroundColor: isDestructive 
+          ? Colors.red.shade50 
+          : Colors.grey[100],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        minimumSize: Size(0, 32),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: isDestructive ? Colors.red.shade700 : Colors.grey[700],
+          ),
+          if (!iconOnly) ...[
+            SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -1041,37 +1278,68 @@ class _AdminHomePageState extends State<AdminHomePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
+            borderRadius: BorderRadius.circular(12.0),
           ),
           backgroundColor: Colors.white,
-          title: Text(
-            'Zmień login',
-            style: TextStyle(color: Colors.black),
-          ),
-          content: TextField(
-            controller: usernameController,
-            style: TextStyle(color: Colors.black),
-            decoration: InputDecoration(
-              labelText: 'Nowy login',
-              labelStyle: TextStyle(color: Colors.black),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFF49402)),
+          title: Row(
+            children: [
+              Icon(Icons.edit_outlined, color: Color(0xFFF49402), size: 24),
+              SizedBox(width: 12),
+              Text(
+                'Zmień login',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Aktualny login: ${user['username']}',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 13,
+                ),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: usernameController,
+                style: TextStyle(color: Colors.black),
+                decoration: InputDecoration(
+                  labelText: 'Nowy login',
+                  labelStyle: TextStyle(color: Colors.grey[600]),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
+                  ),
+                  prefixIcon: Icon(Icons.person_outline, color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                ),
+              ),
+            ],
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                foregroundColor: Colors.grey[800],
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-              child: Text('Anuluj'),
+              child: Text(
+                'Anuluj',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 String newUsername = usernameController.text.trim();
                 if (newUsername.isNotEmpty) {
@@ -1088,7 +1356,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   );
 
                   if (response.statusCode == 200) {
-                    print('Login został zmieniony');
                     setState(() {
                       filteredUsers = filteredUsers.map((u) {
                         if (u['username'] == user['username']) {
@@ -1099,13 +1366,25 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     });
                     Navigator.of(context).pop();
                   } else {
-                    print('Błąd zmiany loginu: ${response.body}');
                     Navigator.of(context).pop();
+                    _showErrorDialog(context, 'Błąd', 'Nie udało się zmienić loginu.');
                   }
                 }
               },
-              child: Text('Zapisz'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFF49402),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Zapisz',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
+            SizedBox(width: 8),
           ],
         );
       },
@@ -1713,7 +1992,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
         return '$minutes ${minutes == 1 ? 'minuta' : minutes < 5 ? 'minuty' : 'minut'} temu';
       } else if (difference.inDays < 1) {
         final hours = difference.inHours;
-        return '$hours ${hours == 1 ? 'godzina' : hours < 5 ? 'godziny' : 'godzin'} temu';
+        return '$hours ${hours == 1 ? 'godz' : hours < 5 ? 'godz' : 'godz'} temu';
       } else if (difference.inDays < 7) {
         final days = difference.inDays;
         return '$days ${days == 1 ? 'dzień' : 'dni'} temu';
@@ -1809,15 +2088,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                 size: 14,
                                 color: getPriorityColor(problem['priority']),
                               ),
-                              SizedBox(width: 4),
-                              Text(
-                                getPriorityText(problem['priority']),
-                                style: TextStyle(
-                                  color: getPriorityColor(problem['priority']),
-                                  fontSize: 12.0,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
                             ],
                           ),
                         ),
@@ -1826,7 +2096,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     SizedBox(height: 8),
                     // Problem Description
                     Text(
-                      _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'),35),
+                      _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'),31),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.black87,
@@ -1845,7 +2115,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                             Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
                             SizedBox(width: 4),
                             Text(
-                              problem['username'] ?? 'Nieznany',
+                              _truncateText(problem['username'] ?? 'Nieznany', 10),
                               style: TextStyle(
                                 color: Colors.grey[700],
                                 fontSize: 12,
@@ -1915,7 +2185,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Szczegóły',
+                                'Rozwiń',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
