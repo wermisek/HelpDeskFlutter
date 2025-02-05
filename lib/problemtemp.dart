@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:dropdown_button2/dropdown_button2.dart';
 
 // Klasa reprezentująca stronę ProblemTempPage
 class ProblemTempPage extends StatefulWidget {
@@ -18,6 +19,11 @@ class ProblemTempPage extends StatefulWidget {
 // Stan dla ProblemTempPage
 class _ProblemTempPageState extends State<ProblemTempPage> {
   String? _comment;
+  final Map<String, Color> statusColors = {
+    'untouched': Colors.grey,
+    'in_progress': Colors.orange,
+    'done': Colors.green,
+  };
 
   // Helper functions for styling
   Color getPriorityColor(String? priority) {
@@ -415,6 +421,38 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
     );
   }
 
+  Future<void> updateTicketStatus(String newStatus) async {
+    try {
+      final problemId = widget.problem['id'].toString();
+      final response = await http.put(
+        Uri.parse('http://localhost:8080/update_status/$problemId'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'status': newStatus,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          widget.problem['status'] = newStatus;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Status został zaktualizowany')),
+        );
+      } else {
+        print('Server response: ${response.body}');
+        throw Exception('Failed to update status: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error updating status: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Nie udało się zaktualizować statusu zgłoszenia')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     DateTime timestamp = DateTime.parse(widget.problem['timestamp'] ?? DateTime.now().toString());
@@ -481,6 +519,64 @@ class _ProblemTempPageState extends State<ProblemTempPage> {
           ],
         ),
         actions: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: DropdownButton2<String>(
+              value: widget.problem['status'] ?? 'untouched',
+              items: ['untouched', 'in_progress', 'done'].map((String status) {
+                return DropdownMenuItem<String>(
+                  value: status,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: statusColors[status],
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        status == 'untouched' ? 'Nierozpoczęte' :
+                        status == 'in_progress' ? 'W trakcie' : 'Zakończone',
+                        style: TextStyle(
+                          color: Colors.grey[800],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  updateTicketStatus(newValue);
+                }
+              },
+              buttonStyleData: ButtonStyleData(
+                height: 36,
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+              ),
+              dropdownStyleData: DropdownStyleData(
+                maxHeight: 200,
+                width: 160,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                ),
+              ),
+              menuItemStyleData: MenuItemStyleData(
+                height: 40,
+              ),
+            ),
+          ),
           Container(
             margin: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
             child: ElevatedButton.icon(

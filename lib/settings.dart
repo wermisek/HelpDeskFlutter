@@ -92,7 +92,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       index: 1,
                       icon: Icons.lock,
                       text: 'Zmień hasło',
-                      onTap: () => _showPasswordChangeMessage(context),
+                      onTap: () => _changePassword(),
                     ),
                   ],
                 ),
@@ -215,197 +215,146 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _showPasswordChangeMessage(BuildContext context) {
-    final TextEditingController currentPasswordController = TextEditingController();
-    final TextEditingController newPasswordController = TextEditingController();
-    final TextEditingController confirmPasswordController = TextEditingController();
-    final _formKey = GlobalKey<FormState>();
+  Future<void> _changePassword() async {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
 
-    showGeneralDialog(
+    await showDialog(
       context: context,
-      pageBuilder: (context, animation1, animation2) => Container(),
-      transitionBuilder: (context, animation1, animation2, child) {
-        return FadeTransition(
-          opacity: animation1,
-          child: ScaleTransition(
-            scale: animation1,
-            child: AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        backgroundColor: Colors.white,
+        title: Row(
+          children: [
+            Icon(Icons.lock_outline, color: Color(0xFFF49402), size: 24),
+            SizedBox(width: 12),
+            Text(
+              'Zmień hasło',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
               ),
-              backgroundColor: Colors.white,
-              title: Text(
-                'Zmiana hasła',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18.0,
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: currentPasswordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Aktualne hasło',
+                labelStyle: TextStyle(color: Colors.grey[600]),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
+                ),
+                prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[600]),
+                filled: true,
+                fillColor: Colors.grey[50],
               ),
-              content: SizedBox(
-                width: 400,
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: currentPasswordController,
-                        obscureText: true,
-                        style: TextStyle(color: Colors.black),
-                        decoration: InputDecoration(
-                          labelText: 'Obecne hasło',
-                          labelStyle: TextStyle(color: Colors.black),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Color(0xFFF49402)),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Wprowadź obecne hasło';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
-                      TextFormField(
-                        controller: newPasswordController,
-                        obscureText: true,
-                        style: TextStyle(color: Colors.black),
-                        decoration: InputDecoration(
-                          labelText: 'Nowe hasło',
-                          labelStyle: TextStyle(color: Colors.black),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Color(0xFFF49402)),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Wprowadź nowe hasło';
-                          }
-                          if (value.length < 6) {
-                            return 'Hasło musi mieć minimum 6 znaków';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
-                      TextFormField(
-                        controller: confirmPasswordController,
-                        obscureText: true,
-                        style: TextStyle(color: Colors.black),
-                        decoration: InputDecoration(
-                          labelText: 'Potwierdź nowe hasło',
-                          labelStyle: TextStyle(color: Colors.black),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Color(0xFFF49402)),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Potwierdź nowe hasło';
-                          }
-                          if (value != newPasswordController.text) {
-                            return 'Hasła nie są identyczne';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: newPasswordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Nowe hasło',
+                labelStyle: TextStyle(color: Colors.grey[600]),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
+                ),
+                prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[600]),
+                filled: true,
+                fillColor: Colors.grey[50],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(color: Colors.black),
-                    ),
-                  ),
-                  child: Text('Anuluj'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      try {
-                        final response = await http.put(
-                          Uri.parse('http://localhost:8080/change_password_for_user'),
-                          headers: {'Content-Type': 'application/json'},
-                          body: json.encode({
-                            'username': accountName,
-                            'oldPassword': currentPasswordController.text,
-                            'newPassword': newPasswordController.text,
-                          }),
-                        );
-
-                        if (response.statusCode == 200) {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Hasło zostało zmienione pomyślnie'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Błąd: ${json.decode(response.body)['message']}'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Błąd połączenia z serwerem'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFF49402),
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text('Zmień hasło'),
-                ),
-              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.grey[800],
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: Text(
+              'Anuluj',
+              style: TextStyle(fontWeight: FontWeight.w500),
             ),
           ),
-        );
-      },
-      transitionDuration: Duration(milliseconds: 300),
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.black54,
+          ElevatedButton(
+            onPressed: () async {
+              final currentPassword = currentPasswordController.text.trim();
+              final newPassword = newPasswordController.text.trim();
+
+              if (currentPassword.isNotEmpty && newPassword.isNotEmpty) {
+                try {
+                  var response = await http.put(
+                    Uri.parse('http://localhost:8080/change_password'),
+                    body: json.encode({
+                      'username': widget.username,
+                      'currentPassword': currentPassword,
+                      'newPassword': newPassword,
+                    }),
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  );
+
+                  if (response.statusCode == 200) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Hasło zostało zmienione pomyślnie'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Błąd: Nie udało się zmienić hasła (${response.statusCode})'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Błąd połączenia z serwerem: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFFF49402),
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'Zapisz',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          SizedBox(width: 8),
+        ],
+      ),
     );
   }
 
@@ -567,9 +516,5 @@ class _SettingsPageState extends State<SettingsPage> {
       barrierLabel: '',
       barrierColor: Colors.black54,
     );
-  }
-
-  void _showChangePasswordDialog() {
-    // ... existing code ...
   }
 }

@@ -67,6 +67,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
   late String currentUsername;
   Map<String, bool> hoverStates = {};
   bool _isLoading = false;
+  final Map<String, Color> statusColors = {
+    'untouched': Colors.grey,
+    'in_progress': Colors.orange,
+    'done': Colors.green,
+  };
 
   String getRelativeTime(String timestamp) {
     final now = DateTime.now();
@@ -234,9 +239,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
     
     setState(() {
       filteredProblems = filtered;
-      currentPage = 0;
-      if (_problemsPageController.hasClients) {
-        _problemsPageController.jumpToPage(0);
+      // Remove the currentPage reset
+      // Only reset page if we have fewer pages than the current page
+      int totalPages = (filtered.length / itemsPerPage).ceil();
+      if (currentPage >= totalPages) {
+        currentPage = totalPages > 0 ? totalPages - 1 : 0;
+        if (_problemsPageController.hasClients) {
+          _problemsPageController.jumpToPage(currentPage);
+        }
       }
     });
   }
@@ -345,7 +355,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                               var pageProblems = filteredProblems.sublist(startIndex, endIndex);
 
                               return GridView.builder(
-                                padding: EdgeInsets.fromLTRB(6.0, 50.0, 6.0, 20.0),
+                                padding: EdgeInsets.fromLTRB(6.0, 80.0, 6.0, 20.0),
                                 physics: NeverScrollableScrollPhysics(),
                                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 4,
@@ -969,10 +979,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     return text.replaceAll(RegExp(r'(\r\n|\n|\r)'), ' '); // Usuwa nowe linie
   }
 
-
-
-
-
   void _filterByDate(DateTime selectedDate) {
     setState(() {
       filteredProblems = problems.where((problem) {
@@ -995,8 +1001,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
       }
     });
   }
-
-
 
   void _filterProblems(String query) {
     setState(() {
@@ -1032,8 +1036,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     });
   }
 
-
-
   Set<DateTime> _getAvailableDates() {
     Set<DateTime> availableDates = <DateTime>{};
 
@@ -1047,7 +1049,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
     return availableDates;
   }
-
 
   void _filterUsersByQuery(String query) {
     setState(() {
@@ -1068,10 +1069,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
       }
     });
   }
-
-
-
-
 
   Widget _buildUserCard(dynamic user) {
     return MouseRegion(
@@ -1269,8 +1266,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-
-
   void _changeUsername(dynamic user) {
     TextEditingController usernameController = TextEditingController();
     showDialog(
@@ -1391,7 +1386,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-
   void _changePassword(dynamic user) {
     TextEditingController passwordController = TextEditingController();
     showDialog(
@@ -1402,74 +1396,127 @@ class _AdminHomePageState extends State<AdminHomePage> {
             borderRadius: BorderRadius.circular(16.0),
           ),
           backgroundColor: Colors.white,
-          title: Text(
-            'Zmień hasło',
-            style: TextStyle(color: Colors.black),
-          ),
-          content: TextField(
-            controller: passwordController,
-            style: TextStyle(color: Colors.black),
-            obscureText: true,
-            decoration: InputDecoration(
-              labelText: 'Nowe hasło',
-              labelStyle: TextStyle(color: Colors.black),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFF49402)),
+          title: Row(
+            children: [
+              Icon(Icons.lock_outline, color: Color(0xFFF49402), size: 24),
+              SizedBox(width: 12),
+              Text(
+                'Zmień hasło',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Użytkownik: ${user['username']}',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 13,
+                ),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: passwordController,
+                style: TextStyle(color: Colors.black),
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Nowe hasło',
+                  labelStyle: TextStyle(color: Colors.grey[600]),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Color(0xFFF49402), width: 2),
+                  ),
+                  prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[600]),
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                ),
+              ),
+            ],
           ),
           actions: <Widget>[
-            // Przycisk "Anuluj"
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                foregroundColor: Colors.grey[800],
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-              child: Text('Anuluj'),
+              child: Text(
+                'Anuluj',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
             ),
-            // Przycisk "Zapisz"
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 String newPassword = passwordController.text.trim();
                 if (newPassword.isNotEmpty) {
-                  var response = await http.put(
-                    Uri.parse('http://localhost:8080/change_password'),
-                    body: json.encode({
-                      'username': user['username'],
-                      'newPassword': newPassword,
-                    }),
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'role': 'admin',
-                    },
-                  );
+                  try {
+                    var response = await http.put(
+                      Uri.parse('http://localhost:8080/change_password_for_user'),
+                      body: json.encode({
+                        'username': user['username'],
+                        'newPassword': newPassword,
+                        'role': 'admin'
+                      }),
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    );
 
-                  if (response.statusCode == 200) {
-                    print('Hasło zostało zmienione');
-                    Navigator.of(context).pop();
-                  } else {
-                    print('Błąd zmiany hasła: ${response.body}');
-                    Navigator.of(context).pop();
+                    if (response.statusCode == 200) {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Hasło zostało zmienione pomyślnie'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Błąd: Nie udało się zmienić hasła (${response.statusCode})'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Błąd połączenia z serwerem: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
                 }
               },
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFF49402),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              child: Text('Zapisz'),
+              child: Text(
+                'Zapisz',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
+            SizedBox(width: 8),
           ],
         );
       },
     );
   }
-
 
   void _deleteUser(dynamic user) {
     showDialog(
@@ -1534,15 +1581,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ),
               child: Text('Usuń'),
             ),
-
-
           ],
         );
       },
     );
   }
-
-
 
   void _showErrorDialog(BuildContext context, String title, String message) {
     showDialog(
@@ -1741,8 +1784,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-
-
   void _showAddUserDialog(BuildContext context) {
     final TextEditingController usernameController = TextEditingController();
     final TextEditingController passwordController = TextEditingController();
@@ -1795,63 +1836,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
-              // Dropdown dla roli
-              DropdownButtonFormField2<String>(
-                value: selectedRole,
-                items: [
-                  DropdownMenuItem(
-                    value: 'user',
-                    child: Text(
-                      'User',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: 'admin',
-                    child: Text(
-                      'Admin',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  ),
-                ],
-                onChanged: (value) {
-                  selectedRole = value!;
-                },
-                decoration: InputDecoration(
-                  labelText: 'Rola',
-                  labelStyle: TextStyle(color: Colors.black),
-                  border: OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFF49402)),
-                  ),
-                ),
-                buttonStyleData: ButtonStyleData(
-                  height: 25,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(5.0),
-                  ),
-                  overlayColor: WidgetStateProperty.all(Colors.transparent),
-                ),
-                dropdownStyleData: DropdownStyleData(
-                  maxHeight: 150,
-                  offset: Offset(0, 0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(5.0),
-                  ),
-                ),
-                iconStyleData: IconStyleData(
-                  icon: Icon(
-                    Icons.arrow_drop_down,
-                    color: Colors.black,
-                  ),
-                ),
-              )
             ],
           ),
           actions: [
@@ -1954,50 +1938,27 @@ class _AdminHomePageState extends State<AdminHomePage> {
       }
     }
 
-    String getPriorityText(String? priority) {
-      switch (priority) {
-        case 'high':
-          return 'Wysoki';
-        case 'medium':
-          return 'Średni';
-        case 'low':
-          return 'Niski';
+    Color getStatusColor(String? status) {
+      switch (status) {
+        case 'done':
+          return Colors.green;
+        case 'in_progress':
+          return Colors.orange;
+        case 'untouched':
         default:
-          return 'Nieokreślony';
+          return Colors.grey;
       }
     }
 
-    IconData getPriorityIcon(String? priority) {
-      switch (priority) {
-        case 'high':
-          return Icons.arrow_upward;
-        case 'medium':
-          return Icons.remove;
-        case 'low':
-          return Icons.arrow_downward;
+    String getStatusText(String? status) {
+      switch (status) {
+        case 'done':
+          return 'Zakończone';
+        case 'in_progress':
+          return 'W trakcie';
+        case 'untouched':
         default:
-          return Icons.remove;
-      }
-    }
-
-    String getRelativeTime(String timestamp) {
-      final now = DateTime.now();
-      final date = DateTime.parse(timestamp);
-      final difference = now.difference(date);
-
-      if (difference.inMinutes < 1) {
-        return 'Przed chwilą';
-      } else if (difference.inHours < 1) {
-        final minutes = difference.inMinutes;
-        return '$minutes ${minutes == 1 ? 'minuta' : minutes < 5 ? 'minuty' : 'minut'} temu';
-      } else if (difference.inDays < 1) {
-        final hours = difference.inHours;
-        return '$hours ${hours == 1 ? 'godz' : hours < 5 ? 'godz' : 'godz'} temu';
-      } else if (difference.inDays < 7) {
-        final days = difference.inDays;
-        return '$days ${days == 1 ? 'dzień' : 'dni'} temu';
-      } else {
-        return '${date.day}.${date.month}.${date.year}';
+          return 'Nierozpoczęte';
       }
     }
 
@@ -2015,131 +1976,118 @@ class _AdminHomePageState extends State<AdminHomePage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
             side: BorderSide(
-              color: getPriorityColor(problem['priority']).withOpacity(0.3),
+              color: getStatusColor(problem['status']).withOpacity(0.3),
               width: 1.0,
             ),
           ),
+          child: Container(
+            height: 140,
+            padding: EdgeInsets.all(16.0),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
-                child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header Row with Room and Priority
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Room Number with Icon
                         Row(
                           children: [
-                            Icon(Icons.room, size: 18, color: Colors.grey[800]),
+                        Icon(Icons.room, size: 16, color: Colors.grey[700]),
                             SizedBox(width: 4),
                             Text(
-                              (problem['room'] ?? 'Nieznana').toLowerCase().startsWith('sala') 
-                                ? _truncateText(problem['room'] ?? 'Nieznana', 7)
-                                : 'Sala ${_truncateText(problem['room'] ?? 'Nieznana', 7)}',
+                          'Sala ${problem['room']}',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
                                 color: Colors.grey[800],
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            // Time information
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.access_time,
-                                  size: 14,
-                                  color: Colors.grey[600],
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  getRelativeTime(problem['timestamp']),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                    fontStyle: FontStyle.italic,
                                   ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                        // Priority Badge
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: getPriorityColor(problem['priority']).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12.0),
+                        color: getStatusColor(problem['status']).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: getPriorityColor(problem['priority']).withOpacity(0.3),
-                              width: 1,
+                          color: getStatusColor(problem['status']).withOpacity(0.3),
                             ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                getPriorityIcon(problem['priority']),
-                                size: 14,
-                                color: getPriorityColor(problem['priority']),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: getStatusColor(problem['status']),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            getStatusText(problem['status']),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: getStatusColor(problem['status']),
+                              fontWeight: FontWeight.w500,
+                            ),
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
-                    // Problem Description
-                    Text(
-                      _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'),31),
+                SizedBox(height: 12),
+                Expanded(
+                  child: Text(
+                    _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'), 150),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.black87,
-                        height: 1.3,
+                      height: 1.4,
                       ),
-                      maxLines: 2,
+                    maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 8),
-                    // Bottom Info Row
+                ),
+                SizedBox(height: 12),
                     Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // User Info
-                        Row(
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: getPriorityColor(problem['priority']).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
+                          Icon(
+                            Icons.flag,
+                            size: 12,
+                            color: getPriorityColor(problem['priority']),
+                          ),
                             SizedBox(width: 4),
                             Text(
-                              _truncateText(problem['username'] ?? 'Nieznany', 10),
+                            problem['priority'] == 'high' ? 'Wysoki' :
+                            problem['priority'] == 'medium' ? 'Średni' : 'Niski',
                               style: TextStyle(
-                                color: Colors.grey[700],
                                 fontSize: 12,
+                              color: getPriorityColor(problem['priority']),
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(width: 16),
-                        // Category
-                        Row(
-                          children: [
-                            Icon(Icons.category_outlined, size: 16, color: Colors.grey[600]),
-                            SizedBox(width: 4),
+                    ),
                             Text(
-                              getCategoryName(problem['category']),
+                      getRelativeTime(problem['timestamp']),
                               style: TextStyle(
-                                color: Colors.grey[700],
                                 fontSize: 12,
+                        color: Colors.grey[600],
                               ),
                             ),
-                          ],
-                        ),
-                        Spacer(),
-                        // View Details Button
                         TextButton(
                           onPressed: () async {
                             final response = await http.put(
@@ -2150,7 +2098,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                               Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => ProblemTempPage(problem: problem),
+                              pageBuilder: (context, animation, secondaryAnimation) =>
+                                  ProblemTempPage(problem: problem),
                                   transitionsBuilder: (context, animation, secondaryAnimation, child) {
                                     var begin = Offset(1.0, 0.0);
                                     var end = Offset.zero;
@@ -2165,42 +2114,32 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                 ),
                               ).then((shouldDelete) {
                                 if (shouldDelete == true) {
-                                  getProblems(); // Refresh the entire list
-                                }
-                              });
-                            } else {
-                              print('Błąd odczytania wiadomości: ${response.body}');
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Nie udało się odczytać wiadomości.'),
-                                ),
-                              );
+                              getProblems();
+                            }
+                          });
                             }
                           },
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.grey[700],
-                            padding: EdgeInsets.symmetric(horizontal: 8),
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size(0, 32),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Rozwiń',
+                            'Szczegóły',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              SizedBox(width: 6),
-                              Transform.translate(
-                                offset: Offset(0, 2),
-                                child: Icon(
+                          SizedBox(width: 4),
+                          Icon(
                                   Icons.arrow_forward_ios,
                                   size: 12,
                                   color: Color(0xFFF49402),
                                 ),
-                              ),
-                              SizedBox(width: 2),
                             ],
                           ),
                         ),
@@ -2208,8 +2147,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ),
                   ],
                 ),
-              ),
-            ],
           ),
         ),
       ),
@@ -2390,6 +2327,80 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ],
         );
       },
+    );
+  }
+
+  Future<void> updateTicketStatus(int problemId, String newStatus) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8080/update-status'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'problemId': problemId,
+          'status': newStatus,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Refresh the problems list
+        await getProblems();
+        setState(() {});
+      } else {
+        throw Exception('Failed to update status');
+      }
+    } catch (e) {
+      print('Error updating status: $e');
+      // Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update ticket status')),
+      );
+    }
+  }
+
+  Widget buildStatusDropdown(dynamic problem) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8),
+      child: DropdownButton2<String>(
+        value: problem['status'] ?? 'untouched',
+        items: ['untouched', 'in_progress', 'done'].map((String status) {
+          return DropdownMenuItem<String>(
+            value: status,
+            child: Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: statusColors[status],
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Text(
+                  status == 'untouched' ? 'Nierozpoczęte' :
+                  status == 'in_progress' ? 'W trakcie' : 'Zakończone',
+                  style: TextStyle(
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          if (newValue != null) {
+            updateTicketStatus(problem['id'], newValue);
+          }
+        },
+        buttonStyleData: ButtonStyleData(
+          height: 36,
+          padding: EdgeInsets.symmetric(horizontal: 8),
+        ),
+        dropdownStyleData: DropdownStyleData(
+          maxHeight: 200,
+          width: 160,
+        ),
+      ),
     );
   }
 }

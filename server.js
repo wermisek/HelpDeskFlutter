@@ -57,6 +57,17 @@ try {
         }
     }
 
+    try {
+        db.prepare('ALTER TABLE problems ADD COLUMN status TEXT CHECK(status IN ("untouched", "in_progress", "done")) DEFAULT "untouched"').run();
+        console.log('Column "status" added to "problems" table.');
+    } catch (err) {
+        if (err.message.includes("duplicate column name: status")) {
+            console.log('Column "status" already exists in "problems" table.');
+        } else {
+            console.error('Error adding status column:', err.message);
+        }
+    }
+
     db.pragma('foreign_keys = ON');
 
     // Create users table if it doesn't exist
@@ -292,6 +303,98 @@ app.put('/update_priority/:id', (req, res) => {
     } catch (err) {
         console.error('Error updating priority:', err.message);
         return res.status(500).send({ message: 'Error updating priority' });
+    }
+});
+
+// Endpoint to update problem status
+app.put('/update_status/:id', (req, res) => {
+    const problemId = req.params.id;
+    const { status } = req.body;
+    
+    if (!problemId || !status) {
+        return res.status(400).send({ message: 'Problem ID and status are required' });
+    }
+
+    if (!['untouched', 'in_progress', 'done'].includes(status)) {
+        return res.status(400).send({ message: 'Status must be untouched, in_progress, or done' });
+    }
+
+    try {
+        const stmt = db.prepare('UPDATE problems SET status = ? WHERE id = ?');
+        const result = stmt.run(status, problemId);
+
+        if (result.changes === 0) {
+            return res.status(404).send({ message: 'Problem not found' });
+        }
+
+        res.status(200).send({ message: 'Status updated successfully' });
+    } catch (err) {
+        console.error('Error updating status:', err.message);
+        return res.status(500).send({ message: 'Error updating status' });
+    }
+});
+
+// Endpoint to change user password (admin only)
+app.put('/change_password_for_user', (req, res) => {
+    const { username, newPassword, role } = req.body;
+
+    if (!username || !newPassword) {
+        return res.status(400).send({ message: 'Username and new password are required' });
+    }
+
+    if (role !== 'admin') {
+        return res.status(403).send({ message: 'Only admin can change other users passwords' });
+    }
+
+    try {
+        const hashedPassword = bcrypt.hashSync(newPassword, 10);
+        const stmt = db.prepare('UPDATE users SET password = ? WHERE username = ?');
+        const result = stmt.run(hashedPassword, username);
+
+        if (result.changes === 0) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        res.status(200).send({ message: 'Password changed successfully' });
+    } catch (err) {
+        console.error('Error changing password:', err.message);
+        res.status(500).send({ message: 'Error changing password' });
+    }
+});
+
+// Endpoint for users to change their own password
+app.put('/change_password', (req, res) => {
+    const { username, currentPassword, newPassword } = req.body;
+
+    if (!username || !currentPassword || !newPassword) {
+        return res.status(400).send({ message: 'Username, current password and new password are required' });
+    }
+
+    try {
+        const stmt = db.prepare('SELECT * FROM users WHERE username = ?');
+        const user = stmt.get(username);
+
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        const isMatch = bcrypt.compareSync(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).send({ message: 'Current password is incorrect' });
+        }
+
+        const hashedPassword = bcrypt.hashSync(newPassword, 10);
+        const updateStmt = db.prepare('UPDATE users SET password = ? WHERE username = ?');
+        const result = updateStmt.run(hashedPassword, username);
+
+        if (result.changes === 0) {
+            return res.status(500).send({ message: 'Failed to update password' });
+        }
+
+        res.status(200).send({ message: 'Password changed successfully' });
+    } catch (err) {
+        console.error('Error changing password:', err.message);
+        res.status(500).send({ message: 'Error changing password' });
     }
 });
 

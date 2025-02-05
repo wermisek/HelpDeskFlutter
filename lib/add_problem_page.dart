@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'settings.dart';
 import 'package:http/http.dart' as http;
@@ -63,6 +64,12 @@ class _UserHomePageState extends State<UserHomePage> {
   int selectedFloor = 0;
   String searchQuery = '';
   String? selectedSortOption;
+  late String currentUsername;
+  final Map<String, Color> statusColors = {
+    'untouched': Colors.grey,
+    'in_progress': Colors.orange,
+    'done': Colors.green,
+  };
 
   List<dynamic> get problems => _problems;
   List<dynamic> get filteredProblems => _filteredProblems.isEmpty ? _problems : _filteredProblems;
@@ -82,6 +89,84 @@ class _UserHomePageState extends State<UserHomePage> {
     '31', '32', '33', '34', '35', '36', '37', '38', '39', '40',
     'Sala gimnastyczna', 'Biblioteka', 'Świetlica', 'Aula'
   ];
+
+  Color _getStatusColor(String? status) {
+    switch (status) {
+      case 'done':
+        return Colors.green;
+      case 'in_progress':
+        return Colors.orange;
+      case 'untouched':
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusText(String? status) {
+    switch (status) {
+      case 'done':
+        return 'Zakończone';
+      case 'in_progress':
+        return 'W trakcie';
+      case 'untouched':
+      default:
+        return 'Nierozpoczęte';
+    }
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.orange;
+      case 'low':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getPriorityText(String priority) {
+    switch (priority) {
+      case 'high':
+        return 'Wysoki';
+      case 'medium':
+        return 'Średni';
+      case 'low':
+        return 'Niski';
+      default:
+        return 'Nieznany';
+    }
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'printer':
+        return Icons.print;
+      case 'hardware':
+        return Icons.computer;
+      case 'network':
+        return Icons.wifi;
+      case 'software':
+        return Icons.apps;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  IconData _getPriorityIconData(String priority) {
+    switch (priority) {
+      case 'high':
+        return Icons.arrow_upward;
+      case 'medium':
+        return Icons.remove;
+      case 'low':
+        return Icons.arrow_downward;
+      default:
+        return Icons.remove;
+    }
+  }
 
   @override
   void initState() {
@@ -702,18 +787,19 @@ class _UserHomePageState extends State<UserHomePage> {
   }
 
   void _showTemplateSelection() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(20),
         ),
       ),
-      backgroundColor: Colors.white,
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,
       ),
-      builder: (context) => Container(
+      builder: (BuildContext context) => Container(
         padding: EdgeInsets.only(top: 8),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -722,7 +808,6 @@ class _UserHomePageState extends State<UserHomePage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle bar
             Center(
               child: Container(
                 width: 40,
@@ -734,7 +819,6 @@ class _UserHomePageState extends State<UserHomePage> {
                 ),
               ),
             ),
-            // Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
@@ -765,30 +849,6 @@ class _UserHomePageState extends State<UserHomePage> {
             ),
             SizedBox(height: 12),
             Divider(height: 1),
-            // Scroll indicator
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.grey[400],
-                    size: 20,
-                  ),
-                  SizedBox(width: 4),
-                  Text(
-                    'Przewiń w dół',
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Templates list
             Expanded(
               child: ListView.builder(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -905,76 +965,9 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-  Color _getPriorityColor(String priority) {
-    switch (priority) {
-      case 'high':
-        return Colors.red;
-      case 'medium':
-        return Colors.orange;
-      case 'low':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getPriorityText(String priority) {
-    switch (priority) {
-      case 'high':
-        return 'Wysoki';
-      case 'medium':
-        return 'Średni';
-      case 'low':
-        return 'Niski';
-      default:
-        return 'Nieznany';
-    }
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'printer':
-        return Icons.print;
-      case 'hardware':
-        return Icons.computer;
-      case 'network':
-        return Icons.wifi;
-      case 'software':
-        return Icons.apps;
-      default:
-        return Icons.help_outline;
-    }
-  }
-
-  IconData _getPriorityIconData(String priority) {
-    switch (priority) {
-      case 'high':
-        return Icons.arrow_upward;
-      case 'medium':
-        return Icons.remove;
-      case 'low':
-        return Icons.arrow_downward;
-      default:
-        return Icons.remove;
-    }
-  }
-
-  IconData _getPriorityIcon(String? priority) {
-    switch (priority) {
-      case 'high':
-        return Icons.arrow_upward;
-      case 'medium':
-        return Icons.remove;
-      case 'low':
-        return Icons.arrow_downward;
-      default:
-        return Icons.help_outline;
-    }
-  }
-
   String _truncateText(String text, int maxLength) {
     if (text.length <= maxLength) return text;
-    return '${text.substring(0, maxLength)}...';
+    return text.substring(0, maxLength) + '...';
   }
 
   String _removeNewlines(String text) {
@@ -986,19 +979,14 @@ class _UserHomePageState extends State<UserHomePage> {
     final date = DateTime.parse(timestamp);
     final difference = now.difference(date);
 
-    if (difference.inMinutes < 1) {
-      return 'Przed chwilą';
-    } else if (difference.inHours < 1) {
-      final minutes = difference.inMinutes;
-      return '$minutes ${minutes == 1 ? 'minuta' : minutes < 5 ? 'minuty' : 'minut'} temu';
-    } else if (difference.inDays < 1) {
-      final hours = difference.inHours;
-      return '$hours ${hours == 1 ? 'godzina' : hours < 5 ? 'godziny' : 'godzin'} temu';
-    } else if (difference.inDays < 7) {
-      final days = difference.inDays;
-      return '$days ${days == 1 ? 'dzień' : 'dni'} temu';
+    if (difference.inDays > 0) {
+      return '${difference.inDays} ${difference.inDays == 1 ? 'dzień' : 'dni'} temu';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} ${difference.inHours == 1 ? 'godzina' : 'godzin'} temu';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} ${difference.inMinutes == 1 ? 'minuta' : 'minut'} temu';
     } else {
-      return '${date.day}.${date.month}.${date.year}';
+      return 'Przed chwilą';
     }
   }
 
@@ -1017,8 +1005,13 @@ class _UserHomePageState extends State<UserHomePage> {
         }).toList();
       }
       
-      if (_pageController.hasClients) {
-        _pageController.jumpToPage(0);
+      // Only reset page if current page is beyond the new total pages
+      int totalPages = (_filteredProblems.isEmpty ? _problems.length : _filteredProblems.length) ~/ itemsPerPage + 1;
+      if (currentPage >= totalPages) {
+        currentPage = totalPages > 0 ? totalPages - 1 : 0;
+        if (_pageController.hasClients) {
+          _pageController.jumpToPage(currentPage);
+        }
       }
     });
   }
@@ -1035,8 +1028,13 @@ class _UserHomePageState extends State<UserHomePage> {
         ).toList();
       }
       
-      if (_pageController.hasClients) {
-        _pageController.jumpToPage(0);
+      // Only reset page if current page is beyond the new total pages
+      int totalPages = (_filteredProblems.isEmpty ? _problems.length : _filteredProblems.length) ~/ itemsPerPage + 1;
+      if (currentPage >= totalPages) {
+        currentPage = totalPages > 0 ? totalPages - 1 : 0;
+        if (_pageController.hasClients) {
+          _pageController.jumpToPage(currentPage);
+        }
       }
     });
   }
@@ -1053,8 +1051,13 @@ class _UserHomePageState extends State<UserHomePage> {
         ).toList();
       }
       
-      if (_pageController.hasClients) {
-        _pageController.jumpToPage(0);
+      // Only reset page if current page is beyond the new total pages
+      int totalPages = (_filteredProblems.isEmpty ? _problems.length : _filteredProblems.length) ~/ itemsPerPage + 1;
+      if (currentPage >= totalPages) {
+        currentPage = totalPages > 0 ? totalPages - 1 : 0;
+        if (_pageController.hasClients) {
+          _pageController.jumpToPage(currentPage);
+        }
       }
     });
   }
@@ -1355,10 +1358,7 @@ class _UserHomePageState extends State<UserHomePage> {
                     leading: Icon(Icons.logout, color: Colors.black),
                     title: Text('Wyloguj się', style: TextStyle(color: Colors.black)),
                     onTap: () {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) => LoginPage()),
-                        (Route<dynamic> route) => false,
-                      );
+                      _handleLogout();
                     },
                   ),
                 ),
@@ -1390,7 +1390,7 @@ class _UserHomePageState extends State<UserHomePage> {
 
   Widget _buildHomeView() {
     return Column(
-      children: [
+      children: <Widget>[
         Divider(
           color: Color(0xFFF49402),
           thickness: 1.0,
@@ -1404,7 +1404,7 @@ class _UserHomePageState extends State<UserHomePage> {
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   SizedBox(height: 15.0),
                   Center(
                     child: Text(
@@ -1422,9 +1422,9 @@ class _UserHomePageState extends State<UserHomePage> {
                     padding: const EdgeInsets.symmetric(horizontal: 55.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         Row(
-                          children: [
+                          children: <Widget>[
                             Icon(Icons.info_outline, 
                               size: 18, 
                               color: Color(0xFFF49402)
@@ -1483,9 +1483,9 @@ class _UserHomePageState extends State<UserHomePage> {
                             padding: EdgeInsets.all(12.0),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: [
+                              children: <Widget>[
                                 Row(
-                                  children: [
+                                  children: <Widget>[
                                     Expanded(
                                       child: TextFormField(
                                         controller: _teacherController,
@@ -1622,11 +1622,11 @@ class _UserHomePageState extends State<UserHomePage> {
                                 ),
                                 SizedBox(height: 12),
                                 Row(
-                                  children: [
+                                  children: <Widget>[
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
+                                        children: <Widget>[
                                           Padding(
                                             padding: const EdgeInsets.only(left: 4, bottom: 8),
                                             child: Text(
@@ -1649,7 +1649,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                               children: categories.map((category) {
                                                 return Expanded(
                                                   child: Row(
-                                                    children: [
+                                                    children: <Widget>[
                                                       Expanded(
                                                         child: Padding(
                                                           padding: EdgeInsets.symmetric(horizontal: 2),
@@ -1675,7 +1675,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
+                                        children: <Widget>[
                                           Padding(
                                             padding: const EdgeInsets.only(left: 4, bottom: 8),
                                             child: Text(
@@ -1695,7 +1695,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                               border: Border.all(color: Colors.grey[300]!),
                                             ),
                                             child: Row(
-                                              children: [
+                                              children: <Widget>[
                                                 _buildPriorityButton('low', 'Niski', Icons.arrow_downward, Colors.green),
                                                 Container(width: 1, height: 24, color: Colors.grey[300]),
                                                 _buildPriorityButton('medium', 'Średni', Icons.remove, Colors.orange),
@@ -1715,7 +1715,7 @@ class _UserHomePageState extends State<UserHomePage> {
                         ),
                         SizedBox(height: 12.0),
                         Row(
-                          children: [
+                          children: <Widget>[
                             Icon(Icons.description_outlined, 
                               size: 18, 
                               color: Color(0xFFF49402)
@@ -1735,7 +1735,7 @@ class _UserHomePageState extends State<UserHomePage> {
                         Container(
                           height: 250,
                           child: Stack(
-                            children: [
+                            children: <Widget>[
                               Positioned.fill(
                                 child: TextFormField(
                                   controller: _problemController,
@@ -1835,7 +1835,7 @@ class _UserHomePageState extends State<UserHomePage> {
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
-                                  children: [
+                                  children: <Widget>[
                                     Icon(Icons.send, size: 18, color: Colors.white),
                                     SizedBox(width: 8),
                                     Text(
@@ -1865,286 +1865,348 @@ class _UserHomePageState extends State<UserHomePage> {
   }
 
   Widget _buildMyProblemsView() {
-    return Column(
-      children: [
-        Container(
-          height: 60,
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 37.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Container(
-                  width: 250,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  child: MouseRegion(
-                    onEnter: (_) => setState(() => hoverStates['searchBar'] = true),
-                    onExit: (_) => setState(() => hoverStates['searchBar'] = false),
-                    child: TextField(
-                      style: TextStyle(color: Colors.black),
-                      decoration: InputDecoration(
-                        hintText: 'Wyszukaj zgłoszenia...',
-                        hintStyle: TextStyle(color: Colors.grey[500]),
-                        prefixIcon: AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
-                          child: Icon(
-                            Icons.search,
-                            color: hoverStates['searchBar'] == true
-                                ? Color(0xFFF49402)
-                                : Colors.grey[600],
-                            size: hoverStates['searchBar'] == true ? 24 : 22,
-                          ),
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                      onChanged: _filterProblems,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 8),
-                _buildFilterButtons(),
-              ],
+    if (filteredProblems.isEmpty) {
+      return Column(
+        children: <Widget>[
+          _buildSearchBar(),
+          Expanded(
+            child: Center(
+              child: Text(
+                'Brak zgłoszeń.',
+                style: TextStyle(fontSize: 16.0, color: Colors.black),
+              ),
             ),
           ),
-        ),
+        ],
+      );
+    }
+
+    final int totalPages = (filteredProblems.length / itemsPerPage).ceil();
+    if (currentPage >= totalPages) {
+      currentPage = totalPages - 1;
+    }
+    if (currentPage < 0) {
+      currentPage = 0;
+    }
+    
+    final int startIndex = currentPage * itemsPerPage;
+    final int endIndex = (startIndex + itemsPerPage > filteredProblems.length) 
+        ? filteredProblems.length 
+        : startIndex + itemsPerPage;
+    final List<dynamic> currentPageProblems = filteredProblems.sublist(startIndex, endIndex);
+
+    return Column(
+      children: <Widget>[
+        _buildSearchBar(),
         Expanded(
           child: Container(
             margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
             child: Column(
-              children: [
-                if (filteredProblems.isEmpty)
-                  Expanded(
-                        child: Center(
-                          child: Text(
-                            'Brak zgłoszeń.',
-                            style: TextStyle(fontSize: 16.0, color: Colors.black),
-                          ),
-                        ),
-                      )
-                else
-                  Expanded(
-                        child: GridView.builder(
-                          padding: EdgeInsets.symmetric(vertical: 3.0),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 8.0,
-                            mainAxisSpacing: 8.0,
-                            childAspectRatio: 1.9,
-                          ),
-                          itemCount: filteredProblems.length,
-                          itemBuilder: (context, index) {
-                            var problem = filteredProblems[index];
-                            bool isRead = problem['read'] == 1;
-
-                            return MouseRegion(
-                              onEnter: (_) => setState(() => hoverStates['problem_${problem['id']}'] = true),
-                              onExit: (_) => setState(() => hoverStates['problem_${problem['id']}'] = false),
-                              child: AnimatedContainer(
-                                duration: Duration(milliseconds: 200),
-                                transform: Matrix4.identity()
-                                  ..scale(hoverStates['problem_${problem['id']}'] == true ? 1.02 : 1.0),
-                                child: Card(
-                                  margin: EdgeInsets.symmetric(vertical: 5.0),
-                                  elevation: hoverStates['problem_${problem['id']}'] == true ? 8 : 4,
-                                  color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    side: BorderSide(
-                                      color: _getPriorityColor(problem['priority']).withOpacity(0.3),
-                                      width: 1.0,
-                                    ),
-                                  ),
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // Header Row with Room and Priority
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            // Room Number with Icon and Time
-                                            Row(
-                                              children: [
-                                                Icon(Icons.room, size: 18, color: Colors.grey[800]),
-                                                SizedBox(width: 4),
-                                                Text(
-                                                  (problem['room'] ?? 'Nieznana').toLowerCase().startsWith('sala') 
-                                                    ? _truncateText(problem['room'] ?? 'Nieznana', 7)
-                                                    : 'Sala ${_truncateText(problem['room'] ?? 'Nieznana', 7)}',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 14,
-                                                    color: Colors.grey[800],
-                                                  ),
-                                                ),
-                                                SizedBox(width: 12),
-                                                // Time information
-                                                Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.access_time,
-                                                      size: 14,
-                                                      color: Colors.grey[600],
-                                                    ),
-                                                    SizedBox(width: 4),
-                                                    Text(
-                                                      getRelativeTime(problem['timestamp']),
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.grey[600],
-                                                        fontStyle: FontStyle.italic,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                            // Priority Badge
-                                            Container(
-                                              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-                                              decoration: BoxDecoration(
-                                                color: _getPriorityColor(problem['priority']).withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                  color: _getPriorityColor(problem['priority']).withOpacity(0.3),
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    _getPriorityIcon(problem['priority']),
-                                                    size: 14,
-                                                    color: _getPriorityColor(problem['priority']),
-                                                  ),
-                                                  SizedBox(width: 4),
-                                                  Text(
-                                                    _getPriorityText(problem['priority']),
-                                                    style: TextStyle(
-                                                      color: _getPriorityColor(problem['priority']),
-                                                      fontSize: 12.0,
-                                                      fontWeight: FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 8),
-                                        // Problem Description
-                                        Text(
-                                          _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'),35),
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.black87,
-                                            height: 1.3,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        SizedBox(height: 8),
-                                        // Bottom Info Row
-                                        Row(
-                                          children: [
-                                            Spacer(),
-                                            // View Details Button
-                                            TextButton(
-                                              onPressed: () => Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) => ProblemTempPage(problem: problem),
-                                                ),
-                                              ).then((deleted) {
-                                                if (deleted == true) {
-                                                  _fetchUserProblems();
-                                                }
-                                              }),
-                                              style: TextButton.styleFrom(
-                                                foregroundColor: Colors.black87,
-                                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    'Szczegóły',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight: FontWeight.w500,
-                                                      color: Colors.black87,
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding: EdgeInsets.only(left: 4, top: 1),
-                                                    child: Icon(Icons.arrow_forward, 
-                                                      size: 16,
-                                                      color: Colors.black87,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+              children: <Widget>[
+                Expanded(
+                  child: GridView.builder(
+                    padding: EdgeInsets.symmetric(vertical: 3.0),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 8.0,
+                      mainAxisSpacing: 8.0,
+                      childAspectRatio: 1.9,
+                    ),
+                    itemCount: currentPageProblems.length,
+                    itemBuilder: (context, index) {
+                      var problem = currentPageProblems[index];
+                      return _buildProblemCard(problem);
+                    },
+                  ),
+                ),
                 Container(
                   padding: EdgeInsets.symmetric(vertical: 8.0),
                   child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back_ios, size: 20),
-                      onPressed: currentPage > 0
-                          ? () {
-                              setState(() {
-                                currentPage--;
-                                _pageController.jumpToPage(currentPage);
-                              });
-                            }
-                          : null,
-                    ),
-                    Text('${currentPage + 1} / ${(filteredProblems.length / itemsPerPage).ceil()}'),
-                    IconButton(
-                      icon: Icon(Icons.arrow_forward_ios, size: 20),
-                      onPressed: currentPage < (filteredProblems.length / itemsPerPage).ceil() - 1
-                          ? () {
-                              setState(() {
-                                currentPage++;
-                                _pageController.jumpToPage(currentPage);
-                              });
-                            }
-                          : null,
-                    ),
-                  ],
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      IconButton(
+                        icon: Icon(Icons.arrow_back_ios, size: 20),
+                        onPressed: currentPage > 0
+                            ? () {
+                                setState(() {
+                                  currentPage--;
+                                });
+                              }
+                            : null,
+                        color: currentPage > 0 ? Colors.black : Colors.grey,
+                      ),
+                      Text(
+                        '${currentPage + 1} / $totalPages',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.arrow_forward_ios, size: 20),
+                        onPressed: currentPage < totalPages - 1
+                            ? () {
+                                setState(() {
+                                  currentPage++;
+                                });
+                              }
+                            : null,
+                        color: currentPage < totalPages - 1 ? Colors.black : Colors.grey,
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-      ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      height: 60,
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 37.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: <Widget>[
+            Container(
+              width: 250,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: MouseRegion(
+                onEnter: (_) => setState(() => hoverStates['searchBar'] = true),
+                onExit: (_) => setState(() => hoverStates['searchBar'] = false),
+                child: TextField(
+                  style: TextStyle(color: Colors.black),
+                  onChanged: _filterProblems,
+                  decoration: InputDecoration(
+                    hintText: 'Wyszukaj zgłoszenia...',
+                    hintStyle: TextStyle(color: Colors.grey[500]),
+                    prefixIcon: AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.search,
+                        color: hoverStates['searchBar'] == true
+                            ? Color(0xFFF49402)
+                            : Colors.grey[600],
+                        size: hoverStates['searchBar'] == true ? 24 : 22,
+                      ),
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+            _buildFilterButtons(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProblemCard(dynamic problem) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => hoverStates['problem_${problem['id']}'] = true),
+      onExit: (_) => setState(() => hoverStates['problem_${problem['id']}'] = false),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        transform: Matrix4.identity()
+          ..scale(hoverStates['problem_${problem['id']}'] == true ? 1.02 : 1.0),
+        child: Card(
+          margin: EdgeInsets.symmetric(vertical: 5.0),
+          elevation: hoverStates['problem_${problem['id']}'] == true ? 8 : 4,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            side: BorderSide(
+              color: _getStatusColor(problem['status']).withOpacity(0.3),
+              width: 1.0,
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.room, size: 16, color: Colors.grey[700]),
+                        SizedBox(width: 4),
+                        Text(
+                          'Sala ${problem['room']}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(problem['status']).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _getStatusColor(problem['status']).withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(problem['status']),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            _getStatusText(problem['status']),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _getStatusColor(problem['status']),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                Expanded(
+                  child: Text(
+                    _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'), 150),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.black87,
+                      height: 1.4,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getPriorityColor(problem['priority']).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.flag,
+                            size: 12,
+                            color: _getPriorityColor(problem['priority']),
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            _getPriorityText(problem['priority']),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _getPriorityColor(problem['priority']),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      getRelativeTime(problem['timestamp']),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        final response = await http.put(
+                          Uri.parse('http://localhost:8080/mark_as_read/${problem['id']}'),
+                        );
+
+                        if (response.statusCode == 200) {
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) => ProblemTempPage(problem: problem),
+                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                var begin = Offset(1.0, 0.0);
+                                var end = Offset.zero;
+                                var curve = Curves.easeInOut;
+                                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                return SlideTransition(
+                                  position: animation.drive(tween),
+                                  child: child,
+                                );
+                              },
+                              transitionDuration: Duration(milliseconds: 300),
+                            ),
+                          ).then((shouldDelete) {
+                            if (shouldDelete == true) {
+                              _fetchUserProblems();
+                            }
+                          });
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.grey[700],
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size(0, 32),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Szczegóły',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Color(0xFFF49402),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleLogout() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => LoginPage()),
+      (Route<dynamic> route) => false,
     );
   }
 }
