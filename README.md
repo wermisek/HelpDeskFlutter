@@ -1,7 +1,7 @@
-# HelpDeskFlutter 🚀
+# HelpDesk Drzewniak 🚀
 
-**HelpDeskFlutter** to aplikacja służąca do zarządzania problemami w szkołach.  
-**HelpDeskFlutter** is an application designed to manage issues in schools.
+**HelpDesk Drzewniak** to aplikacja służąca do zarządzania problemami w szkołach.  
+**HelpDesk Drzewniak** is an application designed to manage issues in schools.
 
 ![Flutter Badge](https://img.shields.io/badge/Flutter-Framework-blue?style=for-the-badge&logo=flutter)
 ![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red?style=for-the-badge)
@@ -62,11 +62,11 @@
 
 ## 🛡 Licencja / License
 
-**HelpDeskFlutter** jest objęty licencją niestandardową (Custom License).  
+**HelpDesk Drzewniak** jest objęty licencją niestandardową (Custom License).  
 Aplikacja może być używana wyłącznie przez autoryzowane instytucje.  
 Nieautoryzowane modyfikacje lub rozpowszechnianie są zabronione.  
 
-**HelpDeskFlutter** is licensed under a Custom License.  
+**HelpDesk Drzewniak** is licensed under a Custom License.  
 The application can only be used by authorized institutions.  
 Unauthorized modifications or distribution are prohibited.
 

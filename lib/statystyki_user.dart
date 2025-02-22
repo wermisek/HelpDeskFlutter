@@ -246,7 +246,7 @@ class _StatystykiUserPageState extends State<StatystykiUserPage> {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.symmetric(vertical: 18, horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

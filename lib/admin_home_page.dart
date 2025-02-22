@@ -1164,7 +1164,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: 10),
                 // Action buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -1338,31 +1338,48 @@ class _AdminHomePageState extends State<AdminHomePage> {
               onPressed: () async {
                 String newUsername = usernameController.text.trim();
                 if (newUsername.isNotEmpty) {
-                  var response = await http.put(
-                    Uri.parse('http://localhost:8080/change_username'),
-                    body: json.encode({
-                      'oldUsername': user['username'],
-                      'newUsername': newUsername,
-                    }),
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'role': 'admin',
-                    },
-                  );
+                  try {
+                    print('Attempting to change username from ${user['username']} to $newUsername');
+                    var response = await http.put(
+                      Uri.parse('http://localhost:8080/change_username'),
+                      body: json.encode({
+                        'username': user['username'],
+                        'newUsername': newUsername,
+                      }),
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    );
 
-                  if (response.statusCode == 200) {
-                    setState(() {
-                      filteredUsers = filteredUsers.map((u) {
-                        if (u['username'] == user['username']) {
-                          u['username'] = newUsername;
-                        }
-                        return u;
-                      }).toList();
-                    });
+                    print('Response status code: ${response.statusCode}');
+                    print('Response body: ${response.body}');
+
+                    if (response.statusCode == 200) {
+                      setState(() {
+                        filteredUsers = filteredUsers.map((u) {
+                          if (u['username'] == user['username']) {
+                            u['username'] = newUsername;
+                          }
+                          return u;
+                        }).toList();
+                      });
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Login został zmieniony pomyślnie'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else {
+                      Navigator.of(context).pop();
+                      _showErrorDialog(context, 'Błąd', 
+                        'Nie udało się zmienić loginu. Status: ${response.statusCode}, Odpowiedź: ${response.body}');
+                    }
+                  } catch (e) {
+                    print('Error during username change: $e');
                     Navigator.of(context).pop();
-                  } else {
-                    Navigator.of(context).pop();
-                    _showErrorDialog(context, 'Błąd', 'Nie udało się zmienić loginu.');
+                    _showErrorDialog(context, 'Błąd', 
+                      'Wystąpił błąd podczas zmiany loginu: $e');
                   }
                 }
               },
@@ -1460,17 +1477,21 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 String newPassword = passwordController.text.trim();
                 if (newPassword.isNotEmpty) {
                   try {
+                    print('Changing password for user: ${user['username']}');
                     var response = await http.put(
                       Uri.parse('http://localhost:8080/change_password_for_user'),
                       body: json.encode({
                         'username': user['username'],
                         'newPassword': newPassword,
-                        'role': 'admin'
+                        'role': 'admin',
                       }),
                       headers: {
                         'Content-Type': 'application/json',
                       },
                     );
+
+                    print('Response status code: ${response.statusCode}');
+                    print('Response body: ${response.body}');
 
                     if (response.statusCode == 200) {
                       Navigator.of(context).pop();
@@ -1481,20 +1502,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         ),
                       );
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Błąd: Nie udało się zmienić hasła (${response.statusCode})'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
+                      Navigator.of(context).pop();
+                      _showErrorDialog(context, 'Błąd', 
+                        'Nie udało się zmienić hasła. Status: ${response.statusCode}, Odpowiedź: ${response.body}');
                     }
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Błąd połączenia z serwerem: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    print('Error during password change: $e');
+                    Navigator.of(context).pop();
+                    _showErrorDialog(context, 'Błąd', 
+                      'Wystąpił błąd podczas zmiany hasła: $e');
                   }
                 }
               },
@@ -1983,39 +1999,39 @@ class _AdminHomePageState extends State<AdminHomePage> {
           child: Container(
             height: 140,
             padding: EdgeInsets.all(16.0),
-          child: Column(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
                         Icon(Icons.room, size: 16, color: Colors.grey[700]),
-                            SizedBox(width: 4),
-                            Text(
-                          'Sala ${problem['room']}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                                color: Colors.grey[800],
-                                  ),
-                                ),
-                              ],
-                            ),
-                        Container(
+                        SizedBox(width: 4),
+                        Text(
+                          'Sala: ${_truncateText(problem['room'] ?? 'Nieznana', 7)}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
+                      decoration: BoxDecoration(
                         color: getStatusColor(problem['status']).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
+                        border: Border.all(
                           color: getStatusColor(problem['status']).withOpacity(0.3),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           Container(
                             width: 8,
                             height: 8,
@@ -2032,29 +2048,29 @@ class _AdminHomePageState extends State<AdminHomePage> {
                               color: getStatusColor(problem['status']),
                               fontWeight: FontWeight.w500,
                             ),
-                              ),
-                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                SizedBox(height: 12),
+                  ],
+                ),
+                SizedBox(height: 10),
                 Expanded(
                   child: Text(
                     _truncateText(_removeNewlines(problem['problem'] ?? 'Brak opisu'), 150),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.black87,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.black87,
                       height: 1.4,
-                      ),
-                    maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
                     ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                SizedBox(height: 12),
-                    Row(
+                SizedBox(height: 4),
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
+                  children: [
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
@@ -2063,90 +2079,90 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                          children: [
+                        children: [
                           Icon(
                             Icons.flag,
                             size: 12,
                             color: getPriorityColor(problem['priority']),
                           ),
-                            SizedBox(width: 4),
-                            Text(
+                          SizedBox(width: 4),
+                          Text(
                             problem['priority'] == 'high' ? 'Wysoki' :
                             problem['priority'] == 'medium' ? 'Średni' : 'Niski',
-                              style: TextStyle(
-                                fontSize: 12,
+                            style: TextStyle(
+                              fontSize: 12,
                               color: getPriorityColor(problem['priority']),
-                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
                     ),
-                            Text(
+                    Text(
                       getRelativeTime(problem['timestamp']),
-                              style: TextStyle(
-                                fontSize: 12,
+                      style: TextStyle(
+                        fontSize: 12,
                         color: Colors.grey[600],
-                              ),
-                            ),
-                        TextButton(
-                          onPressed: () async {
-                            final response = await http.put(
-                              Uri.parse('http://localhost:8080/mark_as_read/${problem['id']}'),
-                            );
-
-                            if (response.statusCode == 200) {
-                              Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                              pageBuilder: (context, animation, secondaryAnimation) =>
-                                  ProblemTempPage(problem: problem),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                    var begin = Offset(1.0, 0.0);
-                                    var end = Offset.zero;
-                                    var curve = Curves.easeInOut;
-                                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                                    return SlideTransition(
-                                      position: animation.drive(tween),
-                                      child: child,
-                                    );
-                                  },
-                                  transitionDuration: Duration(milliseconds: 300),
-                                ),
-                              ).then((shouldDelete) {
-                                if (shouldDelete == true) {
-                              getProblems();
-                            }
-                          });
-                            }
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.grey[700],
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        minimumSize: Size(0, 32),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                            'Szczegóły',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                          SizedBox(width: 4),
-                          Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 12,
-                                  color: Color(0xFFF49402),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
+                TextButton(
+                  onPressed: () async {
+                    final response = await http.put(
+                      Uri.parse('http://localhost:8080/mark_as_read/${problem['id']}'),
+                    );
+
+                    if (response.statusCode == 200) {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) =>
+                              ProblemTempPage(problem: problem),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            var begin = Offset(1.0, 0.0);
+                            var end = Offset.zero;
+                            var curve = Curves.easeInOut;
+                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                            return SlideTransition(
+                              position: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                          transitionDuration: Duration(milliseconds: 300),
+                        ),
+                      ).then((shouldDelete) {
+                        if (shouldDelete == true) {
+                          getProblems();
+                        }
+                      });
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.grey[700],
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size(0, 32),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Szczegóły',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: Color(0xFFF49402),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
