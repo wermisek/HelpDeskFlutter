@@ -1,8 +1,7 @@
-Custom License Agreement
-========================
+Copyright (c) 2024 AUTOR. All rights reserved.
 
-Copyright (c) 2024 Wiktor Dłużniewski. All rights reserved.
+This is the license text content.
 
-This software is licensed to authorized institutions only. Unauthorized use, modification, or distribution of this software is strictly prohibited. The software is intended solely for educational purposes within the specified institution.
+... (Other content here) ...
 
-For licensing inquiries, please contact the author: Wiktor Dłużniewski.
+For licensing inquiries, please contact the author: AUTOR.
