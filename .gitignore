@@ -96,6 +96,7 @@ package-lock.json
 .env.production.local
 
 # Database files
+users.db
 *.db
 *.db-journal
 *.sqlite
