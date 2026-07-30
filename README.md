@@ -1,75 +1,87 @@
-# HelpDesk Drzewniak 🚀
+# HelpDeskDrzewniak
 
-**HelpDesk Drzewniak** to aplikacja służąca do zarządzania problemami w szkołach.  
-**HelpDesk Drzewniak** is an application designed to manage issues in schools.
+Aplikacja do zgłaszania i zarządzania problemami IT w szkole.
+Pracownicy zgłaszają usterki, administratorzy je przeglądają i przypisują status.
 
-![Flutter Badge](https://img.shields.io/badge/Flutter-Framework-blue?style=for-the-badge&logo=flutter)
-![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red?style=for-the-badge)
+## Jak to działa
 
----
+1. Użytkownik loguje się jako **user** lub **admin**.
+2. **User** może dodać zgłoszenie (sala, opis, kategoria, priorytet) i przeglądać swoje zgłoszenia.
+3. **Admin** widzi wszystkie zgłoszenia, może zmieniać ich status (untouched → in_progress → done), dodawać komentarze, zarządzać użytkownikami.
+4. Backend to serwer Node.js na lokalnej sieci, który trzyma dane w SQLite.
 
-## ✨ Funkcje / Features
+Aplikacja działa na desktopie (Windows/Linux/macOS) i łączy się z backendem po HTTP.
 
-- **Dodawanie zgłoszeń** / **Issue Reporting**  
-  Nauczyciele mogą zgłaszać problemy, wprowadzając nazwę pokoju i opis problemu.  
-  Teachers can report issues by entering the room name and problem description.
+## Wymagania
 
-- **Zarządzanie zgłoszeniami** / **Issue Management**  
-  Administratorzy mogą przeglądać i aktualizować status zgłoszeń.  
-  Administrators can view and update the status of reported issues.
+- [Flutter SDK](https://flutter.dev) (^3.5.4)
+- [Node.js](https://nodejs.org) (v16+)
+- menedżer pakietów npm
 
-- **Obsługa sieci lokalnej** / **Local Network Support**  
-  Aplikacja działa w oparciu o lokalną infrastrukturę sieciową.  
-  The application operates over a local network infrastructure.
+## Uruchomienie backendu
 
-- **Przyjazny interfejs** / **User-Friendly Interface**  
-  Intuicyjny design z wykorzystaniem Fluttera.  
-  Intuitive design leveraging Flutter's capabilities.
+```bash
+cd Serwerjs
+npm install
+node server.js
+```
 
-- **Zarządzanie użytkownikami** / **User Management**  
-  Administratorzy mogą tworzyć, edytować dane oraz usuwać konta użytkowników.  
-  Administrators can create, edit, and delete user accounts.
+Serwer wystartuje na porcie **8080**.
+Domyślnie baza danych (`users.db`) tworzy się automatycznie.
 
+## Uruchomienie aplikacji Flutter
 
----
+```bash
+flutter pub get
+flutter run
+```
 
-## 🛠 Instalacja i uruchomienie / Installation and Launch
+Aplikacja uruchomi się jako okno desktopowe.
+W polu adresu backendu wpisz `http://<ip-serwera>:8080` (domyślnie localhost:8080).
 
-1. **Klonowanie repozytorium / Clone the repository**:  
-   ```bash
-   git clone https://github.com/TwojeRepo/HelpDeskFlutter.git
-   cd HelpDeskFlutter
-2. **Instalacja zależności / Install dependencies**:
-   ```bash
-   flutter pub get
-3. **Uruchomienie aplikacji / Run the application**:
-   ```bash
-   flutter run
-   ```
+## Budowa projektu
 
+```
+HelpDeskFlutter/
+├── lib/                        # Kod źródłowy Flutter
+│   ├── main.dart               # Wejście aplikacji
+│   ├── login.dart              # Ekran logowania
+│   ├── add_problem_page.dart   # Dodawanie zgłoszenia
+│   ├── admin_home_page.dart    # Panel administratora
+│   ├── problemtemp.dart        # Lista zgłoszeń
+│   ├── settings.dart           # Ustawienia
+│   ├── statystyki_admin.dart   # Statystyki admina
+│   ├── statystyki_user.dart    # Statystyki użytkownika
+│   ├── usertempp.dart          # Zarządzanie użytkownikami
+│   ├── models/                 # Modele danych
+│   └── pages/                  # Dodatkowe strony
+├── Serwerjs/                   # Backend Node.js
+│   ├── server.js               # Serwer Express + SQLite
+│   ├── index.html              # Testowa strona WWW
+│   └── package.json
+├── assets/images/              # Obrazy
+├── test/                       # Testy Flutter
+├── android/                    # Konfiguracja Androida
+├── ios/                        # Konfiguracja iOS
+├── web/                        # Konfiguracja Web
+├── windows/                    # Konfiguracja Windows
+├── linux/                      # Konfiguracja Linux
+├── macos/                      # Konfiguracja macOS
+├── pubspec.yaml                # Zależności Flutter
+└── README.md
+```
 
+## Technologie
 
----
+| Część | Technologia |
+|---|---|
+| Frontend | Flutter / Dart |
+| Backend | Node.js + Express |
+| Baza danych | SQLite (better-sqlite3) |
+| Hasła | bcrypt |
+| Desktop | window_manager |
 
-## 🌟 Technologie / Technologies
+## Licencja
 
-- **Flutter** - Framework do tworzenia aplikacji multiplatformowych.  
-  Framework for building cross-platform applications.
-- **Dart** - Język programowania wykorzystywany przez Fluttera.  
-  Programming language used by Flutter.
-
----
-
-## 🛡 Licencja / License
-
-**HelpDesk Drzewniak** jest objęty licencją niestandardową (Custom License).  
-Aplikacja może być używana wyłącznie przez autoryzowane instytucje.  
-Nieautoryzowane modyfikacje lub rozpowszechnianie są zabronione.  
-
-**HelpDesk Drzewniak** is licensed under a Custom License.  
-The application can only be used by authorized institutions.  
-Unauthorized modifications or distribution are prohibited.
-
-**Full license can be seen in LICENSE.md file**
-
-**Autor / Author**: Wiktor Dłużniewski
+Custom License — patrz plik [LICENSE.md](./LICENSE.md).
+Autor: Wiktor Dłużniewski.
